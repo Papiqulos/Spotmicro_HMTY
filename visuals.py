@@ -49,39 +49,6 @@ class RobotVisualizer:
         
         self.ax.plot(xs, zs, ys, linewidth=3, label='Chassis', color='blue')
 
-    def drawLegPoints(self, p):
-        """ Draws the lines and joints for a leg 
-
-        :p: List of the kinematic chain for each leg. The kinematic chain is given in homogenous vector form"""
-        print(p[0])
-        # Plot links (Black line)
-        self.ax.plot([x[0] for x in p], [x[2] for x in p], [x[1] for x in p], 'k-', lw=3)
-        # Plot joints (Blue and Red dots)
-        self.ax.plot([p[0][0]], [p[0][2]], [p[0][1]], 'bo', lw=2)
-        self.ax.plot([p[4][0]], [p[4][2]], [p[4][1]], 'ro', lw=2)    
-
-    def drawLegPair(self, Tl, Tr, Ll, Lr):
-        """ Calculates and draws a pair of legs (Left and Right) 
-        
-        :param Tl: Transformation matrix for left leg shoulder relative to body
-        :param Tr: Transformation matrix for right leg shoulder relative to body
-        :param Ll: Target foot position for left leg relative to body
-        :param Lr: Target foot position for right leg relative to body
-        """
-        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-        
-        # Left Leg
-        left_angles = self.kin.legIK(np.linalg.inv(Tl) @ Ll) # Passing foot position relative to left shoulder
-        print(f"Left Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
-        left_points = [Tl @ x for x in self.kin.legFK_hard_coded(left_angles)]
-        self.drawLegPoints(left_points)
-        
-        # Right Leg
-        right_angles = self.kin.legIK(Ix @ np.linalg.inv(Tr) @ Lr) # Passing foot position relative to right shoulder
-        print(f"Right Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
-        right_points = [Tr @ Ix @ x for x in self.kin.legFK_hard_coded(right_angles)]
-        self.drawLegPoints(right_points)
-
     def draw_pose_FK(self, theta, orientation, center):
         # Compute DH parameters for each leg
         theta = [radians(angle) for angle in theta]
@@ -129,6 +96,41 @@ class RobotVisualizer:
         self.drawLegPoints(fr_chain_)
         self.drawLegPoints(bl_chain_)
         self.drawLegPoints(br_chain_)
+
+    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
+    def drawLegPoints(self, p):
+        """ Draws the lines and joints for a leg 
+
+        :p: List of the kinematic chain for each leg. The kinematic chain is given in homogenous vector form"""
+        print(p[0])
+        # Plot links (Black line)
+        self.ax.plot([x[0] for x in p], [x[2] for x in p], [x[1] for x in p], 'k-', lw=3)
+        # Plot joints (Blue and Red dots)
+        self.ax.plot([p[0][0]], [p[0][2]], [p[0][1]], 'bo', lw=2)
+        self.ax.plot([p[4][0]], [p[4][2]], [p[4][1]], 'ro', lw=2)    
+    
+    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
+    def drawLegPair(self, Tl, Tr, Ll, Lr):
+        """ Calculates and draws a pair of legs (Left and Right) 
+        
+        :param Tl: Transformation matrix for left leg shoulder relative to body
+        :param Tr: Transformation matrix for right leg shoulder relative to body
+        :param Ll: Target foot position for left leg relative to body
+        :param Lr: Target foot position for right leg relative to body
+        """
+        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        
+        # Left Leg
+        left_angles = self.kin.legIK(np.linalg.inv(Tl) @ Ll) # Passing foot position relative to left shoulder
+        print(f"Left Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
+        left_points = [Tl @ x for x in self.kin.legFK_hard_coded(left_angles)]
+        self.drawLegPoints(left_points)
+        
+        # Right Leg
+        right_angles = self.kin.legIK(Ix @ np.linalg.inv(Tr) @ Lr) # Passing foot position relative to right shoulder
+        print(f"Right Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
+        right_points = [Tr @ Ix @ x for x in self.kin.legFK_hard_coded(right_angles)]
+        self.drawLegPoints(right_points)
 
     def draw_pose_IK(self, eof_positions, orientation, center):
         (omega, phi, psi) = orientation

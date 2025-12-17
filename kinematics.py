@@ -244,11 +244,9 @@ if __name__ == "__main__":
     theta1, theta2, theta3 = kinematics.legIK(target_pos)
     print(f"Inverse Kinematics for target position {target_pos}:\nTheta1: {math.degrees(theta1):.2f}°, Theta2: {math.degrees(theta2):.2f}°, Theta3: {math.degrees(theta3):.2f}°")
 
-    # Verify by forward kinematics
-    dh_params = kinematics.l_legs(math.degrees(theta1), math.degrees(theta2), math.degrees(theta3))
-    T_end, _ = kinematics.legFK(dh_params)
-    end_effector_pos = T_end[:3, 3]
-    print(f"Forward Kinematics End Effector Position Relative to hip: x={end_effector_pos[0]:.2f}, y={end_effector_pos[1]:.2f}, z={end_effector_pos[2]:.2f}")
+    # Verify with forward kinematics
+    kinematic_chain = kinematics.legFK_hard_coded([theta1, theta2, theta3])
+    print(f"Verifying with Forward Kinematics x={kinematic_chain[-1][0]:.2f}, y={kinematic_chain[-1][1]:.2f}, z={kinematic_chain[-1][2]:.2f}")
     
     
 
