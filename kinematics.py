@@ -119,6 +119,7 @@ class Kinematics:
             [self.l4,     0,      0,     -theta3]   # Ankle joint
         ]
 
+    # NEEDS FIXING
     def legFK(self, dh_params: list|np.ndarray):
         '''
         Forward kinematics using Denavit-Hartenberg parameters for one leg.
@@ -144,6 +145,7 @@ class Kinematics:
         kinematic_chain = [T_ @ x for x in kinematic_chain]
         return T, kinematic_chain
     
+    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legFK_hard_coded(self, angles):
         '''
         Hard coded Forward kinematics for one leg.
