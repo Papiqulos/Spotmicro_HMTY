@@ -168,7 +168,7 @@ class Kinematics:
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def bodyIK(self, omega, phi, psi, xm, ym, zm):
         """
-        Return the transformation matrices for each leg shoulder relative to body center and orientation.
+        Return the transformation matrices for each leg shoulder relative to body given body center and orientation.
         
         :param omega: Roll angle (rotation around x-axis)
         :param phi: Pitch angle (rotation around y-axis)
