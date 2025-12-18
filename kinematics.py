@@ -2,18 +2,14 @@ import numpy as np
 from math import *
 import math
 
+#--- Useful constants ---
 sHp=np.sin(pi/2)
 cHp=np.cos(pi/2)
 pi = math.pi
-LENGTH = 125 # Length of Robot's base in mm
-WIDTH = 108  # Width of Robot's base in mm
-
-# Inverse Kinematics Constants
-sHp = np.sin(pi/2)
-cHp = np.cos(pi/2)
 
 # Initial Foot Positions (Lp)
 # [Front Left, Front Right, Back Left, Back Right]
+# X(FORWARD), Y(UP), Z(LEFT), IDENTITY
 Lp = np.array([
     [100, -100, 100, 1],
     [100, -100, -100, 1],
@@ -25,30 +21,34 @@ Lp = np.array([
 Lo = np.array([0, 0, 0, 1])
 
 
+#--- Robot Dimensions ---
+LENGTH = 125 # Length of Robot's base in mm
+WIDTH = 108  # Width of Robot's base in mm
+
 # Lengths of leg segments
 L1 = 50    # Horizontal offset from hip to knee in mm
-Z_OFFSET = 0  # Height difference from hip joint to base in mm
 L2 = 20    # Vertical offset from hip to knee in mm
 L3 = 80   # Upper Leg Length in mm
 L4 = 130   # Lower Leg Length in mm
 
-# 1 - Left front ankle 125 -1
-# 2 - Left front knee 95 -1
-# 3 - Left front shoulder 100 -1
 
-# 13 - Left back ankle 130 -1
-# 14 - Left back knee 95 -1
-# 15 - Left back shoulder 95 -1
+#--- Real world parameters and connectivity ---
+# pca pin - joint name - zero angle - direction of rotation
+# 1 - Left front ankle - 125 - -1
+# 2 - Left front knee - 95 - -1
+# 3 - Left front shoulder - 100 -1
 
-# 4 - Right front ankle 70 1
-# 5 - Right front knee 92 1
-# 6 - Right front shoulder 85 -1
+# 13 - Left back ankle - 130 - -1
+# 14 - Left back knee - 95 - -1
+# 15 - Left back shoulder - 95 - -1
 
-#  8 - Right back ankle 70 1
-#  9 - Right back knee 92 1
-# 10 - Right back shoulder 70 -1
+# 4 - Right front ankle - 70 - 1
+# 5 - Right front knee - 92 - 1
+# 6 - Right front shoulder - 85 - -1
 
-
+#  8 - Right back ankle-  70 - 1
+#  9 - Right back knee - 92 - 1
+# 10 - Right back shoulder - 70 - -1
 
 DIRECTIONS = np.array([[1, 1, -1],    # Right Front
                        [-1, -1, -1],  # Left Front
@@ -59,13 +59,6 @@ ZEROES = np.array([[70, 92, 85],    # Right Front
                    [125, 95, 100],  # Left Front
                    [130, 95, 95],   # Left Back
                    [70, 92, 70]])   # Right Back
-
-HIP_OFFSETS = {
-            'FL': (LENGTH / 2, WIDTH / 2, Z_OFFSET),  # Front Left (+X, +Y, -Z)
-            'FR': (LENGTH / 2, -WIDTH / 2, Z_OFFSET), # Front Right (+X, -Y, -Z)
-            'RL': (-LENGTH / 2, WIDTH / 2, Z_OFFSET), # Rear Left (-X, +Y, -Z)
-            'RR': (-LENGTH / 2, -WIDTH / 2, Z_OFFSET),# Rear Right (-X, -Y, -Z)
-        }
 
 
 def Rx(theta):
@@ -131,7 +124,7 @@ class Kinematics:
         '''
         T = np.eye(4)
         # Rotation to adjust coordinate system
-        T_ = Ry(-pi/2) @ Rz(pi/2)
+        T_ = Ry(-pi/2) @ Rz(-pi/2)
         
         kinematic_chain = []
         for a, alpha, d, theta in dh_params:
