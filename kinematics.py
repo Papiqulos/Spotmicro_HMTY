@@ -113,7 +113,7 @@ class Kinematics:
         ]
 
     # NEEDS FIXING
-    def legFK(self, dh_params: list|np.ndarray):
+    def legFK(self, dh_params):
         '''
         Forward kinematics using Denavit-Hartenberg parameters for one leg.
         Starting from the hip joint to the end effector (foot).
