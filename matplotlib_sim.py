@@ -184,9 +184,9 @@ if __name__ == "__main__":
     # angles = (Roll, Pitch, Yaw)
     # center = (x, y, z)
     current_angles = [0, 0, 0]
-    current_center = [0, 0, 0]
+    current_center = [0, 250, 0]
 
     # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta)
-    viz.draw_robot_pose(orientation=current_angles, center=current_center, eof_positions=eof_positions, mode='IK')
+    viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
 
     plt.show()

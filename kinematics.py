@@ -232,7 +232,7 @@ if __name__ == "__main__":
     print("Kinematics module loaded.")
     kinematics = Kinematics(L1, L2, L3)
 
-    target_pos = [100,-200,100]
+    target_pos = [-50,-201.86, 25]
     
     theta1, theta2, theta3 = kinematics.legIK(target_pos)
     print(f"Inverse Kinematics for target position {target_pos}:\nTheta1: {math.degrees(theta1):.2f}°, Theta2: {math.degrees(theta2):.2f}°, Theta3: {math.degrees(theta3):.2f}°")
