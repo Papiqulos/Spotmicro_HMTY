@@ -20,7 +20,7 @@ WIDTH = 110  # Width of Robot's base in mm
 # Lengths of leg segments
 L1 = 52    # Horizontal offset from hip to knee in mm
 L2 = 0    # Vertical offset from hip to knee in mm
-L3 = 120   # Upper Leg Length in mm
+L3 = 120.416  # Upper Leg Length in mm
 L4 = 115   # Lower Leg Length in mm
 
 
@@ -176,8 +176,8 @@ class Kinematics:
         (x, y, z) = (point[0], point[1], point[2])
         
         # Check if target is reachable (simple validity check)
-        # if x**2 + y**2 - self.l1**2 < 0:
-        #     return (0, 0, 0) # Error safety
+        if x**2 + y**2 - self.l1**2 < 0:
+            return (0, 0, 0) # Error safety
 
         F = sqrt(x**2 + y**2 - self.l1**2)
         G = F - self.l2  
@@ -195,7 +195,7 @@ class Kinematics:
 
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
 
-        return (theta1, theta2, theta3)
+        return [theta1, theta2, theta3]
     
 
 

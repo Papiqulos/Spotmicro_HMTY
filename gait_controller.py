@@ -28,7 +28,7 @@ class GaitController:
 
         control_points = [start_pos, middle_pos, end_pos]
         bezier_gen = bezier.BezierCurveGen(control_points)
-        curve = bezier_gen.generate_curve(num_points=1000)
+        curve = bezier_gen.generate_curve(num_points=100)
 
         # Get the angles of the trajectory points
         kinematics_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
@@ -38,6 +38,7 @@ class GaitController:
         center = from_pybullet(center)
         # T_hip_base for each leg
         (T_fl, T_fr, T_bl, T_br) = kinematics_solver.bodyIK(*orientation, *center)
+        
         for point in curve:
             point = from_pybullet(point)
             point = to_homogenous(point)  # Homogeneous coordinates
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     _, curve_points, control_points = gait.swing_trajectory(
                     start_pos=point_x,
                     end_pos=point_y,
-                    swing_height=0.5,
+                    swing_height=0.05,
                     center=center,
                     orientation=orientation,
                     phase=0
