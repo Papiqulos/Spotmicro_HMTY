@@ -1,35 +1,27 @@
 import numpy as np
 from math import *
 import math
+from utils import *
 
 #--- Useful constants ---
 sHp=np.sin(pi/2)
 cHp=np.cos(pi/2)
 pi = math.pi
 
-# Initial Foot Positions (Lp)
-# [Front Left, Front Right, Back Left, Back Right]
 # X(FORWARD), Y(UP), Z(LEFT), IDENTITY
-Lp = np.array([
-    [100, -100, 100, 1],
-    [100, -100, -100, 1],
-    [-100, -100, 100, 1],
-    [-100, -100, -100, 1]
-])
-
 # Legend Origin (Identity)
 Lo = np.array([0, 0, 0, 1])
 
 
 #--- Robot Dimensions ---
-LENGTH = 125 # Length of Robot's base in mm
-WIDTH = 108  # Width of Robot's base in mm
+LENGTH = 140 # Length of Robot's base in mm
+WIDTH = 110  # Width of Robot's base in mm
 
 # Lengths of leg segments
-L1 = 50    # Horizontal offset from hip to knee in mm
-L2 = 20    # Vertical offset from hip to knee in mm
-L3 = 80   # Upper Leg Length in mm
-L4 = 130   # Lower Leg Length in mm
+L1 = 52    # Horizontal offset from hip to knee in mm
+L2 = 0    # Vertical offset from hip to knee in mm
+L3 = 120   # Upper Leg Length in mm
+L4 = 115   # Lower Leg Length in mm
 
 
 #--- Real world parameters and connectivity ---
@@ -61,30 +53,15 @@ ZEROES = np.array([[70, 92, 85],    # Right Front
                    [70, 92, 70]])   # Right Back
 
 
-def Rx(theta):
-    return np.array([[1, 0, 0, 0],
-                     [0, math.cos(theta), -math.sin(theta), 0],
-                     [0, math.sin(theta), math.cos(theta), 0],
-                     [0, 0, 0, 1]])
 
-def Ry(theta):
-    return np.array([[math.cos(theta), 0, math.sin(theta), 0],
-                     [0, 1, 0, 0],
-                     [-math.sin(theta), 0, math.cos(theta), 0],
-                     [0, 0, 0, 1]])
-
-def Rz(theta):
-    return np.array([[math.cos(theta), -math.sin(theta), 0, 0],
-                     [math.sin(theta), math.cos(theta), 0, 0],
-                     [0, 0, 1, 0],
-                     [0, 0, 0, 1]])
 
 
 class Kinematics:
 
-    def __init__(self, l1=L1, l2=L2, l3=L3, l4=L4):
+    def __init__(self, length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4):
         
-        self.origin = np.array([0, 0, 0, 1])  # Homogeneous coordinates of origin
+        self.length = length  # Length of Robot's base in mm
+        self.width = width   # Width of Robot's base in mm
         self.l1 = l1  # Horizontal offset from hip to knee in mm
         self.l2 = l2  # Vertical offset from hip to knee in mm
         self.l3 = l3  # Upper Leg Length in mm
@@ -152,10 +129,10 @@ class Kinematics:
         theta23 = theta2 + theta3
 
         T0 = Lo
-        T1 = T0 + np.array([-L1 * cos(theta1), L1 * sin(theta1), 0, 0])
-        T2 = T1 + np.array([-L2 * sin(theta1), -L2 * cos(theta1), 0, 0])
-        T3 = T2 + np.array([-L3 * sin(theta1) * cos(theta2), -L3 * cos(theta1) * cos(theta2), L3 * sin(theta2), 0])
-        T4 = T3 + np.array([-L4 * sin(theta1) * cos(theta23), -L4 * cos(theta1) * cos(theta23), L4 * sin(theta23), 0])
+        T1 = T0 + np.array([-self.l1 * cos(theta1), self.l1 * sin(theta1), 0, 0])
+        T2 = T1 + np.array([-self.l2 * sin(theta1), -self.l2 * cos(theta1), 0, 0])
+        T3 = T2 + np.array([-self.l3 * sin(theta1) * cos(theta2), -self.l3 * cos(theta1) * cos(theta2), self.l3 * sin(theta2), 0])
+        T4 = T3 + np.array([-self.l4 * sin(theta1) * cos(theta23), -self.l4 * cos(theta1) * cos(theta23), self.l4 * sin(theta23), 0])
         return np.array([T0, T1, T2, T3, T4])
     
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
@@ -183,10 +160,10 @@ class Kinematics:
         T = np.array([[0,0,0,xm],[0,0,0,ym],[0,0,0,zm],[0,0,0,0]])
         Tm = T+Rxyz
 
-        return([Tm @ np.array([[cHp,0,sHp,LENGTH/2],[0,1,0,0],[-sHp,0,cHp,WIDTH/2],[0,0,0,1]]),
-            Tm @ np.array([[cHp,0,sHp,LENGTH/2],[0,1,0,0],[-sHp,0,cHp,-WIDTH/2],[0,0,0,1]]),
-            Tm @ np.array([[cHp,0,sHp,-LENGTH/2],[0,1,0,0],[-sHp,0,cHp,WIDTH/2],[0,0,0,1]]),
-            Tm @ np.array([[cHp,0,sHp,-LENGTH/2],[0,1,0,0],[-sHp,0,cHp,-WIDTH/2],[0,0,0,1]])
+        return([Tm @ np.array([[cHp,0,sHp,self.length/2],[0,1,0,0],[-sHp,0,cHp,self.width/2],[0,0,0,1]]),
+            Tm @ np.array([[cHp,0,sHp,self.length/2],[0,1,0,0],[-sHp,0,cHp,-self.width/2],[0,0,0,1]]),
+            Tm @ np.array([[cHp,0,sHp,-self.length/2],[0,1,0,0],[-sHp,0,cHp,self.width/2],[0,0,0,1]]),
+            Tm @ np.array([[cHp,0,sHp,-self.length/2],[0,1,0,0],[-sHp,0,cHp,-self.width/2],[0,0,0,1]])
             ])
 
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
@@ -199,8 +176,8 @@ class Kinematics:
         (x, y, z) = (point[0], point[1], point[2])
         
         # Check if target is reachable (simple validity check)
-        if x**2 + y**2 - self.l1**2 < 0:
-            return (0, 0, 0) # Error safety
+        # if x**2 + y**2 - self.l1**2 < 0:
+        #     return (0, 0, 0) # Error safety
 
         F = sqrt(x**2 + y**2 - self.l1**2)
         G = F - self.l2  
@@ -219,6 +196,84 @@ class Kinematics:
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
 
         return (theta1, theta2, theta3)
+    
+
+
+    def robot_IK(self, center, orientation, eof_positions):
+
+        # T_hip_base for each leg
+        T_hip_base = self.bodyIK(*orientation, *center)
+
+        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Inversion matrix for right legs
+
+        fl = eof_positions[0]
+        fr = eof_positions[1]
+        rl = eof_positions[2]
+        rr = eof_positions[3]
+
+        angles = []
+
+        # Front Left Leg
+        fl_angles = self.legIK(np.linalg.inv(T_hip_base[0]) @ to_homogenous(fl)) # Passing foot position relative to left shoulder
+        for angle in fl_angles:
+            angles.append(angle)
+
+        # Front Right Leg
+        fr_angles = self.legIK(Ix @ np.linalg.inv(T_hip_base[1]) @ to_homogenous(fr)) # Passing foot position relative to right shoulder
+        for angle in fr_angles:
+            angles.append(angle)
+            
+        # Back Left Leg
+        rl_angles = self.legIK(np.linalg.inv(T_hip_base[2]) @ to_homogenous(rl)) # Passing foot position relative to left shoulder
+        for angle in rl_angles:
+            angles.append(angle)
+
+        # Back Right Leg
+        rr_angles = self.legIK(Ix @ np.linalg.inv(T_hip_base[3]) @ to_homogenous(rr)) # Passing foot position relative to right shoulder
+        for angle in rr_angles:
+            angles.append(angle)
+
+        return angles # [ [FL angles], [FR angles], [RL angles], [RR angles] ]
+    
+
+    def robot_FK(self, center, orientation, joint_angles, unit='radians'):
+
+        # Convert angles from degrees to radians if necessary
+        if unit == 'degrees':
+            joint_angles = [math.radians(angle) for angle in joint_angles]
+
+        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Inversion matrix for right legs
+
+
+        fl_angles = joint_angles[0:3]
+        fr_angles = joint_angles[3:6]
+        rl_angles = joint_angles[6:9]
+        rr_angles = joint_angles[9:12]
+
+        # Kinematic chain for every joint relative to hip
+        fl_chain = self.legFK_hard_coded(fl_angles)
+        fr_chain = self.legFK_hard_coded(fr_angles)
+        rl_chain = self.legFK_hard_coded(rl_angles)
+        rr_chain = self.legFK_hard_coded(rr_angles)
+
+        # T_hip_base for each leg
+        fl_hip_base, fr_hip_base, rl_hip_base, rr_hip_base = self.bodyIK(*orientation, *center)
+
+
+        # Kinematic chain for every joint relative to base
+        fl_chain_ = [fl_hip_base @ x for x in fl_chain]
+        fr_chain_ = [fr_hip_base @ Ix @ x for x in fr_chain]
+        rl_chain_ = [rl_hip_base @ x for x in rl_chain]
+        rr_chain_ = [rr_hip_base @ Ix @ x for x in rr_chain]
+
+        eof_positions = [fl_chain_[-1], fr_chain_[-1], rl_chain_[-1], rr_chain_[-1]]
+
+
+        return eof_positions
+
+        
+
+
 
     def differential_kinematics(self, joint_angles, joint_velocities):
         # Placeholder for differential kinematics implementation
@@ -230,17 +285,43 @@ class Kinematics:
 if __name__ == "__main__":
 
     print("Kinematics module loaded.")
-    kinematics = Kinematics(L1, L2, L3)
+    kinematics = Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
 
-    target_pos = [-50,-201.86, 25]
+    theta = [0, -30, 60, # FL
+             0, -30, 60, # FR
+             0, -30, 60, # RL
+             0, -30, 60 ] # RR
+    eof_positions = np.array([
+        [ 95, 48.13,  105, 1], # FL
+        [ 95, 48.13,  -105, 1], # FR
+        [-45, 48.13, 105, 1], # RL
+        [-45, 48.13, -105, 1] # RR
+        ])
     
-    theta1, theta2, theta3 = kinematics.legIK(target_pos)
-    print(f"Inverse Kinematics for target position {target_pos}:\nTheta1: {math.degrees(theta1):.2f}°, Theta2: {math.degrees(theta2):.2f}°, Theta3: {math.degrees(theta3):.2f}°")
 
-    # Verify with forward kinematics
-    kinematic_chain = kinematics.legFK_hard_coded([theta1, theta2, theta3])
-    print(f"Verifying with Forward Kinematics x={kinematic_chain[-1][0]:.2f}, y={kinematic_chain[-1][1]:.2f}, z={kinematic_chain[-1][2]:.2f}")
     
-    
+    orientation = [0, 0, 0]  # Roll, Pitch, Yaw in radians
+    center = [0, 250, 0]  # X, Y, Z in mm
 
-    
+
+    leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
+
+    print(f"Front Left leg:x={leg_points[0][0]:.2f}, y={leg_points[0][1]:.2f}, z={leg_points[0][2]:.2f}")
+    print(f"Front Right leg:x={leg_points[1][0]:.2f}, y={leg_points[1][1]:.2f}, z={leg_points[1][2]:.2f}")
+    print(f"Back Left leg:x={leg_points[2][0]:.2f}, y={leg_points[2][1]:.2f}, z={leg_points[2][2]:.2f}")
+    print(f"Back Right leg:x={leg_points[3][0]:.2f}, y={leg_points[3][1]:.2f}, z={leg_points[3][2]:.2f}")
+
+    # Verify IK
+    eof_positions = np.array([
+        leg_points[0],
+        leg_points[1],
+        leg_points[2],
+        leg_points[3]
+    ])
+    angles = kinematics.robot_IK(center, orientation, eof_positions)
+    # Convert radians to degrees for better readability
+    angles_deg = [math.degrees(angle) for angle in angles]
+    print(f"Front Left Leg Angles (rad): theta1={(angles_deg[0]):.2f}, theta2={(angles_deg[1]):.2f}, theta3={(angles_deg[2]):.2f}")
+    print(f"Front Right Leg Angles (rad): theta1={(angles_deg[3]):.2f}, theta2={(angles_deg[4]):.2f}, theta3={(angles_deg[5]):.2f}")
+    print(f"Back Left Leg Angles (rad): theta1={(angles_deg[6]):.2f}, theta2={(angles_deg[7]):.2f}, theta3={(angles_deg[8]):.2f}")
+    print(f"Back Right Leg Angles (rad): theta1={(angles_deg[9]):.2f}, theta2={(angles_deg[10]):.2f}, theta3={(angles_deg[11]):.2f}")

@@ -2,9 +2,19 @@ import numpy as np
 import bezier_curve_gen as bezier
 import kinematics
 import matplotlib.pyplot as plt
+from robot_mania_code import *
 from utils import *
 
+
+L1 = kinematics.L1
+L2 = kinematics.L2
+L3 = kinematics.L3
+L4 = kinematics.L4
+LENGTH = kinematics.LENGTH
+WIDTH = kinematics.WIDTH
+
 class GaitController:
+    
     def __init__(self, stance_time=0, swing_time=0, time_step=0, contact_phases=None, default_stance=None):
         self.stance_time = stance_time
         self.swing_time = swing_time
@@ -12,7 +22,7 @@ class GaitController:
         self.contact_phases = contact_phases
         self.default_stance = default_stance
 
-    def swing_trajectory(self, start_pos, end_pos, swing_height, phase):
+    def swing_trajectory(self, start_pos, end_pos, swing_height, center, orientation, phase):
         middle_pos = (start_pos + end_pos) / 2
         middle_pos[2] += swing_height  # Raise Z for swing height
 
@@ -21,12 +31,24 @@ class GaitController:
         curve = bezier_gen.generate_curve(num_points=1000)
 
         # Get the angles of the trajectory points
-        kinematics_solver = kinematics.Kinematics(kinematics.L1, kinematics.L2, kinematics.L3)
+        kinematics_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
         joint_angles = []
+
+        # Convert the center to Kinematics frame
+        center = from_pybullet(center)
+        # T_hip_base for each leg
+        (T_fl, T_fr, T_bl, T_br) = kinematics_solver.bodyIK(*orientation, *center)
         for point in curve:
             point = from_pybullet(point)
-            angles = kinematics_solver.legIK(point)
+            point = to_homogenous(point)  # Homogeneous coordinates
+
+            # The point is given in world frame, we need to convert it to be relative to the hip joint
+            point = np.linalg.inv(T_fl) @ point  # Example for front left leg
+            angles = kinematics_solver.legIK(point) 
             joint_angles.append(angles)
+
+
+       
 
         return joint_angles, curve, control_points
 
@@ -45,10 +67,14 @@ if __name__ == "__main__":
     gait = GaitController()
     point_x = np.array([95 /1000, 105 /1000, 48 /1000])
     point_y = np.array([170 /1000, 105 /1000, 48 /1000])
+    center = np.array([0,0,0.25])
+    orientation = [0,0,0]
     _, curve_points, control_points = gait.swing_trajectory(
                     start_pos=point_x,
                     end_pos=point_y,
-                    swing_height=0.1,
+                    swing_height=0.5,
+                    center=center,
+                    orientation=orientation,
                     phase=0
                 )
     

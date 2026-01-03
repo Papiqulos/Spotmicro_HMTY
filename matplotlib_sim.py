@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kinematics import Kinematics, L1, L2, L3, L4
+from kinematics import Kinematics, WIDTH, LENGTH, L1, L2, L3, L4
 from math import *
 
 
@@ -53,12 +53,15 @@ class RobotVisualizer:
     def draw_pose_FK(self, theta, orientation, center):
         
         theta = [radians(angle) for angle in theta]
+
+        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+
         fl_angles = theta[0:3]
         fr_angles = theta[3:6]
         bl_angles = theta[6:9]
         br_angles = theta[9:12]
 
-        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        
         
         # Kinematic chain for every joint relative to hip
         fl_chain = self.kin.legFK_hard_coded(fl_angles)
@@ -66,24 +69,6 @@ class RobotVisualizer:
         bl_chain = self.kin.legFK_hard_coded(bl_angles)
         br_chain = self.kin.legFK_hard_coded(br_angles)
 
-        
-        # Compute DH parameters for each leg
-        # fl_dh = self.kin.l_legs(*fl_angles)
-        # fr_dh = self.kin.r_legs(*fr_angles)
-        # bl_dh = self.kin.l_legs(*bl_angles)
-        # br_dh = self.kin.r_legs(*br_angles)
-
-        # _, chain_mfl = self.kin.legFK(fl_dh)
-        # _, chain_mfr = self.kin.legFK(fr_dh)
-        # _, chain_mbl = self.kin.legFK(bl_dh)
-        # _, chain_mbr = self.kin.legFK(br_dh)
-
-        # print(chain_mfl[0][:4,3])
-
-        # fl_chain = [M[:4, 3] for M in chain_mfl]
-        # fr_chain = [M[:4, 3] for M in chain_mfr]
-        # bl_chain = [M[:4, 3] for M in chain_mbl]
-        # br_chain = [M[:4, 3] for M in chain_mbr]
 
         # T_hip_base for each leg
         fl_hip_base, fr_hip_base, bl_hip_base, br_hip_base = self.kin.bodyIK(*orientation, *center)
@@ -121,7 +106,7 @@ class RobotVisualizer:
         self.ax.plot([p[-1][0]], [p[-1][2]], [p[-1][1]], 'ro', lw=2)    
     
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
-    def drawLegPair(self, Tl, Tr, Ll, Lr):
+    def drawLegPair(self, Tl, Tr, Ll, Lr, tag):
         """ Calculates and draws a pair of legs (Left and Right) 
         
         :param Tl: Transformation matrix for left leg shoulder relative to body
@@ -133,13 +118,13 @@ class RobotVisualizer:
         
         # Left Leg
         left_angles = self.kin.legIK(np.linalg.inv(Tl) @ Ll) # Passing foot position relative to left shoulder
-        print(f"Left Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
+        print(f"{tag} Left Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[2]):.2f}", )
         left_points = [Tl @ x for x in self.kin.legFK_hard_coded(left_angles)]
         self.drawLegPoints(left_points)
         
         # Right Leg
         right_angles = self.kin.legIK(Ix @ np.linalg.inv(Tr) @ Lr) # Passing foot position relative to right shoulder
-        print(f"Right Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[1]):.2f}", )
+        print(f"{tag} Right Leg Angles (rad): theta1={degrees(right_angles[0]):.2f}, theta2={degrees(right_angles[1]):.2f}, theta3={degrees(right_angles[2]):.2f}", )
         right_points = [Tr @ Ix @ x for x in self.kin.legFK_hard_coded(right_angles)]
         self.drawLegPoints(right_points)
 
@@ -152,8 +137,8 @@ class RobotVisualizer:
         self._draw_body({'FL': T_fl, 'FR': T_fr, 'RL': T_bl, 'RR': T_br})
 
         # Draw Legs 
-        self.drawLegPair(T_fl, T_fr, eof_positions[0], eof_positions[1]) # Front Legs
-        self.drawLegPair(T_bl, T_br, eof_positions[2], eof_positions[3]) # Back Legs
+        self.drawLegPair(T_fl, T_fr, eof_positions[0], eof_positions[1], "Front") # Front Legs
+        self.drawLegPair(T_bl, T_br, eof_positions[2], eof_positions[3], "Back") # Back Legs
 
     def draw_robot_pose(self, orientation = [0, 0, 0], center= [0, 0, 0], theta = [], eof_positions= [], mode='FK'):
         '''
@@ -168,7 +153,7 @@ class RobotVisualizer:
 
 
 if __name__ == "__main__":
-    kin_solver = Kinematics()
+    kin_solver = Kinematics(LENGTH, WIDTH, L1, L2, L3, L4 )
     viz = RobotVisualizer(kin_solver)
 
     theta = [0, -30, 60, # FL
@@ -176,17 +161,16 @@ if __name__ == "__main__":
              0, -30, 60, # RL
              0, -30, 60 ] # RR
     eof_positions = np.array([
-        [ 100, -200,  100, 1], # Front Left
-        [ 150, -200, -100, 1], # Front Right
-        [-100, -200,  100, 1], # Back Left
-        [-100, -200, -100, 1] # Back Right
+        [ 95, 48.13,  105, 1], # FL
+        [ 95, 48.13,  -105, 1], # FR
+        [-45, 48.13, 105, 1], # RL
+        [-45, 48.13, -105, 1] # RR
         ])
-    # angles = (Roll, Pitch, Yaw)
-    # center = (x, y, z)
+    # angles = (Roll, Pitch, Yaw) in radians
+    # center = (x, y, z) in mm
     current_angles = [0, 0, 0]
     current_center = [0, 250, 0]
 
     # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta)
     viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
-
     plt.show()
