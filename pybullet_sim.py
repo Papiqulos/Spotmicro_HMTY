@@ -52,7 +52,7 @@ class PybulletSim:
 
     def load_quadruped(self, urdf_path, center, orn):
         try:
-            robotId = p.loadURDF(urdf_path, center, orn)
+            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=True)
             print(f"Successfully loaded {urdf_path}!")
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
@@ -68,7 +68,7 @@ class PybulletSim:
             print(f"Error loading URDF: {e}")
             return
         
-    def prep_environment(self, plane_orientation, center_plane,cameraDistance=1, cameraYaw=-1.6, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
+    def prep_environment(self, plane_orientation, center_plane,cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
         physicsClient = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
@@ -77,15 +77,43 @@ class PybulletSim:
         orn= p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
         planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
 
-    def move_robot_to_pose(self, robotId, theta, joint_dic):
-    
+    def move_robot_to_pose(self, robotId, theta, joint_dic, unit='degrees'):
+        if unit == 'degrees':
+            theta = [math.radians(angle) for angle in theta]
         # Convert angles to radians and apply directions
-        theta = [math.radians(angle) * dir for angle, dir in zip(theta, self.theta_dirs)]
+        theta = [angle * dir for angle, dir in zip(theta, self.theta_dirs)]
         p.setJointMotorControlArray(robotId,
                                     jointIndices=list(joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=theta)
     
+    def execute_leg_trajectory(self, trajectory, leg="FL"):
+        """ Execute a trajectory for a single leg.
+        """
+        if leg == "FL":
+            jointIndices = [3, 4, 6]
+            dirs = self.theta_dirs[:3]
+        elif leg == "FR":
+            jointIndices = [8, 9, 11]
+            dirs = self.theta_dirs[3:6]
+        elif leg == "RL":
+            jointIndices = [13, 14, 16]
+            dirs = self.theta_dirs[6:9]
+        elif leg == "RR":
+            jointIndices = [18, 19, 21]
+            dirs = self.theta_dirs[9:12]
+        
+        for target_angle in trajectory:
+            # Apply theta dirs
+            target_angle = [angle * dir for angle, dir in zip(target_angle, dirs)]
+            p.setJointMotorControlArray(self.robotId,
+                            jointIndices=jointIndices,  # shoulder, leg, foot
+                            controlMode=p.POSITION_CONTROL,
+                            targetPositions=target_angle)
+            for _ in range(2): 
+                p.stepSimulation()
+                time.sleep(1./120.)
+
     def display_initial_pose(self, center, theta):
         
         # Initial Pose
@@ -95,39 +123,20 @@ class PybulletSim:
         while True:
             p.stepSimulation()
 
-            # x+30, y+20, z-20
-            pointp = [ 97.5, 26.48,  87]
-            pointp = to_pybullet(pointp)
-
             # X forward Y left Z up
-            point_x = np.array([1, 0, 0])
-            point_y = np.array([0, 1, 0])
-            point_z = np.array([0, 0, 1])
-
+            # x+30, y+20, z-20
             #### 15 x z
             eof_positions = self.kin_solver.robot_FK(center_kin, [0, 0, 0], theta, unit='degrees')
-            
             eof_positions_pb = np.array([to_pybullet(pos[:3]) for pos in eof_positions])
-            
+
+            # for point in eof_positions_pb:
+            #     self.debug_point(point)
 
             fl_eof = eof_positions_pb[0]
-            fl_eof_end = [fl_eof[0]+0.1, fl_eof[1], fl_eof[2]]
+            fr_eof = eof_positions_pb[1]
+            rl_eof = eof_positions_pb[2]
+            rr_eof = eof_positions_pb[3]
 
-            visual_idx = p.createVisualShape(p.GEOM_SPHERE, radius=0.01, rgbaColor=[1, 0, 0, 1])
-            
-            p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=fl_eof)
-            p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=fl_eof_end)
-            # p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=fr_eof)
-            # p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=rl_eof)
-            # p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=rr_eof)
-
-            # visual_idy = p.createVisualShape(p.GEOM_SPHERE, radius=0.05, rgbaColor=[0, 1, 0, 1])
-            # p.createMultiBody(baseVisualShapeIndex=visual_idy, basePosition=point_y)
-
-            # visual_idz = p.createVisualShape(p.GEOM_SPHERE, radius=0.05, rgbaColor=[0, 0, 1, 1])
-            # p.createMultiBody(baseVisualShapeIndex=visual_idz, basePosition=point_z)
-        
-            # Testing only front left leg
             
             mouse_event = p.getMouseEvents()
             try:
@@ -138,32 +147,53 @@ class PybulletSim:
                 button_state = None
             # Mouse left button released
             if event_type == 2 and button_state == 4:  
-                
-                print("Start Pos:", fl_eof)
-                print("End Pos:", fl_eof_end)
+                leg = "FR"
 
-                target_angles, curve_points, control_points = self.gait_solver.swing_trajectory(
-                    start_pos=fl_eof,  
-                    end_pos=fl_eof_end,  
+                if leg == "FL":
+                    start_pos = fl_eof
+                elif leg == "FR":
+                    start_pos = fr_eof
+                elif leg == "RL":
+                    start_pos = rl_eof
+                elif leg == "RR":
+                    start_pos = rr_eof
+                
+                # Swing
+                swing_angles, _, _ = self.gait_solver.swing_trajectory(
+                    start_pos=start_pos,    
                     swing_height=0.1,            
                     center=center,
-                    orientation=[0, 0, 0]
+                    orientation=[0, 0, 0],
+                    leg=leg,
+                    disp_length=0.08,
+                    disp_orientation="+x"
                 )
-                for target_angle in target_angles:
 
-                    p.setJointMotorControlArray(self.robotId,
-                                    jointIndices=[3, 4, 6],  # Front Left shoulder, leg, foot
-                                    controlMode=p.POSITION_CONTROL,
-                                    targetPositions=target_angle)
-                    for _ in range(3): 
-                        p.stepSimulation()
-                        time.sleep(1./240.)
+                # Stance
+                stance_angles, _, _ = self.gait_solver.stance_trajectory(
+                    start_pos=start_pos,
+                    center=center,
+                    orientation=[0, 0, 0],
+                    leg=leg,
+                    disp_length=0.08,
+                    disp_orientation="-y"
+                )
+                
+                # self.execute_trajectory(swing_angles, leg=leg)
+                self.execute_leg_trajectory(stance_angles, leg=leg)
+                
+
+                
             time.sleep(1./240.) # PyBullet default time step
+
+    def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
+        visual_idx = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=colour)
+        p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=point)
 
 if __name__ == "__main__":
     # X forward Y up Z left
 
-    center = [0, 0, 0.24]    
+    center = [0, 0, 0.3]    
     center_plane = [0, 0, 0] 
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 

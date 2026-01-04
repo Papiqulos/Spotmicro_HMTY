@@ -42,7 +42,7 @@ if __name__ == "__main__":
     end = np.array([1, 1, 0])
     middle1 = start + end / 2 + np.array([0, 0, 1])  # Elevated middle point
     middle2 = end + start / 2 + np.array([0, 1, 1])  # Elevated middle point
-    control_points = [start, middle1, middle2, end]
+    control_points = [start, end]
 
     # Create Bezier curve generator
     bezier_gen = BezierCurveGen(control_points)

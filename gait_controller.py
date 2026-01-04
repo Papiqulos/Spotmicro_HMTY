@@ -21,50 +21,91 @@ class GaitController:
         self.time_step = time_step
         self.contact_phases = contact_phases
         self.default_stance = default_stance
+        self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
-    def swing_trajectory(self, start_pos, end_pos, swing_height, center, orientation):
-
-        """Generates a swing trajectory for a single leg using a cubic Bezier curve moving 
-        from start_pos to end_pos in the +X direction 
-        with a specified swing_height in the +Z direction.
-        """
-        middle_pos = (start_pos + end_pos) / 2
-        middle_pos[2] += swing_height  # Raise Z for swing height
-
-        control_points = [start_pos, middle_pos, end_pos]
+    def generate_trajectory(self, control_points, num_points=100, leg="FL", center=None, orientation=[0, 0, 0]):
+        
         bezier_gen = bezier.BezierCurveGen(control_points)
         curve = bezier_gen.generate_curve(num_points=100)
 
         # Get the angles of the trajectory points
-        kinematics_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
         joint_angles = []
 
         # Convert the center to Kinematics frame
         center = from_pybullet(center)
         # T_shoulder_base for each leg
-        (T_fl, T_fr, T_rl, T_rr) = kinematics_solver.bodyIK(*orientation, *center)
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*orientation, *center)
+
+        # Placeholder for Inversion Matrix for right legs
+        Ix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+
+        if leg == "FL":
+            T_shoulder_base = T_fl
+        elif leg == "FR":
+            T_shoulder_base = T_fr
+            Ix = self.kin_solver.Ix
+        elif leg == "RL":
+            T_shoulder_base = T_rl
+        elif leg == "RR":
+            T_shoulder_base = T_rr
+            Ix = self.kin_solver.Ix
+            
         
         for point in curve:
             point = from_pybullet(point)
             point = to_homogenous(point)  # Homogeneous coordinates
 
             # The point is given in world frame, we need to convert it to be relative to the shoulder joint
-            point = np.linalg.inv(T_fl) @ point  # Example for front left leg
-            angles = kinematics_solver.legIK(point) 
+            point = Ix @ np.linalg.inv(T_shoulder_base) @ point  
+            angles = self.kin_solver.legIK(point) 
             joint_angles.append(angles)
-
-
-       
 
         return joint_angles, curve, control_points
 
-    def stance_trajectory(self, start_pos, end_pos, phase):
-        pass
+
+    def swing_trajectory(self, start_pos, swing_height, center, orientation, leg="FL", disp_length=0.1, disp_orientation="+x"):
+
+        """Generates a swing trajectory for a single leg using a cubic Bezier curve moving 
+        disp_length meters in the specified direction 
+        with a specified swing_height in the +Z direction.
+        """
+        if disp_orientation == "+x":
+            end_pos = np.array([start_pos[0] + disp_length, start_pos[1], start_pos[2]])
+        elif disp_orientation == "-x":
+            end_pos = np.array([start_pos[0] - disp_length, start_pos[1], start_pos[2]])
+        elif disp_orientation == "+y":
+            end_pos = np.array([start_pos[0], start_pos[1] + disp_length, start_pos[2]])
+        elif disp_orientation == "-y":
+            end_pos = np.array([start_pos[0], start_pos[1] - disp_length, start_pos[2]])
+
+        middle_pos = (start_pos + end_pos) / 2
+        middle_pos[2] += swing_height  # Raise Z for swing height
+
+        control_points = [start_pos, middle_pos, end_pos]
+
+        joint_angles, curve_points, control_points = self.generate_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
+
+        return joint_angles, curve_points, control_points
 
 
+    def stance_trajectory(self, start_pos, center, orientation, leg="FL", disp_length=0.1, disp_orientation="-x"):
+        """
+        Generates a stance trajectory for a single leg moving disp_length meters in the specified direction.
+        """
+        if disp_orientation == "+x":
+            end_pos = np.array([start_pos[0] + disp_length, start_pos[1], start_pos[2]])
+        elif disp_orientation == "-x":
+            end_pos = np.array([start_pos[0] - disp_length, start_pos[1], start_pos[2]])
+        elif disp_orientation == "+y":
+            end_pos = np.array([start_pos[0], start_pos[1] + disp_length, start_pos[2]])
+        elif disp_orientation == "-y":
+            end_pos = np.array([start_pos[0], start_pos[1] - disp_length, start_pos[2]])
 
+        control_points = [start_pos, end_pos]
 
+        joint_angles, curve_points, control_points = self.generate_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
 
+        return joint_angles, curve_points, control_points
 
 
 
@@ -76,7 +117,6 @@ if __name__ == "__main__":
     orientation = [0,0,0]
     _, curve_points, control_points = gait.swing_trajectory(
                     start_pos=point_x,
-                    end_pos=point_y,
                     swing_height=0.05,
                     center=center,
                     orientation=orientation

@@ -66,6 +66,9 @@ class Kinematics:
         self.l2 = l2  # Vertical offset from shoulder to leg in mm
         self.l3 = l3  # Upper Leg Length in mm
         self.l4 = l4  # Lower Leg Length in mm
+        
+        # Inversion matrix for right legs
+        self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     
     # NOT USED
     def r_legs(self, theta1=0, theta2=0, theta3=0):
@@ -204,8 +207,6 @@ class Kinematics:
         # T_shoulder_base for each leg
         T_shoulder_base = self.bodyIK(*orientation, *center)
 
-        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Inversion matrix for right legs
-
         fl = eof_positions[0]
         fr = eof_positions[1]
         rl = eof_positions[2]
@@ -219,7 +220,7 @@ class Kinematics:
             angles.append(angle)
 
         # Front Right Leg
-        fr_angles = self.legIK(Ix @ np.linalg.inv(T_shoulder_base[1]) @ to_homogenous(fr)) # Passing foot position relative to right shoulder
+        fr_angles = self.legIK(self.Ix @ np.linalg.inv(T_shoulder_base[1]) @ to_homogenous(fr)) # Passing foot position relative to right shoulder
         for angle in fr_angles:
             angles.append(angle)
             
@@ -229,7 +230,7 @@ class Kinematics:
             angles.append(angle)
 
         # Rear Right Leg
-        rr_angles = self.legIK(Ix @ np.linalg.inv(T_shoulder_base[3]) @ to_homogenous(rr)) # Passing foot position relative to right shoulder
+        rr_angles = self.legIK(self.Ix @ np.linalg.inv(T_shoulder_base[3]) @ to_homogenous(rr)) # Passing foot position relative to right shoulder
         for angle in rr_angles:
             angles.append(angle)
 
@@ -240,8 +241,6 @@ class Kinematics:
         # Convert angles from degrees to radians if necessary
         if unit == 'degrees':
             joint_angles = [math.radians(angle) for angle in joint_angles]
-
-        Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Inversion matrix for right legs
 
 
         fl_angles = joint_angles[0:3]
@@ -261,18 +260,15 @@ class Kinematics:
 
         # Kinematic chain for every joint relative to base
         fl_chain_ = [fl_shoulder_base @ x for x in fl_chain]
-        fr_chain_ = [fr_shoulder_base @ Ix @ x for x in fr_chain]
+        fr_chain_ = [fr_shoulder_base @ self.Ix @ x for x in fr_chain]
         rl_chain_ = [rl_shoulder_base @ x for x in rl_chain]
-        rr_chain_ = [rr_shoulder_base @ Ix @ x for x in rr_chain]
+        rr_chain_ = [rr_shoulder_base @ self.Ix @ x for x in rr_chain]
 
         eof_positions = [fl_chain_[-1], fr_chain_[-1], rl_chain_[-1], rr_chain_[-1]]
 
 
         return eof_positions
 
-    def differential_kinematics(self, joint_angles, joint_velocities):
-        # Placeholder for differential kinematics implementation
-        pass
 
 
 
