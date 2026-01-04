@@ -41,14 +41,14 @@ class GaitController:
 
         # Convert the center to Kinematics frame
         center = from_pybullet(center)
-        # T_hip_base for each leg
-        (T_fl, T_fr, T_bl, T_br) = kinematics_solver.bodyIK(*orientation, *center)
+        # T_shoulder_base for each leg
+        (T_fl, T_fr, T_rl, T_rr) = kinematics_solver.bodyIK(*orientation, *center)
         
         for point in curve:
             point = from_pybullet(point)
             point = to_homogenous(point)  # Homogeneous coordinates
 
-            # The point is given in world frame, we need to convert it to be relative to the hip joint
+            # The point is given in world frame, we need to convert it to be relative to the shoulder joint
             point = np.linalg.inv(T_fl) @ point  # Example for front left leg
             angles = kinematics_solver.legIK(point) 
             joint_angles.append(angles)
@@ -79,8 +79,7 @@ if __name__ == "__main__":
                     end_pos=point_y,
                     swing_height=0.05,
                     center=center,
-                    orientation=orientation,
-                    phase=0
+                    orientation=orientation
                 )
     
 

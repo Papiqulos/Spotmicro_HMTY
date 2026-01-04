@@ -99,6 +99,7 @@ class PybulletSim:
             pointp = [ 97.5, 26.48,  87]
             pointp = to_pybullet(pointp)
 
+            # X forward Y left Z up
             point_x = np.array([1, 0, 0])
             point_y = np.array([0, 1, 0])
             point_z = np.array([0, 0, 1])
@@ -111,13 +112,6 @@ class PybulletSim:
 
             fl_eof = eof_positions_pb[0]
             fl_eof_end = [fl_eof[0]+0.1, fl_eof[1], fl_eof[2]]
-            # print(f"Front Left EOF PyBullet:{fl_eof}")
-            # print(f"Front Left EOF Expected:{pointp}")
-            fr_eof = eof_positions_pb[1]
-            rl_eof = eof_positions_pb[2]
-            rr_eof = eof_positions_pb[3]
-
-            
 
             visual_idx = p.createVisualShape(p.GEOM_SPHERE, radius=0.01, rgbaColor=[1, 0, 0, 1])
             
@@ -151,14 +145,14 @@ class PybulletSim:
                 target_angles, curve_points, control_points = self.gait_solver.swing_trajectory(
                     start_pos=fl_eof,  
                     end_pos=fl_eof_end,  
-                    swing_height=0.07,            
+                    swing_height=0.1,            
                     center=center,
                     orientation=[0, 0, 0]
                 )
                 for target_angle in target_angles:
 
                     p.setJointMotorControlArray(self.robotId,
-                                    jointIndices=[3, 4, 6],  # Front Left ankle, knee, hip
+                                    jointIndices=[3, 4, 6],  # Front Left shoulder, leg, foot
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=target_angle)
                     for _ in range(3): 

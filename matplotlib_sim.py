@@ -40,9 +40,9 @@ class RobotVisualizer:
         self.ax.quiver(*origin, *y_axis, color='g', length=scale, normalize=True)
         self.ax.quiver(*origin, *z_axis, color='b', length=scale, normalize=True)
 
-    def _draw_body(self, hips):
+    def _draw_body(self, shoulders):
 
-        fl, fr, rr, rl = [hips[name] for name in ['FL', 'FR', 'RR', 'RL']]
+        fl, fr, rr, rl = [shoulders[name] for name in ['FL', 'FR', 'RR', 'RL']]
         
         # Extract positions
         pos = [T[:3, 3] for T in [fl, fr, rr, rl, fl]]
@@ -58,40 +58,40 @@ class RobotVisualizer:
 
         fl_angles = theta[0:3]
         fr_angles = theta[3:6]
-        bl_angles = theta[6:9]
-        br_angles = theta[9:12]
+        rl_angles = theta[6:9]
+        rr_angles = theta[9:12]
 
         
         
-        # Kinematic chain for every joint relative to hip
+        # Kinematic chain for every joint relative to shoulder
         fl_chain = self.kin.legFK_hard_coded(fl_angles)
         fr_chain = self.kin.legFK_hard_coded(fr_angles)
-        bl_chain = self.kin.legFK_hard_coded(bl_angles)
-        br_chain = self.kin.legFK_hard_coded(br_angles)
+        rl_chain = self.kin.legFK_hard_coded(rl_angles)
+        rr_chain = self.kin.legFK_hard_coded(rr_angles)
 
 
-        # T_hip_base for each leg
-        fl_hip_base, fr_hip_base, bl_hip_base, br_hip_base = self.kin.bodyIK(*orientation, *center)
+        # T_shoulder_base for each leg
+        fl_shoulder_base, fr_shoulder_base, rl_shoulder_base, rr_shoulder_base = self.kin.bodyIK(*orientation, *center)
 
         # Kinematic chain for every joint relative to base
-        fl_chain_ = [fl_hip_base @ x for x in fl_chain]
-        fr_chain_ = [fr_hip_base @ Ix @ x for x in fr_chain]
-        bl_chain_ = [bl_hip_base @ x for x in bl_chain]
-        br_chain_ = [br_hip_base @ Ix @ x for x in br_chain]
+        fl_chain_ = [fl_shoulder_base @ x for x in fl_chain]
+        fr_chain_ = [fr_shoulder_base @ Ix @ x for x in fr_chain]
+        rl_chain_ = [rl_shoulder_base @ x for x in rl_chain]
+        rr_chain_ = [rr_shoulder_base @ Ix @ x for x in rr_chain]
 
         print(f"Front Left leg:x={fl_chain_[-1][0]:.2f}, y={fl_chain_[-1][1]:.2f}, z={fl_chain_[-1][2]:.2f}")
         print(f"Front Right leg:x={fr_chain_[-1][0]:.2f}, y={fr_chain_[-1][1]:.2f}, z={fr_chain_[-1][2]:.2f}")
-        print(f"Back Left leg:x={bl_chain_[-1][0]:.2f}, y={bl_chain_[-1][1]:.2f}, z={bl_chain_[-1][2]:.2f}")
-        print(f"Back Right leg:x={br_chain_[-1][0]:.2f}, y={br_chain_[-1][1]:.2f}, z={br_chain_[-1][2]:.2f}")
+        print(f"Rear Left leg:x={rl_chain_[-1][0]:.2f}, y={rl_chain_[-1][1]:.2f}, z={rl_chain_[-1][2]:.2f}")
+        print(f"Rear Right leg:x={rr_chain_[-1][0]:.2f}, y={rr_chain_[-1][1]:.2f}, z={rr_chain_[-1][2]:.2f}")
 
         # Draw Body Chassis (Blue box)
-        self._draw_body({'FL': fl_hip_base, 'FR': fr_hip_base, 'RL': bl_hip_base, 'RR': br_hip_base})
+        self._draw_body({'FL': fl_shoulder_base, 'FR': fr_shoulder_base, 'RL': rl_shoulder_base, 'RR': rr_shoulder_base})
 
         # Draw Legs
         self.drawLegPoints(fl_chain_)
         self.drawLegPoints(fr_chain_)
-        self.drawLegPoints(bl_chain_)
-        self.drawLegPoints(br_chain_)
+        self.drawLegPoints(rl_chain_)
+        self.drawLegPoints(rr_chain_)
 
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def drawLegPoints(self, p):
@@ -130,15 +130,15 @@ class RobotVisualizer:
 
     def draw_pose_IK(self, eof_positions, orientation, center):
 
-        # T_hip_base for each leg
-        (T_fl, T_fr, T_bl, T_br) = self.kin.bodyIK(*orientation, *center) 
+        # T_shoulder_base for each leg
+        (T_fl, T_fr, T_rl, T_rr) = self.kin.bodyIK(*orientation, *center) 
         
         # Draw Body Chassis (Blue box)
-        self._draw_body({'FL': T_fl, 'FR': T_fr, 'RL': T_bl, 'RR': T_br})
+        self._draw_body({'FL': T_fl, 'FR': T_fr, 'RL': T_rl, 'RR': T_rr})
 
         # Draw Legs 
         self.drawLegPair(T_fl, T_fr, eof_positions[0], eof_positions[1], "Front") # Front Legs
-        self.drawLegPair(T_bl, T_br, eof_positions[2], eof_positions[3], "Back") # Back Legs
+        self.drawLegPair(T_rl, T_rr, eof_positions[2], eof_positions[3], "Rear") # Rear Legs
 
     def draw_robot_pose(self, orientation = [0, 0, 0], center= [0, 0, 0], theta = [], eof_positions= [], mode='FK'):
         '''
