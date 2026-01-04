@@ -121,7 +121,7 @@ class Kinematics:
         Hard coded Forward kinematics for one leg.
         Everything relative to hip joint
 
-        :dh_params: List of DH parameters [a, alpha, d, theta] for each joint.
+        :angles: Tuple of joint angles (theta1, theta2, theta3)
 
         Returns the kinematic chain of the homogenous vectors 
         '''

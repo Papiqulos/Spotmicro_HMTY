@@ -22,7 +22,12 @@ class GaitController:
         self.contact_phases = contact_phases
         self.default_stance = default_stance
 
-    def swing_trajectory(self, start_pos, end_pos, swing_height, center, orientation, phase):
+    def swing_trajectory(self, start_pos, end_pos, swing_height, center, orientation):
+
+        """Generates a swing trajectory for a single leg using a cubic Bezier curve moving 
+        from start_pos to end_pos in the +X direction 
+        with a specified swing_height in the +Z direction.
+        """
         middle_pos = (start_pos + end_pos) / 2
         middle_pos[2] += swing_height  # Raise Z for swing height
 
@@ -52,7 +57,6 @@ class GaitController:
        
 
         return joint_angles, curve, control_points
-
 
     def stance_trajectory(self, start_pos, end_pos, phase):
         pass
