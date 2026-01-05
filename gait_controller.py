@@ -23,7 +23,7 @@ class GaitController:
         self.default_stance = default_stance
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
-    def generate_trajectory(self, control_points, num_points=100, leg="FL", center=None, orientation=[0, 0, 0]):
+    def generate_bezier_trajectory(self, control_points, num_points=100, leg="FL", center=None, orientation=[0, 0, 0]):
         
         bezier_gen = bezier.BezierCurveGen(control_points)
         curve = bezier_gen.generate_curve(num_points=100)
@@ -62,7 +62,6 @@ class GaitController:
 
         return joint_angles, curve, control_points
 
-
     def swing_trajectory(self, start_pos, swing_height, center, orientation, leg="FL", disp_length=0.1, disp_orientation="+x"):
 
         """Generates a swing trajectory for a single leg using a cubic Bezier curve moving 
@@ -78,16 +77,17 @@ class GaitController:
         elif disp_orientation == "-y":
             end_pos = np.array([start_pos[0], start_pos[1] - disp_length, start_pos[2]])
 
-        middle_pos = (start_pos + end_pos) / 2
-        middle_pos[2] += swing_height  # Raise Z for swing height
 
-        control_points = [start_pos, middle_pos, end_pos]
 
-        joint_angles, curve_points, control_points = self.generate_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
+        middle_pos1 = np.array([start_pos[0], start_pos[1], start_pos[2] + swing_height]) # Directly above start position
+        middle_pos2 = np.array([end_pos[0], end_pos[1], end_pos[2] + swing_height]) # Directly above end position
+
+        control_points = [start_pos, middle_pos1, middle_pos2, end_pos]
+
+        joint_angles, curve_points, control_points = self.generate_bezier_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
 
         return joint_angles, curve_points, control_points
-
-
+    
     def stance_trajectory(self, start_pos, center, orientation, leg="FL", disp_length=0.1, disp_orientation="-x"):
         """
         Generates a stance trajectory for a single leg moving disp_length meters in the specified direction.
@@ -103,7 +103,7 @@ class GaitController:
 
         control_points = [start_pos, end_pos]
 
-        joint_angles, curve_points, control_points = self.generate_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
+        joint_angles, curve_points, control_points = self.generate_bezier_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
 
         return joint_angles, curve_points, control_points
 

@@ -176,10 +176,10 @@ class PybulletSim:
                     orientation=[0, 0, 0],
                     leg=leg,
                     disp_length=0.08,
-                    disp_orientation="-y"
+                    disp_orientation="-x"
                 )
                 
-                # self.execute_trajectory(swing_angles, leg=leg)
+                # self.execute_leg_trajectory(swing_angles, leg=leg)
                 self.execute_leg_trajectory(stance_angles, leg=leg)
                 
 
