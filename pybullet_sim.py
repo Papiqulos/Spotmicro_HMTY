@@ -250,7 +250,7 @@ class PybulletSim:
                     swing_height=0.1,            
                     leg=leg,
                     stride_len=0.08,
-                    stride_orn="+x"
+                    stride_orn="+y"
                 )
 
                 # Stance

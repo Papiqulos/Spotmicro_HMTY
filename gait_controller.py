@@ -77,6 +77,7 @@ class GaitController:
         :param stride_len: stride length in meters
         :param stride_orn: stride orientation in pybullet frame
         """
+        
         if stride_orn == "+x":
             end_pos = np.array([start_pos[0] + stride_len, start_pos[1], start_pos[2]])
         elif stride_orn == "-x":

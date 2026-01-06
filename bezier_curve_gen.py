@@ -6,6 +6,10 @@ import math
 
 class BezierCurveGen:
 
+    """
+    General Bezier Curve Generator using Bernstein polynomials
+    """
+
     def __init__(self, control_points):
         self.control_points = np.array(control_points)
 
@@ -18,10 +22,10 @@ class BezierCurveGen:
     def cubic_interpolate(self, p0, p1, p2, p3, t):
         return (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
     
-    def twelve_point_curve(self, points, t):
+    def n_point_curve(self, points, t, n=12):
         interpolation = 0
         for i, point in enumerate(points):
-            interpolation += math.comb(11, i) * point * (1 - t)**( (11 - i) )* t**i
+            interpolation += math.comb(n-1, i) * point * (1 - t)**( (n-1 - i) )* t**i
         return interpolation
     
     def generate_curve(self, num_points=100):
@@ -29,14 +33,7 @@ class BezierCurveGen:
         curve = []
         for i in range(num_points + 1):
             t = i / num_points
-            if n == 2:
-                point = self.linear_interpolate(self.control_points[0], self.control_points[1], t)
-            elif n == 3:
-                point = self.quadratic_interpolate(self.control_points[0], self.control_points[1], self.control_points[2], t)
-            elif n == 4:
-                point = self.cubic_interpolate(self.control_points[0], self.control_points[1], self.control_points[2], self.control_points[3], t)
-            else:
-                raise ValueError("Invalid number of control points")
+            point = self.n_point_curve(self.control_points, t, n)
             curve.append(point)
         return np.array(curve)
     
@@ -49,6 +46,22 @@ if __name__ == "__main__":
     end = np.array([1, 1, 0])
     middle1 = start + end / 2 + np.array([0, 0, 1])  # Elevated middle point
     middle2 = end + start / 2 + np.array([0, 1, 1])  # Elevated middle point
+
+    # control_points = [
+    # [-200.0, 500.0, 100.0],
+    # [-280.5, 500.0, 100.0],
+    # [-300.0, 361.1, 100.0],
+    # [-300.0, 361.1, 100.0],
+    # [-300.0, 361.1, 100.0],
+    # [0.0, 361.1, 100.0],
+    # [0.0, 361.1, 100.0],
+    # [0.0, 321.4, 100.0],
+    # [303.2, 321.4, 100.0],
+    # [303.2, 321.4, 100.0],
+    # [282.6, 500.0, 100.0],
+    # [200.0, 500.0, 100.0],
+    # [250.0, 550.0, 100.0],
+    # ]
 
 
     control_points = [start, middle1, middle2, end]
