@@ -202,15 +202,15 @@ class Kinematics:
 
         return [theta1, theta2, theta3]
     
-    def robot_IK(self, center, orientation, eof_positions):
-
+    def robot_IK(self, center, orientation, ef_positions):
+        """Returns radians"""
         # T_shoulder_base for each leg
         T_shoulder_base = self.bodyIK(*orientation, *center)
 
-        fl = eof_positions[0]
-        fr = eof_positions[1]
-        rl = eof_positions[2]
-        rr = eof_positions[3]
+        fl = ef_positions[0]
+        fr = ef_positions[1]
+        rl = ef_positions[2]
+        rr = ef_positions[3]
 
         angles = []
 
@@ -237,7 +237,7 @@ class Kinematics:
         return angles # [ [FL angles], [FR angles], [RL angles], [RR angles] ]
     
     def robot_FK(self, center, orientation, joint_angles, unit='radians'):
-
+        """Returns mm and X(forward) Y(up) Z(left) 1(identity)"""
         # Convert angles from degrees to radians if necessary
         if unit == 'degrees':
             joint_angles = [math.radians(angle) for angle in joint_angles]
@@ -264,10 +264,10 @@ class Kinematics:
         rl_chain_ = [rl_shoulder_base @ x for x in rl_chain]
         rr_chain_ = [rr_shoulder_base @ self.Ix @ x for x in rr_chain]
 
-        eof_positions = [fl_chain_[-1], fr_chain_[-1], rl_chain_[-1], rr_chain_[-1]]
+        ef_positions = [fl_chain_[-1], fr_chain_[-1], rl_chain_[-1], rr_chain_[-1]]
 
 
-        return eof_positions
+        return ef_positions
 
 
 
@@ -282,11 +282,18 @@ if __name__ == "__main__":
              0, -30, 60, # FR
              0, -30, 60, # RL
              0, -30, 60 ] # RR
-    eof_positions = np.array([
+    ef_positions = np.array([
         [ 95, 48.13,  105, 1], # FL
         [ 95, 48.13,  -105, 1], # FR
         [-45, 48.13, 105, 1], # RL
         [-45, 48.13, -105, 1] # RR
+        ])
+    
+    ef_positions2 = np.array([
+        [67.29, 46.12, 107, 1],
+        [67.29, 46.12, -107, 1],
+        [-72.21, 46.12, 107, 1],
+        [-72.21, 46.12, -107, 1]
         ])
     
 
@@ -296,20 +303,19 @@ if __name__ == "__main__":
 
 
     leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
-
     print(f"Front Left leg:x={leg_points[0][0]:.2f}, y={leg_points[0][1]:.2f}, z={leg_points[0][2]:.2f}")
     print(f"Front Right leg:x={leg_points[1][0]:.2f}, y={leg_points[1][1]:.2f}, z={leg_points[1][2]:.2f}")
     print(f"Rear Left leg:x={leg_points[2][0]:.2f}, y={leg_points[2][1]:.2f}, z={leg_points[2][2]:.2f}")
     print(f"Rear Right leg:x={leg_points[3][0]:.2f}, y={leg_points[3][1]:.2f}, z={leg_points[3][2]:.2f}")
 
     # Verify IK
-    eof_positions = np.array([
+    ef_positions = np.array([
         leg_points[0],
         leg_points[1],
         leg_points[2],
         leg_points[3]
     ])
-    angles = kinematics.robot_IK(center, orientation, eof_positions)
+    angles = kinematics.robot_IK(center, orientation, ef_positions)
     # Convert radians to degrees for better readability
     angles_deg = [math.degrees(angle) for angle in angles]
     print(f"Front Left Leg Angles (rad): theta1={(angles_deg[0]):.2f}, theta2={(angles_deg[1]):.2f}, theta3={(angles_deg[2]):.2f}")

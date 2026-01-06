@@ -32,10 +32,16 @@ def from_homogenous(vec):
     """ Converts homogeneous coordinates to a 3D vector """
     return vec[:3]
 
-def to_pybullet(vec):
+def to_pybullet_pos(vec):
     """ Converts Kinematics (Y-Up) to PyBullet (Z-Up) """
     return np.array([vec[0], vec[2], vec[1]]) / 1000.0  # Convert mm to meters
 
-def from_pybullet(vec):
+def from_pybullet_pos(vec):
     """ Converts PyBullet (Z-Up) to Kinematics (Y-Up) """
     return np.array([vec[0], vec[2], vec[1]]) * 1000.0  # Convert meters to mm
+
+def to_pybullet_orn(vec):
+    return np.array([vec[0], vec[1], vec[2]+pi])
+
+def from_pybullet_orn(vec):
+    return np.array([vec[0], vec[1], vec[2]-pi])

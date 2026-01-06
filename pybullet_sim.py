@@ -5,7 +5,8 @@ import math
 import numpy as np
 import gait_controller as gait
 import kinematics
-from utils import from_pybullet, to_pybullet
+from utils import from_pybullet_pos, to_pybullet_pos, from_pybullet_orn, to_pybullet_orn
+
 
 
 # CONSTANTS
@@ -13,7 +14,34 @@ PI = math.pi
 
 class PybulletSim:
     
-    def __init__(self, length, width, l1, l2, l3, l4, center, orientation, center_plane, initial_theta):
+    def __init__(self, 
+                 length, 
+                 width, 
+                 l1, 
+                 l2, 
+                 l3, 
+                 l4, 
+                 center, 
+                 orientation, 
+                 center_plane, 
+                 initial_theta, 
+                 initial_ef_positions, 
+                 angle_unit='degrees'):
+        """
+        
+        :param length: robot base length in mm
+        :param width: robot base width in mm
+        :param l1: 
+        :param l2: 
+        :param l3: 
+        :param l4: 
+        :param center: initial center for the robot to spawn (in pybullet frame)
+        :param orientation: initial orientation for the robot to spawn (in pybullet frame)
+        :param center_plane: in pybullet frame
+        :param initial_theta: initial angles for the robot to spawn
+        :param initial_ef_positions: in kinematics frame and homogenous coordinates
+        :param angle_unit: unit of initial_theta
+        """
         # --- CONFIGURATION ---
         self.urdf_path = "./urdf/spotmicroai_gen_ros.urdf"  
         self.theta_dirs = [-1, 1, 1,
@@ -39,20 +67,46 @@ class PybulletSim:
         self.l2 = l2
         self.l3 = l3
         self.l4 = l4
+        self.center = center
+        self.center_kin = from_pybullet_pos(center)
+        self.orientation = orientation
+        self.orientation_kin = from_pybullet_orn(orientation)
+        self.center_plane = center_plane
+        self.initial_theta = initial_theta
+        self.initial_ef_positions = initial_ef_positions
+        self.angle_unit = angle_unit
+
         # Kinematics and Gait Controllers
-        self.kin_solver = kinematics.Kinematics(self.length, self.width, self.l1, self.l2, self.l3, self.l4)
-        self.gait_solver = gait.GaitController()
+        self.kin_solver = kinematics.Kinematics(self.length, 
+                                                self.width, 
+                                                self.l1, 
+                                                self.l2, 
+                                                self.l3, 
+                                                self.l4)
+        self.gait_solver = gait.GaitController(initial_ef_positions=initial_ef_positions, 
+                                               initial_theta=initial_theta, 
+                                               initial_center=self.center_kin, 
+                                               initial_orientation=self.orientation_kin)
 
         # Pybullet Setup
+        # Prepare environment
         self.prep_environment(plane_orientation=[0, 0, 0], center_plane=center_plane)
+        # Load the quadruped
         self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
 
         # Display Initial Pose and Start Simulation
         self.display_initial_pose(center, initial_theta)
 
     def load_quadruped(self, urdf_path, center, orn):
+        """
+        Load the urdf with its meshes
+        
+        :param urdf_path: file path
+        :param center: in pybullet frame
+        :param orn: in pybullet frame
+        """
         try:
-            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=True)
+            robotId = p.loadURDF(urdf_path, center, orn, )
             print(f"Successfully loaded {urdf_path}!")
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
@@ -69,6 +123,16 @@ class PybulletSim:
             return
         
     def prep_environment(self, plane_orientation, center_plane,cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
+        """
+        Docstring for prep_environment
+        
+        :param plane_orientation: in pybullet frame
+        :param center_plane: in pybullet frame
+        :param cameraDistance: 
+        :param cameraYaw: 
+        :param cameraPitch: 
+        :param cameraTargetPosition: 
+        """
         physicsClient = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
@@ -78,6 +142,15 @@ class PybulletSim:
         planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
 
     def move_robot_to_pose(self, robotId, theta, joint_dic, unit='degrees'):
+        """
+        Move the robot to a given pose.
+        
+        :param robotId: 
+        :param theta: angles for all legs [[FL], [FR], [RL], [RR]]
+        :param joint_dic: dictionary mapping joint names to joint indices
+        :param unit: angle unit
+        """
+
         if unit == 'degrees':
             theta = [math.radians(angle) for angle in theta]
         # Convert angles to radians and apply directions
@@ -88,7 +161,12 @@ class PybulletSim:
                                     targetPositions=theta)
     
     def execute_leg_trajectory(self, trajectory, leg="FL"):
-        """ Execute a trajectory for a single leg.
+        """ 
+        Execute a trajectory for a single leg.
+
+        :param trajectory: trajectory of angles for the leg
+        :param leg: leg to execute the trajectory for
+
         """
         if leg == "FL":
             jointIndices = [3, 4, 6]
@@ -116,9 +194,17 @@ class PybulletSim:
 
     def display_initial_pose(self, center, theta):
         
+        """
+        Display the initial and run some gait tests
+        
+        :param center: in pybullet frame
+        :param theta: initial angles for all legs [[FL], [FR], [RL], [RR]]. Unit is given in self.angle_unit
+        """
+
         # Initial Pose
-        self.move_robot_to_pose(self.robotId, theta, self.joint_dic)
-        center_kin = from_pybullet(center)
+        self.move_robot_to_pose(self.robotId, theta, self.joint_dic, self.angle_unit)
+        
+        
         # Start Simulation Loop
         while True:
             p.stepSimulation()
@@ -126,16 +212,16 @@ class PybulletSim:
             # X forward Y left Z up
             # x+30, y+20, z-20
             #### 15 x z
-            eof_positions = self.kin_solver.robot_FK(center_kin, [0, 0, 0], theta, unit='degrees')
-            eof_positions_pb = np.array([to_pybullet(pos[:3]) for pos in eof_positions])
+            ef_positions = self.kin_solver.robot_FK(center_kin, [0, 0, 0], theta, unit=self.angle_unit)
+            ef_positions_pb = np.array([to_pybullet_pos(pos[:3]) for pos in ef_positions])
 
-            # for point in eof_positions_pb:
+            # for point in ef_positions_pb:
             #     self.debug_point(point)
 
-            fl_eof = eof_positions_pb[0]
-            fr_eof = eof_positions_pb[1]
-            rl_eof = eof_positions_pb[2]
-            rr_eof = eof_positions_pb[3]
+            fl_ef = ef_positions_pb[0]
+            fr_ef = ef_positions_pb[1]
+            rl_ef = ef_positions_pb[2]
+            rr_ef = ef_positions_pb[3]
 
             
             mouse_event = p.getMouseEvents()
@@ -150,33 +236,29 @@ class PybulletSim:
                 leg = "FR"
 
                 if leg == "FL":
-                    start_pos = fl_eof
+                    start_pos = fl_ef
                 elif leg == "FR":
-                    start_pos = fr_eof
+                    start_pos = fr_ef
                 elif leg == "RL":
-                    start_pos = rl_eof
+                    start_pos = rl_ef
                 elif leg == "RR":
-                    start_pos = rr_eof
+                    start_pos = rr_ef
                 
                 # Swing
                 swing_angles, _, _ = self.gait_solver.swing_trajectory(
                     start_pos=start_pos,    
                     swing_height=0.1,            
-                    center=center,
-                    orientation=[0, 0, 0],
                     leg=leg,
-                    disp_length=0.08,
-                    disp_orientation="+x"
+                    stride_len=0.08,
+                    stride_orn="+x"
                 )
 
                 # Stance
                 stance_angles, _, _ = self.gait_solver.stance_trajectory(
                     start_pos=start_pos,
-                    center=center,
-                    orientation=[0, 0, 0],
                     leg=leg,
-                    disp_length=0.08,
-                    disp_orientation="-x"
+                    stride_len=0.08,
+                    stride_orn="-x"
                 )
                 
                 self.execute_leg_trajectory(swing_angles, leg=leg)
@@ -187,14 +269,22 @@ class PybulletSim:
             time.sleep(1./240.) # PyBullet default time step
 
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
+        """
+        Generate a point in pybullet
+        
+        :param point: coordinates in pybullet frame
+        :param colour: colour in rgba format
+        :param radius: radius in meters
+        """
         visual_idx = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=colour)
         p.createMultiBody(baseVisualShapeIndex=visual_idx, basePosition=point)
 
 if __name__ == "__main__":
-    # X forward Y up Z left
 
-    center = [0, 0, 0.3]    
+    # X forward Y up Z left in meters
+    center = [0, 0, 0.25]    
     center_plane = [0, 0, 0] 
+    # This is the default orientation of the pybullet frame which is equivalent to [0, 0, 0] in the kinematics frame
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     theta = [0, -30, 60, # FL
@@ -202,13 +292,32 @@ if __name__ == "__main__":
              0, -30, 60, # RL
              0, -30, 60 ] # RR
     
-    eof_positions = np.array([
+    ef_positions = np.array([
             [ 95, 48.13,  105, 1], # FL
             [ 95, 48.13,  -105, 1], # FR
             [-45, 48.13, 105, 1], # RL
             [-45, 48.13, -105, 1] # RR
             ])
+    
+    ef_positions2 = np.array([
+        [67.29, 46.12, 107, 1],
+        [67.29, 46.12, -107, 1],
+        [-72.21, 46.12, 107, 1],
+        [-72.21, 46.12, -107, 1]
+        ])
+    
+    kin = kinematics.Kinematics(kinematics.LENGTH, 
+                                kinematics.WIDTH, 
+                                kinematics.L1, 
+                                kinematics.L2, 
+                                kinematics.L3, 
+                                kinematics.L4)
 
+    center_kin = from_pybullet_pos(center)
+    orientation_kin = from_pybullet_orn(orientation)
+    print(orientation_kin)
+
+    angles = kin.robot_IK(center_kin, orientation_kin, ef_positions2)
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,
@@ -219,4 +328,6 @@ if __name__ == "__main__":
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,
-                               initial_theta=theta)
+                               initial_theta=angles,
+                               initial_ef_positions=ef_positions,
+                               angle_unit="radians")

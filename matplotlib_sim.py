@@ -124,7 +124,7 @@ class RobotVisualizer:
         right_points = [Tr @ self.kin.Ix @ x for x in self.kin.legFK_hard_coded(right_angles)]
         self.drawLegPoints(right_points)
 
-    def draw_pose_IK(self, eof_positions, orientation, center):
+    def draw_pose_IK(self, ef_positions, orientation, center):
 
         # T_shoulder_base for each leg
         (T_fl, T_fr, T_rl, T_rr) = self.kin.bodyIK(*orientation, *center) 
@@ -133,10 +133,10 @@ class RobotVisualizer:
         self._draw_body({'FL': T_fl, 'FR': T_fr, 'RL': T_rl, 'RR': T_rr})
 
         # Draw Legs 
-        self.drawLegPair(T_fl, T_fr, eof_positions[0], eof_positions[1], "Front") # Front Legs
-        self.drawLegPair(T_rl, T_rr, eof_positions[2], eof_positions[3], "Rear") # Rear Legs
+        self.drawLegPair(T_fl, T_fr, ef_positions[0], ef_positions[1], "Front") # Front Legs
+        self.drawLegPair(T_rl, T_rr, ef_positions[2], ef_positions[3], "Rear") # Rear Legs
 
-    def draw_robot_pose(self, orientation = [0, 0, 0], center= [0, 0, 0], theta = [], eof_positions= [], mode='FK'):
+    def draw_robot_pose(self, orientation = [0, 0, 0], center= [0, 0, 0], theta = [], ef_positions= [], mode='FK'):
         '''
         Draws the entire robot given certain orientation and joint angles or end effector positions
         
@@ -144,8 +144,8 @@ class RobotVisualizer:
         orientation = [radians(angle) for angle in orientation]
         if mode == 'FK' and len(theta) == 12:
             self.draw_pose_FK(theta, orientation, center)
-        elif mode == 'IK' and len(eof_positions) == 4:
-            self.draw_pose_IK(eof_positions, orientation, center)
+        elif mode == 'IK' and len(ef_positions) == 4:
+            self.draw_pose_IK(ef_positions, orientation, center)
 
 
 if __name__ == "__main__":
@@ -156,17 +156,26 @@ if __name__ == "__main__":
              0, -30, 60, # FR
              0, -30, 60, # RL
              0, -30, 60 ] # RR
-    eof_positions = np.array([
+    ef_positions = np.array([
         [ 95, 48.13,  105, 1], # FL
         [ 95, 48.13,  -105, 1], # FR
         [-45, 48.13, 105, 1], # RL
         [-45, 48.13, -105, 1] # RR
         ])
-    # angles = (Roll, Pitch, Yaw) in radians
+    
+    ef_positions2 = np.array([
+        [67.29, 46.12, 107, 1],
+        [67.29, 46.12, -107, 1],
+        [-72.21, 46.12, 107, 1],
+        [-72.21, 46.12, -107, 1]
+        ])
+
+
+    # angles = (Roll, Pitch, Yaw) in degrees
     # center = (x, y, z) in mm
-    current_angles = [0, 0, 0]
+    current_angles = [0, 0, 20]
     current_center = [0, 250, 0]
 
     # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta)
-    viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
+    viz.draw_robot_pose(orientation=current_angles, center=current_center, ef_positions=ef_positions2, mode='IK')
     plt.show()
