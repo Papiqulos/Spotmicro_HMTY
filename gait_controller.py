@@ -15,18 +15,14 @@ WIDTH = kinematics.WIDTH
 
 class GaitController:
     
-    def __init__(self, stance_time=0, swing_time=0, time_step=0, contact_phases=None, default_stance=None):
-        self.stance_time = stance_time
-        self.swing_time = swing_time
-        self.time_step = time_step
-        self.contact_phases = contact_phases
-        self.default_stance = default_stance
+    def __init__(self, initial_pos):
+        self.initial_pos = initial_pos
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
     def generate_bezier_trajectory(self, control_points, num_points=100, leg="FL", center=None, orientation=[0, 0, 0]):
         
         bezier_gen = bezier.BezierCurveGen(control_points)
-        curve = bezier_gen.generate_curve(num_points=100)
+        curve = bezier_gen.generate_curve(num_points=num_points)
 
         # Get the angles of the trajectory points
         joint_angles = []
@@ -106,6 +102,10 @@ class GaitController:
         joint_angles, curve_points, control_points = self.generate_bezier_trajectory(control_points, num_points=100, leg=leg, center=center, orientation=orientation)
 
         return joint_angles, curve_points, control_points
+    
+    def trot_trajectory(self, start_pos, end_pos, starting_center, starting_orientation):
+        pass
+        
 
 
 

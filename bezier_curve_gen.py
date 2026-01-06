@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 
 
@@ -16,6 +17,12 @@ class BezierCurveGen:
     
     def cubic_interpolate(self, p0, p1, p2, p3, t):
         return (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
+    
+    def twelve_point_curve(self, points, t):
+        interpolation = 0
+        for i, point in enumerate(points):
+            interpolation += math.comb(11, i) * point * (1 - t)**( (11 - i) )* t**i
+        return interpolation
     
     def generate_curve(self, num_points=100):
         n = len(self.control_points)
