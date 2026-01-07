@@ -25,7 +25,7 @@ class PybulletSim:
                  orientation, 
                  center_plane, 
                  initial_theta, 
-                 initial_ef_positions, 
+                 initial_ef_positions,
                  angle_unit='degrees'):
         """
         
@@ -39,7 +39,6 @@ class PybulletSim:
         :param orientation: initial orientation for the robot to spawn (in pybullet frame)
         :param center_plane: in pybullet frame
         :param initial_theta: initial angles for the robot to spawn
-        :param initial_ef_positions: in kinematics frame and homogenous coordinates
         :param angle_unit: unit of initial_theta
         """
         # --- CONFIGURATION ---
@@ -73,29 +72,37 @@ class PybulletSim:
         self.orientation_kin = from_pybullet_orn(orientation)
         self.center_plane = center_plane
         self.initial_theta = initial_theta
-        self.initial_ef_positions = initial_ef_positions
         self.angle_unit = angle_unit
 
-        # Kinematics and Gait Controllers
+        self.initial_ef_positions = initial_ef_positions
+        
+
+        # Pybullet Setup
+        # Prepare environment
+        self.prep_environment(plane_orientation=[0, 0, 0], center_plane=center_plane)
+
+        # Load the quadruped
+        self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
+
+        # Display Initial Pose 
+        self.move_robot_to_pose(self.robotId, initial_theta, self.joint_dic, self.angle_unit)
+
+        # Kinematics Controller
         self.kin_solver = kinematics.Kinematics(self.length, 
                                                 self.width, 
                                                 self.l1, 
                                                 self.l2, 
                                                 self.l3, 
                                                 self.l4)
-        self.gait_solver = gait.GaitController(initial_ef_positions=initial_ef_positions, 
-                                               initial_theta=initial_theta, 
-                                               initial_center=self.center_kin, 
-                                               initial_orientation=self.orientation_kin)
 
-        # Pybullet Setup
-        # Prepare environment
-        self.prep_environment(plane_orientation=[0, 0, 0], center_plane=center_plane)
-        # Load the quadruped
-        self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
+        # Gait Controller
+        self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions, 
+                                                initial_theta=self.initial_theta, 
+                                                initial_center=self.center_kin, 
+                                                initial_orientation=self.orientation_kin)
 
-        # Display Initial Pose and Start Simulation
-        self.display_initial_pose(center, initial_theta)
+        # Start simulation
+        self.start_simulation()
 
     def load_quadruped(self, urdf_path, center, orn):
         """
@@ -106,7 +113,7 @@ class PybulletSim:
         :param orn: in pybullet frame
         """
         try:
-            robotId = p.loadURDF(urdf_path, center, orn, )
+            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=False)
             print(f"Successfully loaded {urdf_path}!")
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
@@ -115,14 +122,13 @@ class PybulletSim:
                 joint_name = info[1].decode("utf-8")
                 joint_type = info[2]            
                 # We only care about movable joints (Revolute or Prismatic)
-                if joint_type == p.JOINT_REVOLUTE or joint_type == p.JOINT_PRISMATIC:
-                    print(f"Loaded Joint: {joint_name} (ID: {i})")
+                print(f"Loaded Joint: {joint_name} (ID: {i})")
             return robotId, num_joints
         except Exception as e:
             print(f"Error loading URDF: {e}")
             return
         
-    def prep_environment(self, plane_orientation, center_plane,cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
+    def prep_environment(self, plane_orientation, center_plane, cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
         """
         Docstring for prep_environment
         
@@ -140,6 +146,33 @@ class PybulletSim:
 
         orn= p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
         planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
+
+    def get_imu_data(self):
+        """
+        Returns (roll, pitch) in radians and (roll_rate, pitch_rate)
+        simulating an onboard IMU and Gyroscope.
+        """
+        # 1. Orientation (Quaternion -> Euler)
+        pos, orn = p.getBasePositionAndOrientation(self.robotId)
+        roll, pitch, yaw = p.getEulerFromQuaternion(orn)
+        
+        # 2. Angular Velocity (Gyroscope)
+        lin_vel, ang_vel = p.getBaseVelocity(self.robotId)
+        # ang_vel is [wx, wy, wz] (roll_rate, pitch_rate, yaw_rate)
+        roll_rate = ang_vel[0]
+        pitch_rate = ang_vel[1]
+        
+        return roll, pitch, roll_rate, pitch_rate
+
+    def get_ef_positions(self):
+        """
+        Returns the end effector positions in pybullet frame 
+        """
+        ef_indices = [7, 12, 17, 22]
+        ef_positions = []
+        for i in ef_indices:
+            ef_positions.append(p.getLinkState(self.robotId, i)[0])
+        return ef_positions
 
     def move_robot_to_pose(self, robotId, theta, joint_dic, unit='degrees'):
         """
@@ -162,7 +195,7 @@ class PybulletSim:
     
     def execute_leg_trajectory(self, trajectory, leg="FL"):
         """ 
-        Execute a trajectory for a single leg.
+        Execute a trajectory for a single leg. Only for Testing.
 
         :param trajectory: trajectory of angles for the leg
         :param leg: leg to execute the trajectory for
@@ -188,85 +221,95 @@ class PybulletSim:
                             jointIndices=jointIndices,  # shoulder, leg, foot
                             controlMode=p.POSITION_CONTROL,
                             targetPositions=target_angle)
-            for _ in range(2): 
+            for _ in range(1): 
                 p.stepSimulation()
                 time.sleep(1./120.)
-
-    def display_initial_pose(self, center, theta):
         
+    def execute_robot_trajectory(self, trajectories):
         """
-        Display the initial and run some gait tests
+        For testing
         
-        :param center: in pybullet frame
-        :param theta: initial angles for all legs [[FL], [FR], [RL], [RR]]. Unit is given in self.angle_unit
+        :param trajectories: FL, FR, RL, RR
         """
+        fl_trajectory = trajectories[0]
+        fr_trajectory = trajectories[1]
+        rl_trajectory = trajectories[2]
+        rr_trajectory = trajectories[3]
 
-        # Initial Pose
-        self.move_robot_to_pose(self.robotId, theta, self.joint_dic, self.angle_unit)
+        # # Apply directions
+        # fl_trajectory = [angle * dir for angle, dir in zip(fl_trajectory, self.theta_dirs[:3])]
+        # fr_trajectory = [angle * dir for angle, dir in zip(fr_trajectory, self.theta_dirs[3:6])]
+        # rl_trajectory = [angle * dir for angle, dir in zip(rl_trajectory, self.theta_dirs[6:9])]
+        # rr_trajectory = [angle * dir for angle, dir in zip(rr_trajectory, self.theta_dirs[9:12])]
+
+
+        for fl_angle, fr_angle, rl_angle, rr_angle in zip(fl_trajectory, fr_trajectory, rl_trajectory, rr_trajectory):
+            # Apply theta dirs
+            fl_angle = [angle * dir for angle, dir in zip(fl_angle, self.theta_dirs[:3])]
+            p.setJointMotorControlArray(self.robotId,
+                            jointIndices=[3, 4, 6],  # shoulder, leg, foot
+                            controlMode=p.POSITION_CONTROL,
+                            targetPositions=fl_angle)
+            
+            fr_angle = [angle * dir for angle, dir in zip(fr_angle, self.theta_dirs[3:6])]
+            p.setJointMotorControlArray(self.robotId,
+                            jointIndices=[8, 9, 11],  # shoulder, leg, foot
+                            controlMode=p.POSITION_CONTROL,
+                            targetPositions=fr_angle)
+            
+            rl_angle = [angle * dir for angle, dir in zip(rl_angle, self.theta_dirs[6:9])]
+            p.setJointMotorControlArray(self.robotId,
+                            jointIndices=[13, 14, 16],  # shoulder, leg, foot
+                            controlMode=p.POSITION_CONTROL,
+                            targetPositions=rl_angle)
+            
+            rr_angle = [angle * dir for angle, dir in zip(rr_angle, self.theta_dirs[9:12])]
+            p.setJointMotorControlArray(self.robotId,
+                            jointIndices=[18, 19, 21],  # shoulder, leg, foot
+                            controlMode=p.POSITION_CONTROL,
+                            targetPositions=rr_angle)
+            
+            p.stepSimulation()
+            time.sleep(1./240.)
         
+    def start_simulation(self):
         
+        current_time = 0
         # Start Simulation Loop
         while True:
+
+            # Step Simulation and add small delay for smooth transition to initial pose
             p.stepSimulation()
-
-            # X forward Y left Z up
-            # x+30, y+20, z-20
-            #### 15 x z
-            ef_positions = self.kin_solver.robot_FK(center_kin, [0, 0, 0], theta, unit=self.angle_unit)
-            ef_positions_pb = np.array([to_pybullet_pos(pos[:3]) for pos in ef_positions])
-
-            # for point in ef_positions_pb:
-            #     self.debug_point(point)
-
-            fl_ef = ef_positions_pb[0]
-            fr_ef = ef_positions_pb[1]
-            rl_ef = ef_positions_pb[2]
-            rr_ef = ef_positions_pb[3]
-
+            time.sleep(1./240.)
             
+            
+            # Keyboard and Mouse Events
+            keyboard_event = p.getKeyboardEvents()
             mouse_event = p.getMouseEvents()
             try:
                 event_type = mouse_event[0][0]
                 button_state = mouse_event[0][-1]
+                button_index = mouse_event[0][3]
             except:
                 event_type = None
                 button_state = None
-            # Mouse left button released
-            if event_type == 2 and button_state == 4:  
-                leg = "FR"
+            # Mouse right button released
+            if event_type == 2 and button_state == 4 and button_index == 2:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.gait_testing(current_time, 0.6)
+                    
+                
+     
+    def gait_testing(self, current_time, velocity):
 
-                if leg == "FL":
-                    start_pos = fl_ef
-                elif leg == "FR":
-                    start_pos = fr_ef
-                elif leg == "RL":
-                    start_pos = rl_ef
-                elif leg == "RR":
-                    start_pos = rr_ef
-                
-                # Swing
-                swing_angles, _, _ = self.gait_solver.swing_trajectory(
-                    start_pos=start_pos,    
-                    swing_height=0.1,            
-                    leg=leg,
-                    stride_len=0.08,
-                    stride_orn="+y"
-                )
-
-                # Stance
-                stance_angles, _, _ = self.gait_solver.stance_trajectory(
-                    start_pos=start_pos,
-                    leg=leg,
-                    stride_len=0.08,
-                    stride_orn="-x"
-                )
-                
-                self.execute_leg_trajectory(swing_angles, leg=leg)
-                # self.execute_leg_trajectory(stance_angles, leg=leg)
-                
-
-                
-            time.sleep(1./240.) # PyBullet default time step
+        T_cycle = 0.3
+        duty_factor = 0.5
+        swing_height = 0.03
+        
+        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId)
+        
 
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
@@ -305,19 +348,6 @@ if __name__ == "__main__":
         [-72.21, 46.12, 107, 1],
         [-72.21, 46.12, -107, 1]
         ])
-    
-    kin = kinematics.Kinematics(kinematics.LENGTH, 
-                                kinematics.WIDTH, 
-                                kinematics.L1, 
-                                kinematics.L2, 
-                                kinematics.L3, 
-                                kinematics.L4)
-
-    center_kin = from_pybullet_pos(center)
-    orientation_kin = from_pybullet_orn(orientation)
-    print(orientation_kin)
-
-    angles = kin.robot_IK(center_kin, orientation_kin, ef_positions2)
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,
@@ -328,6 +358,6 @@ if __name__ == "__main__":
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,
-                               initial_theta=angles,
-                               initial_ef_positions=ef_positions,
-                               angle_unit="radians")
+                               initial_theta=theta,
+                               initial_ef_positions=ef_positions2,
+                               angle_unit="degrees")

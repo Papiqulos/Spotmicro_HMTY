@@ -23,7 +23,6 @@ def Rz(theta):
                      [0, 0, 1, 0],
                      [0, 0, 0, 1]])
 
-
 def to_homogenous(vec):
     """ Converts a 3D vector to homogeneous coordinates """
     return np.array([vec[0], vec[1], vec[2], 1.0])

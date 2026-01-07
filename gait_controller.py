@@ -4,6 +4,8 @@ import kinematics
 import matplotlib.pyplot as plt
 from robot_mania_code import *
 from utils import *
+import time
+from pid_controller import PIDController
 
 
 L1 = kinematics.L1
@@ -17,7 +19,7 @@ class GaitController:
     
     def __init__(self, initial_ef_positions=None, initial_theta=None, initial_center=None, initial_orientation=None):
         """
-        :param initial_ef_positions: in kinematics frame and homogenous coordinates
+        :param initial_ef_positions: in pybullet frame and not homogenous coordinates
         :param initial_theta: 
         :param initial_center: in kinematics frame
         :param initial_orientation: in kinematics frame
@@ -26,10 +28,20 @@ class GaitController:
         self.initial_theta = initial_theta
         self.initial_center = initial_center
         self.initial_orientation = initial_orientation
+        self.theta_dirs = [[-1, 1, 1],
+                            [1, 1, 1],
+                            [-1, 1, 1], 
+                            [1, 1, 1]]
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
     def generate_bezier_trajectory(self, control_points, num_points=100, leg="FL"):
+
+        """
         
+        :param control_points: in pybullet frame and not homogenous coordinates
+        :param num_points: 
+        :param leg: 
+        """
         bezier_gen = bezier.BezierCurveGen(control_points)
         curve = bezier_gen.generate_curve(num_points=num_points)
 
@@ -77,7 +89,7 @@ class GaitController:
         :param stride_len: stride length in meters
         :param stride_orn: stride orientation in pybullet frame
         """
-        
+
         if stride_orn == "+x":
             end_pos = np.array([start_pos[0] + stride_len, start_pos[1], start_pos[2]])
         elif stride_orn == "-x":
@@ -93,6 +105,10 @@ class GaitController:
         middle_pos2 = np.array([end_pos[0], end_pos[1], end_pos[2] + swing_height]) # Directly above end position
 
         control_points = [start_pos, middle_pos1, middle_pos2, end_pos]
+
+        # 12 point bezier curve based on the MIT Cheetah paper (in the future)
+        # control_points = np.array([[]
+        # ])
 
         joint_angles, curve_points, control_points = self.generate_bezier_trajectory(control_points, num_points=100, leg=leg)
 
@@ -122,8 +138,153 @@ class GaitController:
 
         return joint_angles, curve_points, control_points
     
-    def trot_trajectory(self, start_pos, end_pos, starting_center, starting_orientation):
-        pass
+    def trot(self, current_time, T_cycle, duty_factor, desired_velocity_x, swing_height, p, robotId, imu_data=None):
+        """
+        Make the robot trot in the +x direction
+        
+        :param current_time: current simulation time
+        :param T_cycle: cycle time in seconds
+        :param duty_factor: duty factor
+        :param desired_velocity_x: desired velocity in x direction in meters per second
+        :param swing_height: swing height in meters
+        :param p: pybullet client
+        :param robotId: robot id
+        """
+
+        stance_length = desired_velocity_x * T_cycle * duty_factor
+
+        # Global phase shows where we are in the cycle 
+        # (0 means start of cycle, T_cycle means end of cycle)
+        global_phase = (current_time % T_cycle) / T_cycle
+
+        legs = ["FL", "FR", "RL", "RR"]
+        joint_indices = [
+            [3, 4, 6], 
+            [8, 9, 11], 
+            [13, 14, 16], 
+            [18, 19, 21]
+        ]
+        
+        # Directions for the motors (from pybullet_sim.py)
+        theta_dirs = [-1, 1, 1,   # FL
+                       1, 1, 1,   # FR
+                      -1, 1, 1,   # RL
+                       1, 1, 1]   # RR
+                       
+        leg_offsets = [0, 0.5, 0.5, 0]
+
+        roll_correction = 0
+        pitch_correction = 0
+        yaw_correction = 0
+
+        
+        
+        # DOESN'T WORK YET
+        if imu_data is not None:
+            # Convert imu data to kinematics frame
+            imu_data = from_pybullet_orn(imu_data)
+            # Calculate errors
+            roll_error = imu_data[0] - self.initial_orientation[0]
+            pitch_error = imu_data[1] - self.initial_orientation[1]
+            # Default time step
+            dt = 1./240.
+            # Correct orientation
+            pid = PIDController(kp=1, ki=0.1, kd=0.1)
+            roll_correction = pid.update(roll_error, dt)
+            pitch_correction = pid.update(pitch_error, dt)
+
+        corrected_orientation = (self.initial_orientation[0] + roll_correction, self.initial_orientation[1] + pitch_correction, self.initial_orientation[2] + yaw_correction)
+
+        # Get Body IK transforms in Kinematics frame
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+        transforms = [T_fl, T_fr, T_rl, T_rr]
+
+        for i, leg in enumerate(legs):
+            leg_phase = (global_phase + leg_offsets[i]) % 1
+            
+            # Global Frame Positions (Kinematics Frame: mm, Y-up)
+            initial_pos = self.initial_ef_positions[i][:3]
+            
+            
+            # Stance Length and Swing Height are given in meters
+            # Convert to mm
+            sl_mm = stance_length * 1000.0
+            sh_mm = swing_height * 1000.0
+            
+            if leg_phase < duty_factor:
+                # Stance phase
+                stance_progress = leg_phase / duty_factor
+
+                # Stance moves backwards in Kinematics Frame (Forward is +X)
+                # So foot moves from -SL/2 to +SL/2
+                start_x = sl_mm / 2
+                end_x = -sl_mm / 2
+                
+
+                # delta_x = (1 - stance_progress) * start_x + stance_progress * end_x 
+
+                # delta_y = sh_mm * (1 - np.cos(stance_progress * np.pi)) / 2
+                
+                p0 = np.array([initial_pos[0] + start_x, initial_pos[1], initial_pos[2]])
+                p1 = np.array([initial_pos[0] + end_x, initial_pos[1], initial_pos[2]])
+
+                control_points = [p0, p1]
+                bezier_gen = bezier.BezierCurveGen(control_points)
+                current_pos = bezier_gen.n_point_curve(control_points, stance_progress)
+            
+                # current_pos = np.array([initial_pos[0] + delta_x, initial_pos[1] + delta_y, initial_pos[2]])
+            else:
+                # Swing phase
+                swing_progress = (leg_phase - duty_factor) / (1 - duty_factor)
+                
+                start_x = -sl_mm / 2
+                end_x = sl_mm / 2
+                
+                # Bezier Control Points apply the swing in the y because we are using the kinematics frame
+                p0 = np.array([initial_pos[0] + start_x, initial_pos[1], initial_pos[2]])
+                p3 = np.array([initial_pos[0] + end_x,   initial_pos[1], initial_pos[2]])
+                p1 = np.array([initial_pos[0] + start_x, initial_pos[1] + sh_mm, initial_pos[2] ]) 
+                p2 = np.array([initial_pos[0] + end_x,   initial_pos[1] + sh_mm, initial_pos[2] ])
+                
+                control_points = [p0, p1, p2, p3]
+                bezier_gen = bezier.BezierCurveGen(control_points)
+                current_pos = bezier_gen.n_point_curve(control_points, swing_progress)
+
+
+            # Target Position is already in Kinematics Frame (Local Body Frame)
+            target_pos = to_homogenous(current_pos)
+
+            # Get the shoulder base transform
+            shoulder_base_transform = transforms[i]
+            Ix = np.identity(4)
+            if leg == "FR" or leg == "RR":
+                Ix = self.kin_solver.Ix
+                
+
+            # Now that the point is in the kinematics body frame, we convert it to shoulder frame
+            # target_pos_shoulder = inv(T_shoulder_body) @ target_pos_body
+            target_pos_shoulder = Ix @ np.linalg.inv(shoulder_base_transform) @ target_pos
+            
+            # Get the angles through IK
+            angles = self.kin_solver.legIK(target_pos_shoulder)
+
+            # Apply theta direction
+            angle_dirs = theta_dirs[i*3 : (i+1)*3]
+            angles = [angle * dir for angle, dir in zip(angles, angle_dirs)]
+
+            # Move the leg
+            p.setJointMotorControlArray(robotId, 
+                joint_indices[i], 
+                p.POSITION_CONTROL, 
+                angles)
+
+        p.stepSimulation()
+        time.sleep(1./240.)
+                
+
+
+       
+        
         
 
 

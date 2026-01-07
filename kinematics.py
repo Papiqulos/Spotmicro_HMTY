@@ -66,6 +66,11 @@ class Kinematics:
         self.l2 = l2  # Vertical offset from shoulder to leg in mm
         self.l3 = l3  # Upper Leg Length in mm
         self.l4 = l4  # Lower Leg Length in mm
+
+        self.theta_dirs = [-1, 1, 1,
+                        1, 1, 1,
+                        -1, 1, 1, 
+                        1, 1, 1]
         
         # Inversion matrix for right legs
         self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
