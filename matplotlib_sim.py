@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
     # angles = (Roll, Pitch, Yaw) in degrees
     # center = (x, y, z) in mm
-    current_angles = [0, 0, 20]
+    current_angles = [0, 60, 0]
     current_center = [0, 250, 0]
 
     # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta)

@@ -298,17 +298,17 @@ class PybulletSim:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.gait_testing(current_time, 0.6)
+                    self.gait_testing(current_time, 0.9)
                     
                 
      
     def gait_testing(self, current_time, velocity):
 
-        T_cycle = 0.3
+        T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
         
-        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId)
+        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+x")
         
 
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
