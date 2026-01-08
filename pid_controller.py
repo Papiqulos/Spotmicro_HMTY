@@ -14,35 +14,34 @@ class PIDController:
         self.first_run = True  # Flag to prevent derivative spike on start
 
     def update(self, error, dt):
-        # 1. Handle Initialization (prevents massive kick on startup)
+        # Handle Initialization (prevents massive kick on startup)
         if self.first_run:
             self.previous_error = error
             self.first_run = False
 
-        # 2. Proportional Term
+        # Proportional Term
         proportional = self.kp * error
         
-        # 3. Integral Term (Accumulate the error over time)
+        # Integral Term (Accumulate the error over time)
         self.integral_sum += error * dt
         
         integral = self.ki * self.integral_sum
 
-        # 4. Derivative Term
+        # Derivative Term
         derivative = self.kd * (error - self.previous_error) / dt
         
-        # 5. Save state for next loop
+        # Save state for next loop
         self.previous_error = error
         
         return proportional + derivative + integral
     
     def reset(self):
-        """Call this if you reset the simulation"""
         self.integral_sum = 0
         self.previous_error = 0
         self.first_run = True
 
 
-
+# From https://www.youtube.com/watch?v=O_2swSMecB4&t=24s
 class PIDControllerRP:
     def __init__(self, kp, ki, kd):
         self.kp = kp

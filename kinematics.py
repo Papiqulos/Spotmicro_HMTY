@@ -239,7 +239,7 @@ class Kinematics:
         for angle in rr_angles:
             angles.append(angle)
 
-        return angles # [ [FL angles], [FR angles], [RL angles], [RR angles] ]
+        return angles # [FL angles, FR angles, RL angles, RR angles]
     
     def robot_FK(self, center, orientation, joint_angles, unit='radians'):
         """Returns mm and X(forward) Y(up) Z(left) 1(identity)"""

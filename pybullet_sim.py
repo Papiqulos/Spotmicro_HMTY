@@ -85,7 +85,7 @@ class PybulletSim:
         self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
 
         # Display Initial Pose 
-        self.move_robot_to_pose(self.robotId, initial_theta, self.joint_dic, self.angle_unit)
+        self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
 
         # Kinematics Controller
         self.kin_solver = kinematics.Kinematics(self.length, 
@@ -174,13 +174,12 @@ class PybulletSim:
             ef_positions.append(p.getLinkState(self.robotId, i)[0])
         return ef_positions
 
-    def move_robot_to_pose(self, robotId, theta, joint_dic, unit='degrees'):
+    def move_robot_to_pose(self, robotId, theta, unit='degrees'):
         """
         Move the robot to a given pose.
         
         :param robotId: 
         :param theta: angles for all legs [[FL], [FR], [RL], [RR]]
-        :param joint_dic: dictionary mapping joint names to joint indices
         :param unit: angle unit
         """
 
@@ -189,9 +188,11 @@ class PybulletSim:
         # Convert angles to radians and apply directions
         theta = [angle * dir for angle, dir in zip(theta, self.theta_dirs)]
         p.setJointMotorControlArray(robotId,
-                                    jointIndices=list(joint_dic.values()),
+                                    jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=theta)
+        p.stepSimulation()
+        time.sleep(1./240.)
     
     def execute_leg_trajectory(self, trajectory, leg="FL"):
         """ 
@@ -285,6 +286,13 @@ class PybulletSim:
             
             # Keyboard and Mouse Events
             keyboard_event = p.getKeyboardEvents()
+            cKey = ord('c')
+            rKey = ord('r')
+            wKey = ord('w')
+            sKey = ord('s')
+            aKey = ord('a')
+            dKey = ord('d')
+            qKey = ord('q')
             mouse_event = p.getMouseEvents()
             try:
                 event_type = mouse_event[0][0]
@@ -298,17 +306,85 @@ class PybulletSim:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.gait_testing(current_time, 0.9)
+                    self.go_forward(current_time)
+
+            if cKey in keyboard_event and keyboard_event[cKey]&p.KEY_WAS_TRIGGERED:
+                angles = self.kin_solver.robot_IK(self.center_kin, [PI/6, 0, PI/6], self.initial_ef_positions)
+                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+
+            # Reset to initial pose
+            if rKey in keyboard_event and keyboard_event[rKey]&p.KEY_WAS_TRIGGERED:
+                angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+
+            if wKey in keyboard_event and keyboard_event[wKey]&p.KEY_WAS_TRIGGERED:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.go_forward(current_time, velocity=0.9)
+
+            if sKey in keyboard_event and keyboard_event[sKey]&p.KEY_WAS_TRIGGERED:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.go_backward(current_time, velocity=0.9)
+
+            if aKey in keyboard_event and keyboard_event[aKey]&p.KEY_WAS_TRIGGERED:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.go_left(current_time, velocity=0.9)
+
+            if dKey in keyboard_event and keyboard_event[dKey]&p.KEY_WAS_TRIGGERED:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.go_right(current_time, velocity=0.9)
+
+            # Stop
+            if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    self.move_robot_to_pose(self.robotId, self.initial_theta, unit="degrees")
+
+
+                
                     
                 
      
-    def gait_testing(self, current_time, velocity):
+    def go_forward(self, current_time, velocity=0.9):
 
         T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
+        velocity = velocity
         
         self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+x")
+
+    def go_backward(self, current_time, velocity=0.9):
+        T_cycle = 0.2
+        duty_factor = 0.5
+        swing_height = 0.03
+        velocity = velocity
+        
+        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="-x")
+
+    def go_left(self, current_time, velocity=0.9):
+        T_cycle = 0.2
+        duty_factor = 0.5
+        swing_height = 0.03
+        velocity = velocity
+        
+        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="-y")
+
+    def go_right(self, current_time, velocity=0.9):
+        T_cycle = 0.2
+        duty_factor = 0.5
+        swing_height = 0.03
+        velocity = velocity
+        
+        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+y")   
         
 
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
@@ -348,6 +424,10 @@ if __name__ == "__main__":
         [-72.21, 46.12, 107, 1],
         [-72.21, 46.12, -107, 1]
         ])
+
+
+    test = kinematics.Kinematics()
+    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,

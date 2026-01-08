@@ -206,7 +206,6 @@ class GaitController:
 
         roll_correction = 0
         pitch_correction = 0
-        yaw_correction = 0
         if imu_data is not None:
             # Convert imu data to kinematics frame
             imu_data = from_pybullet_orn(imu_data)
@@ -214,23 +213,19 @@ class GaitController:
             # Default time step
             dt = 1./240.
 
-            # # Calculate errors
-            # roll_error = imu_data[0] - self.initial_orientation[0]
-            # pitch_error = imu_data[1] - self.initial_orientation[1]
-            # yaw_error = imu_data[2] - self.initial_orientation[2]
+            # Calculate errors
+            roll_error = self.initial_orientation[0] - imu_data[0] 
+            pitch_error = self.initial_orientation[1] - imu_data[1]
 
             
-            # # Correct orientation
-            # roll_correction = self.pid_roll.update(roll_error, dt)
-            # pitch_correction = self.pid_pitch.update(pitch_error, dt)
-            # yaw_correction = self.pid_yaw.update(yaw_error, dt)
-
-
+            # Correct orientation
+            roll_correction = self.pid_roll.update(roll_error, dt)
+            pitch_correction = self.pid_pitch.update(pitch_error, dt)
             
-
-            compensation = self.pid_rp.run(imu_data[0], imu_data[1], dt)
-            roll_correction = compensation[0]
-            pitch_correction = compensation[1]
+            # Different PID controller
+            # compensation = self.pid_rp.run(imu_data[0], imu_data[1], dt)
+            # roll_correction = compensation[0]
+            # pitch_correction = compensation[1]
 
         corrected_orientation = (
             self.initial_orientation[0] + roll_correction, 
@@ -257,8 +252,8 @@ class GaitController:
                 # Stance phase
                 stance_progress = leg_phase / duty_factor
 
-                # Stance moves backwards in Kinematics Frame (Forward is +X)
-                # So foot moves from -SL/2 to +SL/2
+                # Stance moves backwards 
+                # So foot moves from SL/2 to -SL/2
                 start_x = sl_mm / 2
                 end_x = -sl_mm / 2
                 
@@ -268,8 +263,9 @@ class GaitController:
                 elif dir == "-x":
                     p0 = np.array([initial_pos[0] - start_x, initial_pos[1], initial_pos[2]])
                     p1 = np.array([initial_pos[0] - end_x, initial_pos[1], initial_pos[2]])
+                # we change the z axis because we are using the kinematics frame
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + start_x]) # we change the z axis because we are using the kinematics frame
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + start_x]) 
                     p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + end_x])
                 elif dir == "-y":
                     p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - start_x])
@@ -314,7 +310,8 @@ class GaitController:
                 current_pos = bezier_gen.n_point_curve(control_points, swing_progress)
 
 
-            # Target Position is already in Kinematics Frame (Local Body Frame)
+            # Target Position is already in Kinematics Frame 
+            # Convert to homogenous coordinates
             target_pos = to_homogenous(current_pos)
 
             # Get the shoulder base transform
@@ -343,14 +340,19 @@ class GaitController:
 
         p.stepSimulation()
         time.sleep(1./240.)
+
+    def turn(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):
+        
+        pass
+
+    def turn_in_place(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):
+        
+        pass
+
+    def body_manipulation(self, map_angle, p, robotId):
+        
+        pass
                 
-
-
-       
-        
-        
-
-
 
 if __name__ == "__main__":
     gait = GaitController()

@@ -171,11 +171,20 @@ if __name__ == "__main__":
         ])
 
 
+
+    ef_positions3 = np.array([
+        [67.29, 46.12, 107, 1],
+        [300, 250, -107, 1],
+        [-72.21, 46.12, 107, 1],
+        [-72.21, 46.12, -107, 1]
+        ])
+
+
     # angles = (Roll, Pitch, Yaw) in degrees
     # center = (x, y, z) in mm
-    current_angles = [0, 60, 0]
+    current_angles = [0, 0, 0]
     current_center = [0, 250, 0]
 
     # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta)
-    viz.draw_robot_pose(orientation=current_angles, center=current_center, ef_positions=ef_positions2, mode='IK')
+    viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
     plt.show()
