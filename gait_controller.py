@@ -177,6 +177,7 @@ class GaitController:
             
         # Apply ramp to velocity
         effective_velocity = desired_velocity * ramp_factor
+        # print(effective_velocity)
 
         # Use effective_velocity instead of desired_velocity_x
         stance_length = effective_velocity * T_cycle * duty_factor

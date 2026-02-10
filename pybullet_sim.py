@@ -293,6 +293,8 @@ class PybulletSim:
             aKey = ord('a')
             dKey = ord('d')
             qKey = ord('q')
+
+            # Not used at the moment
             mouse_event = p.getMouseEvents()
             try:
                 event_type = mouse_event[0][0]
@@ -301,13 +303,8 @@ class PybulletSim:
             except:
                 event_type = None
                 button_state = None
-            # Mouse right button released
-            if event_type == 2 and button_state == 4 and button_index == 2:
-                while True:
-                    current_time += 1./240.
-                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.go_forward(current_time)
 
+            # Move to a certain pose
             if cKey in keyboard_event and keyboard_event[cKey]&p.KEY_WAS_TRIGGERED:
                 angles = self.kin_solver.robot_IK(self.center_kin, [PI/6, 0, PI/6], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
@@ -317,42 +314,55 @@ class PybulletSim:
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
 
+            # Go Forward
             if wKey in keyboard_event and keyboard_event[wKey]&p.KEY_WAS_TRIGGERED:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_forward(current_time, velocity=0.9)
 
+                    keyboard_event = p.getKeyboardEvents()
+                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
+                        print("STOPPING")
+                        break
+                        
+            # Go Backward
             if sKey in keyboard_event and keyboard_event[sKey]&p.KEY_WAS_TRIGGERED:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_backward(current_time, velocity=0.9)
 
+                    keyboard_event = p.getKeyboardEvents()
+                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
+                        print("STOPPING")
+                        break
+                        
+            # Go Left
             if aKey in keyboard_event and keyboard_event[aKey]&p.KEY_WAS_TRIGGERED:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_left(current_time, velocity=0.9)
 
+                    keyboard_event = p.getKeyboardEvents()
+                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
+                        print("STOPPING")
+                        break
+  
+            # Go Right
             if dKey in keyboard_event and keyboard_event[dKey]&p.KEY_WAS_TRIGGERED:
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_right(current_time, velocity=0.9)
 
-            # Stop
-            if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
-                while True:
-                    current_time += 1./240.
-                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.move_robot_to_pose(self.robotId, self.initial_theta, unit="degrees")
+                    keyboard_event = p.getKeyboardEvents()
+                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
+                        print("STOPPING")
+                        break
 
 
-                
-                    
-                
-     
     def go_forward(self, current_time, velocity=0.9):
 
         T_cycle = 0.2
@@ -386,7 +396,6 @@ class PybulletSim:
         
         self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+y")   
         
-
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
         Generate a point in pybullet
