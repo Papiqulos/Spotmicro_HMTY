@@ -371,27 +371,47 @@ class PybulletSim:
             # Go Left
             if self.key_is_pressed(keyboard_event, aKey) or self.key_is_pressed(keyboard_event, leftArrowKey):
                 print("GOING LEFT")
+                deceleration_flag = False
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.go_left(current_time, velocity=0.9)
-
                     keyboard_event = p.getKeyboardEvents()
+
                     if self.key_is_pressed(keyboard_event, qKey):
+                        deceleration_flag = True
+                        print("DECELERATING")
+                    ef_vel = self.go_left(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
+                    print(f"Current Speed in m/s: {ef_vel}")
+                    print(f"dec flag : {deceleration_flag}")
+
+                    # Once speed is 0 return to default pose
+                    if ef_vel == 0.0 and deceleration_flag:
                         print("STOPPED")
+                        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                        self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
   
             # Go Right
             if self.key_is_pressed(keyboard_event, dKey) or self.key_is_pressed(keyboard_event, rightArrowKey):
                 print("GOING RIGHT")
+                deceleration_flag = False
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.go_right(current_time, velocity=0.9)
-
                     keyboard_event = p.getKeyboardEvents()
+
                     if self.key_is_pressed(keyboard_event, qKey):
+                        deceleration_flag = True
+                        print("DECELERATING")
+                    ef_vel = self.go_right(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
+                    print(f"Current Speed in m/s: {ef_vel}")
+                    print(f"dec flag : {deceleration_flag}")
+
+                    # Once speed is 0 return to default pose
+                    if ef_vel == 0.0 and deceleration_flag:
                         print("STOPPED")
+                        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                        self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
 
     
@@ -422,7 +442,7 @@ class PybulletSim:
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, 
+        return self.gait_controller.trot(current_time, 
                                   T_cycle, 
                                   duty_factor, 
                                   velocity, 
@@ -439,7 +459,7 @@ class PybulletSim:
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, 
+        return self.gait_controller.trot(current_time, 
                                   T_cycle, 
                                   duty_factor, 
                                   velocity, 
@@ -456,7 +476,7 @@ class PybulletSim:
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, 
+        return self.gait_controller.trot(current_time, 
                                   T_cycle, 
                                   duty_factor, 
                                   velocity, 

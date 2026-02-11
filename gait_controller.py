@@ -381,7 +381,6 @@ class GaitController:
         p.stepSimulation()
         time.sleep(1./240.)
 
-
         return effective_velocity
 
     def gradual_stop(self, ef_positions, p, robotId):
