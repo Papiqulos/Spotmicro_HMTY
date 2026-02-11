@@ -33,7 +33,10 @@ class GaitController:
                             [-1, 1, 1], 
                             [1, 1, 1]]
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
+
         self.gait_init = None
+        self.deceleration_init = 0
+
         self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self.pid_roll = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self.pid_yaw = PIDController(kp=0.2, ki=0.025, kd=0.025)
@@ -144,7 +147,7 @@ class GaitController:
 
         return joint_angles, curve_points, control_points
     
-    def trot(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):
+    def trot(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x", deceleration_flag=False):
         """
         Make the robot trot in the specified direction
         
@@ -157,27 +160,63 @@ class GaitController:
         :param robotId: robot id
         :param imu_data: imu data
         :param dir: direction of the trot (pybullet frame)
-        """
 
+
+        """
+        # print(f"current_time : {current_time}")
 
         # Ramp up the velocity so that the robot doesn't start moving too fast and turns to the left
+        
         if self.gait_init is None:
             self.gait_init = current_time
+            # print(f"Gait Init : {self.gait_init}")
+
+
+        if deceleration_flag and self.deceleration_init == 0:
+            self.deceleration_init = current_time
+            # print(f"decceleration init : {self.deceleration_init}")
+
+
 
         ramp_duration = 0.5
 
-        # Calculate time since start
+        # Calculate time since initiating the trot
         time_since_start = current_time - self.gait_init
-        
-        # Create a multiplier from 0.0 to 1.0
+        # print(f"time since start : {time_since_start}")
+
+        # Calculate time since triggering the decceleration
+        time_since_dec_trigger = current_time - self.deceleration_init
+        # print(f"time since dec trigger : {time_since_dec_trigger}")
+
+    
+        # Create a multiplier from 0.0 to 1.0 to slowly accelerate to the desired velocity 
+        # THIS HAPPENS UPON PRESSING THE KEY COMMAND AND THE PROCESS LASTS ramp_duration secs
         if time_since_start < ramp_duration:
             ramp_factor = time_since_start / ramp_duration
-        else:
+            # print("accelerating")
+        elif time_since_start >= ramp_duration and not deceleration_flag:
+            # print("fully accelerated")
             ramp_factor = 1.0
+
+
+        # Create a multiplier from 1.0 to 0.0 to slowly decelerate to a halt
+        # THIS HAPPENS UPON PRESSING THE Q COMMAND AND THE PROCESS LASTS ramp_duration secs
+        if time_since_dec_trigger < ramp_duration and deceleration_flag:
+            ramp_factor = 1.0 - (time_since_dec_trigger / ramp_duration)
+            # print("decelerating")
+        elif time_since_dec_trigger >= ramp_duration and deceleration_flag:
+            # Reset in init params for the next trot command
+            self.gait_init = None
+            self.deceleration_init = 0
+            ramp_factor = 0.0
+            # print("fully decelerated")
+
+
+    
             
+
         # Apply ramp to velocity
         effective_velocity = desired_velocity * ramp_factor
-        # print(effective_velocity)
 
         # Use effective_velocity instead of desired_velocity_x
         stance_length = effective_velocity * T_cycle * duty_factor
@@ -341,6 +380,13 @@ class GaitController:
 
         p.stepSimulation()
         time.sleep(1./240.)
+
+
+        return effective_velocity
+
+    def gradual_stop(self, ef_positions, p, robotId):
+        pass
+
 
     def turn(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):
         

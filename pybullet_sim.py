@@ -286,6 +286,12 @@ class PybulletSim:
             
             # Keyboard and Mouse Events
             keyboard_event = p.getKeyboardEvents()
+            # print(f"{keyboard_event})
+
+            upArrowKey = 65297
+            downArrowKey = 65298
+            leftArrowKey = 65295
+            rightArrowKey = 65296
             cKey = ord('c')
             rKey = ord('r')
             wKey = ord('w')
@@ -301,100 +307,165 @@ class PybulletSim:
                 button_state = mouse_event[0][-1]
                 button_index = mouse_event[0][3]
             except:
+                # keyboard_event = None
                 event_type = None
                 button_state = None
 
             # Move to a certain pose
-            if cKey in keyboard_event and keyboard_event[cKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, cKey):
                 angles = self.kin_solver.robot_IK(self.center_kin, [PI/6, 0, PI/6], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
 
             # Reset to initial pose
-            if rKey in keyboard_event and keyboard_event[rKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, rKey):
+                print("RESETTING TO INITIAL POSE")
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
 
             # Go Forward
-            if wKey in keyboard_event and keyboard_event[wKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, wKey) or self.key_is_pressed(keyboard_event, upArrowKey):
+                print("GOING FORWARDS")
+                deceleration_flag = False
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.go_forward(current_time, velocity=0.9)
-
                     keyboard_event = p.getKeyboardEvents()
-                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
-                        print("STOPPING")
+
+                    if self.key_is_pressed(keyboard_event, qKey):
+                        deceleration_flag = True
+                        print("DECELERATING")
+                    ef_vel = self.go_forward(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
+                    print(f"Current Speed in m/s: {ef_vel}")
+                    print(f"dec flag : {deceleration_flag}")
+
+                    # Once speed is 0 return to default pose
+                    if ef_vel == 0.0 and deceleration_flag:
+                        print("STOPPED")
+                        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                        self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
-                        
+                               
             # Go Backward
-            if sKey in keyboard_event and keyboard_event[sKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, sKey) or self.key_is_pressed(keyboard_event, downArrowKey):
+                print("GOING BACKWARDS")
+                deceleration_flag = False
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
-                    self.go_backward(current_time, velocity=0.9)
-
                     keyboard_event = p.getKeyboardEvents()
-                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
-                        print("STOPPING")
+
+                    if self.key_is_pressed(keyboard_event, qKey):
+                        deceleration_flag = True
+                        print("DECELERATING")
+                    ef_vel = self.go_backward(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
+                    print(f"Current Speed in m/s: {ef_vel}")
+                    print(f"dec flag : {deceleration_flag}")
+
+                    # Once speed is 0 return to default pose
+                    if ef_vel == 0.0 and deceleration_flag:
+                        print("STOPPED")
+                        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                        self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
                         
             # Go Left
-            if aKey in keyboard_event and keyboard_event[aKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, aKey) or self.key_is_pressed(keyboard_event, leftArrowKey):
+                print("GOING LEFT")
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_left(current_time, velocity=0.9)
 
                     keyboard_event = p.getKeyboardEvents()
-                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
-                        print("STOPPING")
+                    if self.key_is_pressed(keyboard_event, qKey):
+                        print("STOPPED")
                         break
   
             # Go Right
-            if dKey in keyboard_event and keyboard_event[dKey]&p.KEY_WAS_TRIGGERED:
+            if self.key_is_pressed(keyboard_event, dKey) or self.key_is_pressed(keyboard_event, rightArrowKey):
+                print("GOING RIGHT")
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     self.go_right(current_time, velocity=0.9)
 
                     keyboard_event = p.getKeyboardEvents()
-                    if qKey in keyboard_event and keyboard_event[qKey]&p.KEY_WAS_TRIGGERED:
-                        print("STOPPING")
+                    if self.key_is_pressed(keyboard_event, qKey):
+                        print("STOPPED")
                         break
 
+    
+    def key_is_pressed(self, keyboard_event, key):
+        return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
 
-    def go_forward(self, current_time, velocity=0.9):
+    def go_forward(self, current_time, velocity=0.9, deceleration_flag=False):
 
         T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+x")
+        return self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="+x", 
+                                  deceleration_flag=deceleration_flag)
 
-    def go_backward(self, current_time, velocity=0.9):
+    def go_backward(self, current_time, velocity=0.9, deceleration_flag=False):
         T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="-x")
+        self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="-x",
+                                  deceleration_flag=deceleration_flag)
 
-    def go_left(self, current_time, velocity=0.9):
+    def go_left(self, current_time, velocity=0.9, deceleration_flag=False):
         T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="-y")
+        self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="+y", 
+                                  deceleration_flag=deceleration_flag)
 
-    def go_right(self, current_time, velocity=0.9):
+    def go_right(self, current_time, velocity=0.9, deceleration_flag=False):
         T_cycle = 0.2
         duty_factor = 0.5
         swing_height = 0.03
         velocity = velocity
         
-        self.gait_controller.trot(current_time, T_cycle, duty_factor, velocity, swing_height, p, self.robotId, self.get_imu_data(), dir="+y")   
+        self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="-y",
+                                  deceleration_flag=deceleration_flag)   
         
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
