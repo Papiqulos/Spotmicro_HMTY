@@ -37,8 +37,8 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
-        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self.pid_roll = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self.pid_yaw = PIDController(kp=0.2, ki=0.025, kd=0.025)
 
         self.pid_rp = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
@@ -205,7 +205,7 @@ class GaitController:
             ramp_factor = 1.0 - (time_since_dec_trigger / ramp_duration)
             # print("decelerating")
         elif time_since_dec_trigger >= ramp_duration and deceleration_flag:
-            # Reset in init params for the next trot command
+            # Reset init params for the next trot command
             self.gait_init = None
             self.deceleration_init = 0
             ramp_factor = 0.0
@@ -254,12 +254,20 @@ class GaitController:
             dt = 1./240.
 
             # Calculate errors
-            roll_error = self.initial_orientation[0] - imu_data[0] 
+            # roll_error = self.initial_orientation[0] - imu_data[0] 
             pitch_error = self.initial_orientation[1] - imu_data[1]
+            # yaw_error = self.initial_orientation[2] - imu_data[2]
+
+
+            # print(f"roll_error : {roll_error}")
+            # print(f"target_pitch : {self.initial_orientation[1]}")
+            # print(f"imu_pitch : {imu_data[1]}")
+            # print(f"pitch_error : {pitch_error}")
+            # print(f"yaw_error : {yaw_error}")
 
             
             # Correct orientation
-            roll_correction = self.pid_roll.update(roll_error, dt)
+            # roll_correction = self.pid_roll.update(roll_error, dt)
             pitch_correction = self.pid_pitch.update(pitch_error, dt)
             
             # Different PID controller
@@ -268,7 +276,7 @@ class GaitController:
             # pitch_correction = compensation[1]
 
         corrected_orientation = (
-            self.initial_orientation[0] + roll_correction, 
+            self.initial_orientation[0], 
             self.initial_orientation[1] + pitch_correction, 
             self.initial_orientation[2] )
 
@@ -287,6 +295,11 @@ class GaitController:
             # Convert to mm
             sl_mm = stance_length * 1000.0
             sh_mm = swing_height * 1000.0
+
+            dl = sl_mm * (0.3)
+            L_span = sl_mm
+            h1 = sh_mm - 100.0
+            h2 = sh_mm
             
             if leg_phase < duty_factor:
                 # Stance phase
@@ -294,22 +307,22 @@ class GaitController:
 
                 # Stance moves backwards 
                 # So foot moves from SL/2 to -SL/2
-                start_x = sl_mm / 2
-                end_x = -sl_mm / 2
+                # start_x = sl_mm / 2
+                # end_x = -sl_mm / 2
                 
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] + start_x, initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + end_x, initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] - start_x, initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - end_x, initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
                 # we change the z axis because we are using the kinematics frame
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + start_x]) 
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + end_x])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)]) 
+                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - start_x])
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - end_x])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
 
                 control_points = [p0, p1]
                 bezier_gen = bezier.BezierCurveGen(control_points)
@@ -320,31 +333,47 @@ class GaitController:
                 # Swing phase
                 swing_progress = (leg_phase - duty_factor) / (1 - duty_factor)
                 
-                start_x = -sl_mm / 2
-                end_x = sl_mm / 2
-                
+                # start_x = -sl_mm / 2
+                # end_x = sl_mm / 2
                 # Bezier Control Points apply the swing in the y because we are using the kinematics frame
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] + start_x, initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] + end_x,   initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + start_x, initial_pos[1] + sh_mm, initial_pos[2] ])  
-                    p2 = np.array([initial_pos[0] + end_x,   initial_pos[1] + sh_mm, initial_pos[2] ])
+                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])  
+                    p2 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1] + sh_mm, initial_pos[2] ])
+                    # p0 = np.array([initial_pos[0] - L_span, initial_pos[1], initial_pos[2]])
+                    # p1 = np.array([initial_pos[0] - L_span - dl, initial_pos[1], initial_pos[2]])
+
+                    # p2 = np.array([initial_pos[0] - L_span - dl - 50.0, initial_pos[1] + h1, initial_pos[2]])
+                    # p3 = np.array([initial_pos[0] - L_span - dl - 50.0, initial_pos[1] + h1, initial_pos[2]])
+                    # p4 = np.array([initial_pos[0] - L_span - dl - 50.0, initial_pos[1] + h1, initial_pos[2]])
+
+                    # p5 = np.array([initial_pos[0], initial_pos[1] + h1, initial_pos[2]])
+                    # p6 = np.array([initial_pos[0], initial_pos[1] + h1, initial_pos[2]])
+
+                    # p7 = np.array([initial_pos[0], initial_pos[1] + h2, initial_pos[2]])
+
+                    # p8 = np.array([initial_pos[0] + L_span + dl + 50.0, initial_pos[1] + h2, initial_pos[2]])
+                    # p9 = np.array([initial_pos[0] + L_span + dl + 50.0, initial_pos[1] + h2, initial_pos[2]])
+
+                    # p10 = np.array([initial_pos[0] + L_span + dl, initial_pos[1], initial_pos[2]])
+                    # p11 = np.array([initial_pos[0] + L_span, initial_pos[1], initial_pos[2]])
+                                      
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] - start_x, initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] - end_x,   initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - start_x, initial_pos[1] + sh_mm, initial_pos[2] ]) 
-                    p2 = np.array([initial_pos[0] - end_x,   initial_pos[1] + sh_mm, initial_pos[2] ])
+                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ]) 
+                    p2 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + start_x])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] + end_x])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] + start_x ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] + end_x ])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
+                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] + (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] - (sl_mm / 2) ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] + (sl_mm / 2)])
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - start_x])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] - end_x])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] - start_x ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] - end_x ])
-                
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
+                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] - (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] + (sl_mm / 2) ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] - (sl_mm / 2)])
                 control_points = [p0, p1, p2, p3]
                 bezier_gen = bezier.BezierCurveGen(control_points)
                 current_pos = bezier_gen.n_point_curve(control_points, swing_progress)
@@ -384,8 +413,8 @@ class GaitController:
         return effective_velocity
 
     def gradual_stop(self, ef_positions, p, robotId):
-        pass
 
+        pass
 
     def turn(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):
         
@@ -401,35 +430,5 @@ class GaitController:
                 
 
 if __name__ == "__main__":
-    gait = GaitController()
-    point_x = np.array([95 /1000, 105 /1000, 48 /1000])
-    point_y = np.array([170 /1000, 105 /1000, 48 /1000])
-    center = np.array([0,0,0.25])
-    orientation = [0,0,0]
-    _, curve_points, control_points = gait.swing_trajectory(
-                    start_pos=point_x,
-                    swing_height=0.05,
-                    center=center,
-                    orientation=orientation
-                )
-    
-
-     # Plotting
-    fig = plt.figure()
-    
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel('X (Forward)')
-    ax.set_ylabel('Y (Left)')
-    ax.set_zlabel('Z (Up)')
-
-    # Plot control points
-    cp = np.array(control_points)
-    ax.plot(cp[:, 0], cp[:, 1], cp[:, 2], 'ro--', label='Control Points')
-
-    # Plot Bezier curve
-    ax.plot(curve_points[:, 0], curve_points[:, 1], curve_points[:, 2], 'b-', label='Bezier Curve')
-
-    ax.set_title('Cubic Bezier Curve')
-    ax.legend()
-    plt.show()
+    pass
     

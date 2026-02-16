@@ -5,7 +5,7 @@ import math
 import numpy as np
 import gait_controller as gait
 import kinematics
-from utils import from_pybullet_pos, to_pybullet_pos, from_pybullet_orn, to_pybullet_orn
+from utils import *
 
 
 
@@ -39,6 +39,7 @@ class PybulletSim:
         :param orientation: initial orientation for the robot to spawn (in pybullet frame)
         :param center_plane: in pybullet frame
         :param initial_theta: initial angles for the robot to spawn
+        :param initial_ef_positions: initial end effector positions for the robot to spawn (in kinematics frame)
         :param angle_unit: unit of initial_theta
         """
         # --- CONFIGURATION ---
@@ -113,7 +114,7 @@ class PybulletSim:
         :param orn: in pybullet frame
         """
         try:
-            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=False)
+            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=True)
             print(f"Successfully loaded {urdf_path}!")
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
@@ -143,6 +144,11 @@ class PybulletSim:
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
         p.resetDebugVisualizerCamera(cameraDistance=cameraDistance, cameraYaw=cameraYaw, cameraPitch=cameraPitch, cameraTargetPosition=cameraTargetPosition)
+        self.roll_slider = p.addUserDebugParameter("----roll", -60, 60, 0)
+        self.pitch_slider = p.addUserDebugParameter("----pitch", -60, 60, 0)
+        self.yaw_slider = p.addUserDebugParameter("----yaw", -60, 60, 0)
+
+
 
         orn= p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
         planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
@@ -156,13 +162,13 @@ class PybulletSim:
         pos, orn = p.getBasePositionAndOrientation(self.robotId)
         roll, pitch, yaw = p.getEulerFromQuaternion(orn)
         
-        # 2. Angular Velocity (Gyroscope)
-        lin_vel, ang_vel = p.getBaseVelocity(self.robotId)
-        # ang_vel is [wx, wy, wz] (roll_rate, pitch_rate, yaw_rate)
-        roll_rate = ang_vel[0]
-        pitch_rate = ang_vel[1]
+        # # 2. Angular Velocity (Gyroscope)
+        # lin_vel, ang_vel = p.getBaseVelocity(self.robotId)
+        # # ang_vel is [wx, wy, wz] (roll_rate, pitch_rate, yaw_rate)
+        # roll_rate = ang_vel[0]
+        # pitch_rate = ang_vel[1]
         
-        return roll, pitch, roll_rate, pitch_rate
+        return roll, pitch, yaw
 
     def get_ef_positions(self):
         """
@@ -222,9 +228,9 @@ class PybulletSim:
                             jointIndices=jointIndices,  # shoulder, leg, foot
                             controlMode=p.POSITION_CONTROL,
                             targetPositions=target_angle)
-            for _ in range(1): 
+            for _ in range(3): 
                 p.stepSimulation()
-                time.sleep(1./120.)
+                time.sleep(1./240.)
         
     def execute_robot_trajectory(self, trajectories):
         """
@@ -299,22 +305,60 @@ class PybulletSim:
             aKey = ord('a')
             dKey = ord('d')
             qKey = ord('q')
+            iKey = ord('i')
+            tKey = ord('t')
+
+
 
             # Not used at the moment
-            mouse_event = p.getMouseEvents()
-            try:
-                event_type = mouse_event[0][0]
-                button_state = mouse_event[0][-1]
-                button_index = mouse_event[0][3]
-            except:
-                # keyboard_event = None
-                event_type = None
-                button_state = None
+            # mouse_event = p.getMouseEvents()
+            # try:
+            #     event_type = mouse_event[0][0]
+            #     button_state = mouse_event[0][-1]
+            #     button_index = mouse_event[0][3]
+            # except:
+            #     # keyboard_event = None
+            #     event_type = None
+            #     button_state = None
+
+            # Print imu data
+            if self.key_is_pressed(keyboard_event, iKey):
+                roll = self.get_imu_data()[0]
+                pitch = self.get_imu_data()[1]
+                yaw = self.get_imu_data()[2]
+                roll  = np.degrees(roll)
+                pitch = np.degrees(pitch)
+                yaw   = np.degrees(yaw)
+                print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
+
+
+            # Test certain trajectories
+            if self.key_is_pressed(keyboard_event, tKey):
+                trajectory, cps, _ = self.gait_controller.swing_trajectory(from_homogenous(self.initial_ef_positions[1]) / 1000., 0.1, leg="FR")
+                
+                # for cp in cps:  
+                #     cp = to_pybullet_pos(cp)
+                #     print(cp)
+                #     self.debug_point(cp, radius=0.005)
+                #     time.sleep(1./240.)
+                self.debug_point([0.067, -0.107, 0.046])
+                self.debug_point([0.167, -0.107, 0.046])
+                # self.debug_point(cps[50])
+                # self.debug_point(cps[-1])
+                print(cps)
+                
+                # print(trajectory)
+                self.execute_leg_trajectory(trajectory=trajectory, leg="FR")
+
 
             # Move to a certain pose
             if self.key_is_pressed(keyboard_event, cKey):
-                angles = self.kin_solver.robot_IK(self.center_kin, [PI/6, 0, PI/6], self.initial_ef_positions)
+                roll_angle = np.radians(p.readUserDebugParameter(self.roll_slider))
+                pitch_angle = np.radians(p.readUserDebugParameter(self.pitch_slider))
+                yaw_angle = np.radians(p.readUserDebugParameter(self.yaw_slider))
+                angles = self.kin_solver.robot_IK(self.center_kin, [roll_angle, pitch_angle, yaw_angle], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                
 
             # Reset to initial pose
             if self.key_is_pressed(keyboard_event, rKey):
@@ -324,7 +368,7 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, wKey) or self.key_is_pressed(keyboard_event, upArrowKey):
-                print("GOING FORWARDS")
+                # print("GOING FORWARDS")
                 deceleration_flag = False
                 while True:
                     current_time += 1./240.
@@ -333,14 +377,14 @@ class PybulletSim:
 
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
-                        print("DECELERATING")
+                        # print("DECELERATING")
                     ef_vel = self.go_forward(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
-                    print(f"Current Speed in m/s: {ef_vel}")
-                    print(f"dec flag : {deceleration_flag}")
+                    # print(f"Current Speed in m/s: {ef_vel}")
+                    # print(f"dec flag : {deceleration_flag}")
 
                     # Once speed is 0 return to default pose
                     if ef_vel == 0.0 and deceleration_flag:
-                        print("STOPPED")
+                        # print("STOPPED")
                         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                         self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
@@ -506,11 +550,13 @@ if __name__ == "__main__":
     # This is the default orientation of the pybullet frame which is equivalent to [0, 0, 0] in the kinematics frame
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
+    # Degrees
     theta = [0, -30, 60, # FL
              0, -30, 60, # FR
              0, -30, 60, # RL
              0, -30, 60 ] # RR
     
+    # X forward Y up Z left in milimeters
     ef_positions = np.array([
             [ 95, 48.13,  105, 1], # FL
             [ 95, 48.13,  -105, 1], # FR
@@ -518,6 +564,7 @@ if __name__ == "__main__":
             [-45, 48.13, -105, 1] # RR
             ])
     
+    # X forward Y up Z left in milimeters
     ef_positions2 = np.array([
         [67.29, 46.12, 107, 1],
         [67.29, 46.12, -107, 1],
@@ -526,8 +573,8 @@ if __name__ == "__main__":
         ])
 
 
-    test = kinematics.Kinematics()
-    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
+    # test = kinematics.Kinematics()
+    # print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,

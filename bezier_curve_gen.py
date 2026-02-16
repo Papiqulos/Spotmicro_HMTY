@@ -48,6 +48,26 @@ if __name__ == "__main__":
     middle1 = start + end / 2 + np.array([0, 0, 1])  # Elevated middle point
     middle2 = end + start / 2 + np.array([0, 1, 1])  # Elevated middle point
 
+    dl = 450.0 * (0.27)
+    L_span = 450.0
+    h1 = 250.0 - 70
+    h2 = 250.0
+
+    ef_positions2 = np.array([
+        [67.29 - L_span, 46.12, 107],
+        [67.29 - L_span - dl, 46.12, 107],
+        [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
+        [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
+        [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
+        [67.29, 46.12 + h1, 107],
+        [67.29, 46.12 + h1, 107],
+        [67.29, 46.12 + h2, 107],
+        [67.29 + L_span + dl + 50.0, 46.12 + h2, 107],
+        [67.29 + L_span + dl + 50.0, 46.12 + h2, 107],
+        [67.29 + L_span + dl, 46.12, 107],
+        [67.29 + L_span, 46.12, 107],
+        ])
+
     control_points = [
     [-200.0, 500.0, 100.0],
     [-280.5, 500.0, 100.0],
@@ -68,7 +88,7 @@ if __name__ == "__main__":
     # control_points = [start, middle1, end]
 
     # Create Bezier curve generator
-    bezier_gen = BezierCurveGen(control_points)
+    bezier_gen = BezierCurveGen(ef_positions2)
 
     # Generate curve points
     curve_points = bezier_gen.generate_curve(num_points=1000)
@@ -78,7 +98,7 @@ if __name__ == "__main__":
     ax = fig.add_subplot(111, projection='3d')
 
     # Plot control points
-    cp = np.array(control_points)
+    cp = np.array(ef_positions2)
     ax.plot(cp[:, 0], cp[:, 1], cp[:, 2], 'ro--', label='Control Points')
 
     # Plot Bezier curve
