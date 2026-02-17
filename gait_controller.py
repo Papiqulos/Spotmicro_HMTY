@@ -308,12 +308,6 @@ class GaitController:
 
 
         # PID CONTROLLER for roll, pitch, yaw
-        # roll correction so that it doesn't tumble 
-        # pitch correction so that it follows a relavitely straight line when going forward
-        # yaw correction so that it follows a relavitely straight line when going forward
-        pitch_correction = 0
-        yaw_correction = 0
-
         if imu_data is not None:
             # Convert imu data to kinematics frame
             imu_data = from_pybullet_orn(imu_data)
@@ -324,12 +318,12 @@ class GaitController:
             # Calculate errors
             roll_error = self.initial_orientation[0] - imu_data[0] 
             pitch_error = self.initial_orientation[1] - imu_data[1]
-            yaw_error = self.initial_orientation[2] + np.pi - imu_data[2]
+            yaw_error = normalize_angle(self.initial_orientation[2] - imu_data[2])
 
             print("---------------------------------")
             print(f"target_roll : {self.initial_orientation[0]}")
             print(f"target_pitch : {self.initial_orientation[1]}")
-            print(f"target_yaw : {self.initial_orientation[2] + np.pi}")
+            print(f"target_yaw : {self.initial_orientation[2]}")
             print("---------------------------------")
             print(f"imu_roll : {imu_data[0]}")
             print(f"imu_pitch : {imu_data[1]}")
@@ -355,7 +349,7 @@ class GaitController:
         corrected_orientation = (
             self.initial_orientation[0] + roll_correction, 
             self.initial_orientation[1] + pitch_correction, 
-            self.initial_orientation[2] )
+            self.initial_orientation[2] + yaw_correction)
 
         # Get Body IK transforms in Kinematics frame
         (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)

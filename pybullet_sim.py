@@ -9,6 +9,7 @@ from matplotlib import style
 import gait_controller as gait
 import kinematics
 from utils import *
+from collections import deque
 
 
 
@@ -326,9 +327,12 @@ class PybulletSim:
 
             # Print imu data
             if self.key_is_pressed(keyboard_event, iKey):
-                roll = self.get_imu_data()[0]
-                pitch = self.get_imu_data()[1]
-                yaw = self.get_imu_data()[2] - np.pi
+                imu_data_raw = self.get_imu_data()
+                imu_data_kin = from_pybullet_orn(imu_data_raw)
+                
+                roll = imu_data_kin[0]
+                pitch = imu_data_kin[1]
+                yaw = imu_data_kin[2]
 
                 roll_deg  = np.degrees(roll)
                 pitch_deg = np.degrees(pitch)
@@ -380,45 +384,46 @@ class PybulletSim:
                 # print("GOING FORWARDS")
                 deceleration_flag = False
 
-                # 
+                # PID Controller graphs for the RPY angles
+                max_len = 100
+                x_data = deque(maxlen=max_len)
+                roll_data = deque(maxlen=max_len)
+                pitch_data = deque(maxlen=max_len)
+                yaw_data = deque(maxlen=max_len)
+
+                # Roll
                 fig , (axr, axp, axy) = plt.subplots(3)
-                axr.set_xlim([0, 1])
-                axr.set_ylim([-0.1, 0.1])
                 axr.set_title("Roll Error")
                 axr.grid()
                 roll_graph, = axr.plot([], [], color='red', label="Roll Error")
-                x_target = np.linspace(0, 1, 100)
-                yr_target = np.full(100, self.orientation[0])
-                axr.plot(x_target, yr_target, color="blue", label="Target Roll")
+                axr.axhline(y=0, color='blue', linestyle='--', label="Target (0)")
                 axr.legend()
 
-
-                axp.set_xlim([0, 1])
-                axp.set_ylim([-0.1, 0.1])
+                # Pitch
                 axp.set_title("Pitch Error")
                 axp.grid()
                 pitch_graph, = axp.plot([], [], color='red', label="Pitch Error")
-                yp_target = np.full(100, self.orientation[1])
-                axp.plot(x_target, yp_target, color="blue", label="Target Pitch")
+                axp.axhline(y=0, color='blue', linestyle='--', label="Target (0)")
                 axp.legend()
-
-                axy.set_xlim([0, 1])
-                axy.set_ylim([2, 15])
+                
+                # Yaw
                 axy.set_title("Yaw Error")
                 axy.grid()
                 yaw_graph, = axy.plot([], [], color='red', label="Yaw Error")
-                yy_target = np.full(100, self.orientation[2])
-                axy.plot(x_target, yy_target, color="blue", label="Target Yaw")
+                axy.axhline(y=0, color='blue', linestyle='--', label="Target (0)")
                 axy.legend()
                 
+                plot_step = 0
+
                 while True:
                     current_time += 1./240.
+                    plot_step += 1
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
                     keyboard_event = p.getKeyboardEvents()
 
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
-                        # print("DECELERATING")
+                        print("DECELERATING")
                     T_cycle = 0.2
                     duty_factor = 0.5
                     swing_height = 0.03
@@ -435,19 +440,29 @@ class PybulletSim:
                                   deceleration_flag=deceleration_flag)
                     
                     # Live plot of RPY errors
-                    roll_graph.set_xdata(np.append(roll_graph.get_xdata(), current_time))
-                    roll_graph.set_ydata(np.append(roll_graph.get_ydata(), roll_error))
+                    x_data.append(current_time)
+                    roll_data.append(roll_error)
+                    pitch_data.append(pitch_error)
+                    yaw_data.append(yaw_error)
 
-                    pitch_graph.set_xdata(np.append(pitch_graph.get_xdata(), current_time))
-                    pitch_graph.set_ydata(np.append(pitch_graph.get_ydata(), pitch_error))
+                    # Update plot every 10 steps (approx 24fps) to save performance
+                    if plot_step % 10 == 0:
+                        roll_graph.set_data(x_data, roll_data)
+                        pitch_graph.set_data(x_data, pitch_data)
+                        yaw_graph.set_data(x_data, yaw_data)
+                        
+                        # Dynamic X-axis scrolling
+                        if len(x_data) > 1:
+                            axr.set_xlim(x_data[0], x_data[-1] + 0.1)
+                            axp.set_xlim(x_data[0], x_data[-1] + 0.1)
+                            axy.set_xlim(x_data[0], x_data[-1] + 0.1)
+                            
+                            # Dynamic Y-axis scaling
+                            axr.set_ylim(min(roll_data)-0.05, max(roll_data)+0.05)
+                            axp.set_ylim(min(pitch_data)-0.05, max(pitch_data)+0.05)
+                            axy.set_ylim(min(yaw_data)-0.05, max(yaw_data)+0.05)
 
-                    yaw_graph.set_xdata(np.append(yaw_graph.get_xdata(), current_time))
-                    yaw_graph.set_ydata(np.append(yaw_graph.get_ydata(), yaw_error))
-                    # fig.canvas.draw()
-                    # fig.canvas.flush_events()
-
-                    
-                    plt.pause(0.01)
+                        plt.pause(0.0001)
 
 
 

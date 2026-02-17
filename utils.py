@@ -31,6 +31,10 @@ def from_homogenous(vec):
     """ Converts homogeneous coordinates to a 3D vector """
     return vec[:3]
 
+def normalize_angle(angle):
+    """ Normalizes angle to [-pi, pi] """
+    return (angle + pi) % (2 * pi) - pi
+
 def to_pybullet_pos(vec):
     """ Converts Kinematics (Y-Up) to PyBullet (Z-Up) """
     return np.array([vec[0], vec[2], vec[1]]) / 1000.0  # Convert mm to meters
@@ -43,4 +47,4 @@ def to_pybullet_orn(vec):
     return np.array([vec[0], vec[1], vec[2]+pi])
 
 def from_pybullet_orn(vec):
-    return np.array([vec[0], vec[1], vec[2]-pi])
+    return np.array([vec[0], vec[1], normalize_angle(vec[2]-pi)])
