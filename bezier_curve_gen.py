@@ -37,14 +37,13 @@ class BezierCurveGen:
             point = self.n_point_curve(self.control_points, t)
             curve.append(point)
         return np.array(curve)
-    
 
 
 if __name__ == "__main__":
     
     # Define control points for a cubic Bezier curve
     start = np.array([0, 0, 0])
-    end = np.array([1, 1, 0])
+    end = np.array([1, 0, 0])
     middle1 = start + end / 2 + np.array([0, 0, 1])  # Elevated middle point
     middle2 = end + start / 2 + np.array([0, 1, 1])  # Elevated middle point
 
@@ -103,6 +102,10 @@ if __name__ == "__main__":
 
     # Plot Bezier curve
     ax.plot(curve_points[:, 0], curve_points[:, 1], curve_points[:, 2], 'b-', label='Bezier Curve')
+
+    
+
+    # Set labels and title
 
     ax.set_title('Cubic Bezier Curve')
     ax.legend()

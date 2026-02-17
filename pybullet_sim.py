@@ -3,6 +3,9 @@ import pybullet_data
 import time
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
 import gait_controller as gait
 import kinematics
 from utils import *
@@ -103,8 +106,9 @@ class PybulletSim:
                                                 initial_orientation=self.orientation_kin)
 
         # Start simulation
+        self.initial_state = p.saveState()
         self.start_simulation()
-
+        
     def load_quadruped(self, urdf_path, center, orn):
         """
         Load the urdf with its meshes
@@ -114,7 +118,7 @@ class PybulletSim:
         :param orn: in pybullet frame
         """
         try:
-            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=True)
+            robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=False)
             print(f"Successfully loaded {urdf_path}!")
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
@@ -158,11 +162,11 @@ class PybulletSim:
         Returns (roll, pitch) in radians and (roll_rate, pitch_rate)
         simulating an onboard IMU and Gyroscope.
         """
-        # 1. Orientation (Quaternion -> Euler)
+        # Orientation (Quaternion -> Euler)
         pos, orn = p.getBasePositionAndOrientation(self.robotId)
         roll, pitch, yaw = p.getEulerFromQuaternion(orn)
         
-        # # 2. Angular Velocity (Gyroscope)
+        # Angular Velocity (Gyroscope)
         # lin_vel, ang_vel = p.getBaseVelocity(self.robotId)
         # # ang_vel is [wx, wy, wz] (roll_rate, pitch_rate, yaw_rate)
         # roll_rate = ang_vel[0]
@@ -300,6 +304,7 @@ class PybulletSim:
             rightArrowKey = 65296
             cKey = ord('c')
             rKey = ord('r')
+            eKey = ord('e')
             wKey = ord('w')
             sKey = ord('s')
             aKey = ord('a')
@@ -307,8 +312,6 @@ class PybulletSim:
             qKey = ord('q')
             iKey = ord('i')
             tKey = ord('t')
-
-
 
             # Not used at the moment
             # mouse_event = p.getMouseEvents()
@@ -325,31 +328,34 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, iKey):
                 roll = self.get_imu_data()[0]
                 pitch = self.get_imu_data()[1]
-                yaw = self.get_imu_data()[2]
-                roll  = np.degrees(roll)
-                pitch = np.degrees(pitch)
-                yaw   = np.degrees(yaw)
+                yaw = self.get_imu_data()[2] - np.pi
+
+                roll_deg  = np.degrees(roll)
+                pitch_deg = np.degrees(pitch)
+                yaw_deg   = np.degrees(yaw)
+                print("---------------")
+                # print(f"roll: {roll_deg}\npitch: {pitch_deg}\nyaw: {yaw_deg}")
                 print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
 
-
-            # Test certain trajectories
+            # Test certain trajectories 
             if self.key_is_pressed(keyboard_event, tKey):
-                trajectory, cps, _ = self.gait_controller.swing_trajectory(from_homogenous(self.initial_ef_positions[1]) / 1000., 0.1, leg="FR")
+                start = [(0.09915934827261777, 0.08800000001062948, 0.0414756133649455), 
+                         (0.09915934827261777, -0.0880000000106295, 0.0414756133649455), 
+                         (-0.08684065172738223, 0.0880000000106295, 0.0414756133649455), 
+                         (-0.0868406517273822, -0.08800000001062948, 0.041475613364945596)]
                 
-                # for cp in cps:  
-                #     cp = to_pybullet_pos(cp)
-                #     print(cp)
-                #     self.debug_point(cp, radius=0.005)
-                #     time.sleep(1./240.)
-                self.debug_point([0.067, -0.107, 0.046])
-                self.debug_point([0.167, -0.107, 0.046])
-                # self.debug_point(cps[50])
-                # self.debug_point(cps[-1])
-                print(cps)
+                # angles, points, control_points = self.gait_controller.swing_trajectory_control_points(start[0], 0.05)
                 
-                # print(trajectory)
-                self.execute_leg_trajectory(trajectory=trajectory, leg="FR")
+                # for control_point in control_points:
+                #     self.debug_point(control_point, radius=0.005)
 
+                # for point in points:
+                #     self.debug_point(point, colour=[0, 1, 0, 1], radius=0.005)
+                
+                
+                # # print(trajectory)
+                # self.execute_leg_trajectory(trajectory=angles)
+                pass
 
             # Move to a certain pose
             if self.key_is_pressed(keyboard_event, cKey):
@@ -359,7 +365,10 @@ class PybulletSim:
                 angles = self.kin_solver.robot_IK(self.center_kin, [roll_angle, pitch_angle, yaw_angle], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
                 
-
+            # Reset scene
+            if self.key_is_pressed(keyboard_event, eKey):
+                self.respawn_robot()
+            
             # Reset to initial pose
             if self.key_is_pressed(keyboard_event, rKey):
                 print("RESETTING TO INITIAL POSE")
@@ -370,6 +379,38 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, wKey) or self.key_is_pressed(keyboard_event, upArrowKey):
                 # print("GOING FORWARDS")
                 deceleration_flag = False
+
+                # 
+                fig , (axr, axp, axy) = plt.subplots(3)
+                axr.set_xlim([0, 1])
+                axr.set_ylim([-0.1, 0.1])
+                axr.set_title("Roll Error")
+                axr.grid()
+                roll_graph, = axr.plot([], [], color='red', label="Roll Error")
+                x_target = np.linspace(0, 1, 100)
+                yr_target = np.full(100, self.orientation[0])
+                axr.plot(x_target, yr_target, color="blue", label="Target Roll")
+                axr.legend()
+
+
+                axp.set_xlim([0, 1])
+                axp.set_ylim([-0.1, 0.1])
+                axp.set_title("Pitch Error")
+                axp.grid()
+                pitch_graph, = axp.plot([], [], color='red', label="Pitch Error")
+                yp_target = np.full(100, self.orientation[1])
+                axp.plot(x_target, yp_target, color="blue", label="Target Pitch")
+                axp.legend()
+
+                axy.set_xlim([0, 1])
+                axy.set_ylim([2, 15])
+                axy.set_title("Yaw Error")
+                axy.grid()
+                yaw_graph, = axy.plot([], [], color='red', label="Yaw Error")
+                yy_target = np.full(100, self.orientation[2])
+                axy.plot(x_target, yy_target, color="blue", label="Target Yaw")
+                axy.legend()
+                
                 while True:
                     current_time += 1./240.
                     p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
@@ -378,7 +419,38 @@ class PybulletSim:
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
                         # print("DECELERATING")
-                    ef_vel = self.go_forward(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
+                    T_cycle = 0.2
+                    duty_factor = 0.5
+                    swing_height = 0.03
+                    velocity = 0.9
+                    ef_vel, roll_error, pitch_error, yaw_error = self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="+x", 
+                                  deceleration_flag=deceleration_flag)
+                    
+                    # Live plot of RPY errors
+                    roll_graph.set_xdata(np.append(roll_graph.get_xdata(), current_time))
+                    roll_graph.set_ydata(np.append(roll_graph.get_ydata(), roll_error))
+
+                    pitch_graph.set_xdata(np.append(pitch_graph.get_xdata(), current_time))
+                    pitch_graph.set_ydata(np.append(pitch_graph.get_ydata(), pitch_error))
+
+                    yaw_graph.set_xdata(np.append(yaw_graph.get_xdata(), current_time))
+                    yaw_graph.set_ydata(np.append(yaw_graph.get_ydata(), yaw_error))
+                    # fig.canvas.draw()
+                    # fig.canvas.flush_events()
+
+                    
+                    plt.pause(0.01)
+
+
+
                     # print(f"Current Speed in m/s: {ef_vel}")
                     # print(f"dec flag : {deceleration_flag}")
 
@@ -400,14 +472,27 @@ class PybulletSim:
 
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
-                        print("DECELERATING")
-                    ef_vel = self.go_backward(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
-                    print(f"Current Speed in m/s: {ef_vel}")
-                    print(f"dec flag : {deceleration_flag}")
+                        # print("DECELERATING")
+                    T_cycle = 0.2
+                    duty_factor = 0.5
+                    swing_height = 0.03
+                    velocity = 0.9
+                    ef_vel, _, _ , _  = self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="-x", 
+                                  deceleration_flag=deceleration_flag)
+                    # print(f"Current Speed in m/s: {ef_vel}")
+                    # print(f"dec flag : {deceleration_flag}")
 
                     # Once speed is 0 return to default pose
                     if ef_vel == 0.0 and deceleration_flag:
-                        print("STOPPED")
+                        # print("STOPPED")
                         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                         self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
@@ -423,14 +508,27 @@ class PybulletSim:
 
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
-                        print("DECELERATING")
-                    ef_vel = self.go_left(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
-                    print(f"Current Speed in m/s: {ef_vel}")
-                    print(f"dec flag : {deceleration_flag}")
+                        # print("DECELERATING")
+                    T_cycle = 0.2
+                    duty_factor = 0.5
+                    swing_height = 0.03
+                    velocity = 0.9
+                    ef_vel, _, _ , _  = self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="+y", 
+                                  deceleration_flag=deceleration_flag)
+                    # print(f"Current Speed in m/s: {ef_vel}")
+                    # print(f"dec flag : {deceleration_flag}")
 
                     # Once speed is 0 return to default pose
                     if ef_vel == 0.0 and deceleration_flag:
-                        print("STOPPED")
+                        # print("STOPPED")
                         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                         self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
@@ -446,91 +544,47 @@ class PybulletSim:
 
                     if self.key_is_pressed(keyboard_event, qKey):
                         deceleration_flag = True
-                        print("DECELERATING")
-                    ef_vel = self.go_right(current_time, velocity=0.9, deceleration_flag=deceleration_flag)
-                    print(f"Current Speed in m/s: {ef_vel}")
-                    print(f"dec flag : {deceleration_flag}")
+                        # print("DECELERATING")
+                    T_cycle = 0.2
+                    duty_factor = 0.5
+                    swing_height = 0.03
+                    velocity = 0.9
+                    ef_vel, _, _ , _ = self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  self.get_imu_data(), 
+                                  dir="-y", 
+                                  deceleration_flag=deceleration_flag)
+                    # print(f"Current Speed in m/s: {ef_vel}")
+                    # print(f"dec flag : {deceleration_flag}")
 
                     # Once speed is 0 return to default pose
                     if ef_vel == 0.0 and deceleration_flag:
-                        print("STOPPED")
+                        # print("STOPPED")
                         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                         self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
 
-    
+    def respawn_robot(self):
+        # I am inevitable
+        # p.resetSimulation() # breaks everything
+
+        # Position the robot at its initial position
+        p.restoreState(stateId = self.initial_state)
+        # Reset the camera
+        p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0])
+        print("RESETTING SCENE")
+        # Make sure the robot has the initial pose
+        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+        self.move_robot_to_pose(self.robotId, angles, unit="rad")
+
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
-
-    def go_forward(self, current_time, velocity=0.9, deceleration_flag=False):
-
-        T_cycle = 0.2
-        duty_factor = 0.5
-        swing_height = 0.03
-        velocity = velocity
-        
-        return self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="+x", 
-                                  deceleration_flag=deceleration_flag)
-
-    def go_backward(self, current_time, velocity=0.9, deceleration_flag=False):
-        T_cycle = 0.2
-        duty_factor = 0.5
-        swing_height = 0.03
-        velocity = velocity
-        
-        return self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="-x",
-                                  deceleration_flag=deceleration_flag)
-
-    def go_left(self, current_time, velocity=0.9, deceleration_flag=False):
-        T_cycle = 0.2
-        duty_factor = 0.5
-        swing_height = 0.03
-        velocity = velocity
-        
-        return self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="+y", 
-                                  deceleration_flag=deceleration_flag)
-
-    def go_right(self, current_time, velocity=0.9, deceleration_flag=False):
-        T_cycle = 0.2
-        duty_factor = 0.5
-        swing_height = 0.03
-        velocity = velocity
-        
-        return self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="-y",
-                                  deceleration_flag=deceleration_flag)   
-        
+          
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
         Generate a point in pybullet
@@ -573,8 +627,8 @@ if __name__ == "__main__":
         ])
 
 
-    # test = kinematics.Kinematics()
-    # print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
+    test = kinematics.Kinematics()
+    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,

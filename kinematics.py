@@ -146,13 +146,13 @@ class Kinematics:
         return np.array([T0, T1, T2, T3, T4])
     
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
-    def bodyIK(self, omega, phi, psi, xm, ym, zm):
+    def bodyIK(self, omega, psi, phi, xm, ym, zm):
         """
         Return the transformation matrices for each leg shoulder relative to body given body center and orientation.
         
         :param omega: Roll angle (rotation around x-axis)
-        :param phi: Pitch angle (rotation around y-axis)
-        :param psi: Yaw angle (rotation around z-axis)
+        :param psi: Pitch angle (rotation around z-axis)
+        :param phi: Yaw angle (rotation around y-axis)
         :param xm: X-coordinate of body center
         :param ym: Y-coordinate of body center
         :param zm: Z-coordinate of body center
