@@ -74,57 +74,7 @@ class Kinematics:
         
         # Inversion matrix for right legs
         self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-    
-    # NOT USED
-    def r_legs(self, theta1=0, theta2=0, theta3=0):
-        # degrees to radians
-        theta1 = np.deg2rad(theta1)
-        theta2 = np.deg2rad(theta2)
-        theta3 = np.deg2rad(theta3)
-        return [
-            [0,      pi/2,  0,    theta1],  # Shoulder joint
-            [self.l3+self.l2,     0,      self.l1,     theta2],  # Leg joint
-            [self.l4,     0,      0,     theta3]   # Foot joint
-        ]
-
-    # NOT USED
-    def l_legs(self, theta1=0, theta2=0, theta3=0):
-        # degrees to radians
-        theta1 = np.deg2rad(theta1)
-        theta2 = np.deg2rad(theta2)
-        theta3 = np.deg2rad(theta3)
-        return [
-            [0,      pi/2,  0,    -theta1],  # Shoulder joint
-            [self.l3+self.l2,     0,      -self.l1,     -theta2],  # Leg joint
-            [self.l4,     0,      0,     -theta3]   # Foot joint
-        ]
-
-    # NEEDS FIXING
-    def legFK(self, dh_params):
-        '''
-        Forward kinematics using Denavit-Hartenberg parameters for one leg.
-        Starting from the shoulder joint to the end effector (foot).
-
-        :dh_params: List of DH parameters [a, alpha, d, theta] for each joint.
-
-        Returns the transformation matrix from shoulder joint to end effector and the kinematic chain.
-        '''
-        T = np.eye(4)
-        # Rotation to adjust coordinate system
-        T_ = Ry(-pi/2) @ Rz(-pi/2)
         
-        kinematic_chain = []
-        for a, alpha, d, theta in dh_params:
-            T_i = np.array([[math.cos(theta), -math.sin(theta)*math.cos(alpha),  math.sin(theta)*math.sin(alpha), a*math.cos(theta)],
-                            [math.sin(theta),  math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha), a*math.sin(theta)],
-                            [0,                math.sin(alpha),                  math.cos(alpha),                 d],
-                            [0,                0,                                0,                               1]])
-            T = np.dot(T, T_i)
-            kinematic_chain.append(T.copy())
-        T = T_ @ T
-        kinematic_chain = [T_ @ x for x in kinematic_chain]
-        return T, kinematic_chain
-    
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legFK_hard_coded(self, angles):
         '''

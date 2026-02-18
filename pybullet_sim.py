@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 import gait_controller as gait
-import kinematics
+import kinematics_old
 from utils import *
 from collections import deque
 
@@ -93,7 +93,7 @@ class PybulletSim:
         self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
 
         # Kinematics Controller
-        self.kin_solver = kinematics.Kinematics(self.length, 
+        self.kin_solver = kinematics_old.Kinematics(self.length, 
                                                 self.width, 
                                                 self.l1, 
                                                 self.l2, 
@@ -642,15 +642,15 @@ if __name__ == "__main__":
         ])
 
 
-    test = kinematics.Kinematics()
+    test = kinematics_old.Kinematics()
     print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
 
-    pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
-                               width=kinematics.WIDTH,
-                               l1=kinematics.L1, 
-                               l2=kinematics.L2, 
-                               l3=kinematics.L3, 
-                               l4=kinematics.L4,
+    pybullet_sim = PybulletSim(length=kinematics_old.LENGTH, 
+                               width=kinematics_old.WIDTH,
+                               l1=kinematics_old.L1, 
+                               l2=kinematics_old.L2, 
+                               l3=kinematics_old.L3, 
+                               l4=kinematics_old.L4,
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,

@@ -1,6 +1,6 @@
 import numpy as np
 import bezier_curve_gen as bezier
-import kinematics
+import kinematics_old
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
@@ -10,12 +10,12 @@ import time
 from pid_controller import PIDController, PIDControllerRP
 
 
-L1 = kinematics.L1
-L2 = kinematics.L2
-L3 = kinematics.L3
-L4 = kinematics.L4
-LENGTH = kinematics.LENGTH
-WIDTH = kinematics.WIDTH
+L1 = kinematics_old.L1
+L2 = kinematics_old.L2
+L3 = kinematics_old.L3
+L4 = kinematics_old.L4
+LENGTH = kinematics_old.LENGTH
+WIDTH = kinematics_old.WIDTH
 
 class GaitController:
     
@@ -34,14 +34,14 @@ class GaitController:
                             [1, 1, 1],
                             [-1, 1, 1], 
                             [1, 1, 1]]
-        self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
+        self.kin_solver = kinematics_old.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
         self.gait_init = None
         self.deceleration_init = 0
 
         self.pid_roll = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_yaw = PIDController(kp=0.2, ki=0.0, kd=0.0)
+        self.pid_yaw = PIDController(kp=0.2, ki=0.0, kd=0.025)
 
         self.pid_rp = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
 
@@ -213,6 +213,7 @@ class GaitController:
 
         return point
 
+
     def trot(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x", deceleration_flag=False):
         """
         Make the robot trot in the specified direction
@@ -320,19 +321,19 @@ class GaitController:
             pitch_error = self.initial_orientation[1] - imu_data[1]
             yaw_error = normalize_angle(self.initial_orientation[2] - imu_data[2])
 
-            print("---------------------------------")
-            print(f"target_roll : {self.initial_orientation[0]}")
-            print(f"target_pitch : {self.initial_orientation[1]}")
-            print(f"target_yaw : {self.initial_orientation[2]}")
-            print("---------------------------------")
-            print(f"imu_roll : {imu_data[0]}")
-            print(f"imu_pitch : {imu_data[1]}")
-            print(f"imu_yaw : {imu_data[2]}")
-            print("---------------------------------")
-            print(f"roll_error : {roll_error}")
-            print(f"pitch_error : {pitch_error}")
-            print(f"yaw_error : {yaw_error}")
-            print("---------------------------------")
+            # print("---------------------------------")
+            # print(f"target_roll : {self.initial_orientation[0]}")
+            # print(f"target_pitch : {self.initial_orientation[1]}")
+            # print(f"target_yaw : {self.initial_orientation[2]}")
+            # print("---------------------------------")
+            # print(f"imu_roll : {imu_data[0]}")
+            # print(f"imu_pitch : {imu_data[1]}")
+            # print(f"imu_yaw : {imu_data[2]}")
+            # print("---------------------------------")
+            # print(f"roll_error : {roll_error}")
+            # print(f"pitch_error : {pitch_error}")
+            # print(f"yaw_error : {yaw_error}")
+            # print("---------------------------------")
 
 
             

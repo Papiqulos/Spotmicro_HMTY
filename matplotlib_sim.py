@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from kinematics import Kinematics, WIDTH, LENGTH, L1, L2, L3, L4
+from kinematics_old import Kinematics, WIDTH, LENGTH, L1, L2, L3, L4
 from math import *
 
 
