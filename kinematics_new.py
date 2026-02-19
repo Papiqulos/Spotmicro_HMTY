@@ -9,13 +9,13 @@ from utils import *
 pi = math.pi
 
 #--- Robot Dimensions ---
-LENGTH = 14.0 # Length of Robot's base in cm
-WIDTH = 11.0  # Width of Robot's base in cm
+LENGTH = 0.140 # Length of Robot's base in m
+WIDTH = 0.110  # Width of Robot's base in m
 
 # Lengths of leg segments
-L1 = 5    # Horizontal offset from shoulder to leg in cm
-L2 = 11    # Upper Leg Length in cm
-L3 = 13  # Lower Leg Length in cm
+L1 = 0.052    # Horizontal offset from shoulder to leg in m
+L2 = 0.12416    # Upper Leg Length in m
+L3 = 0.115  # Lower Leg Length in m
 
 #--- Real world parameters and connectivity ---
 # pca pin - joint name - zero angle - direction of rotation
@@ -116,30 +116,27 @@ class Kinematics:
                                [0,0,1,0],
                                [0,0,0,1]]),
             ])
-
-    
+ 
     def legIK(self, point, side="r"):
-        """
-        DERIVED IK: Solves for the exact DH parameters used in legFK.
-        Input: (x, y, z) in ROS frame relative to shoulder.
-        """
-        # 1. Transform ROS point (X:Fwd, Y:Left, Z:Up) back to raw DH frame
-        # This is the inverse of the T_BaseFrame used in FK
+        """ Inverse Kinematics for a single leg 
+        
+        :param point: Target foot position (x, y, z) relative to shoulder
+        
+        :returns: list of joint angles (theta1, theta2, theta3)"""
+        
         xdh, ydh, zdh = -point[2], point[1], point[0]
         d1 = self.l1 if side == "r" else -self.l1
 
-        # 2. Solve for Theta 1 (Hip)
-        # Equation: ydh = (L2c2 + L3c23)s1 - d1c1 | xdh = (L2c2 + L3c23)c1 + d1s1
-        dist_sq = xdh**2 + ydh**2
-        if dist_sq < d1**2: return [0,0,0] # Target inside the hip "dead zone"
         
-        # This is the algebraic solution for theta1 in the DH chain
+        dist_sq = xdh**2 + ydh**2
+        if dist_sq < d1**2: return [0,0,0] 
+        
+        
         theta1 = math.atan2(ydh, xdh) + math.asin(d1 / math.sqrt(dist_sq))
 
-        # 3. Solve for Theta 3 (Knee)
-        # Find the projection B (distance from hip axis to foot in the leg plane)
+        
         B = xdh * math.cos(theta1) + ydh * math.sin(theta1)
-        # Using Law of Cosines for a 2R arm (L2, L3) reaching (B, zdh)
+        
         D = (B**2 + zdh**2 - self.l2**2 - self.l3**2) / (2 * self.l2 * self.l3)
         D = np.clip(D, -1.0, 1.0)
         theta3 = math.acos(D)
@@ -149,9 +146,9 @@ class Kinematics:
 
         return [theta1, theta2, theta3]
         
-
     def dh_params(self, theta1=0, theta2=0, theta3=0, side="r"):
-        # cm and radians
+        """angles in radians ALWAYS USE RADIANS"""
+        # m and radians
         d = self.l1 if side == "r" else -self.l1
         
         
@@ -195,7 +192,7 @@ class Kinematics:
         """
         :center: X, Y, Z in cm
         :orientation: Roll, Pitch, Yaw in radians
-        :ef_postions: X, Y, Z in cm
+        :ef_postions: X, Y, Z in m
         
         
         
@@ -234,7 +231,7 @@ class Kinematics:
         return angles # [FL angles, FR angles, RL angles, RR angles]
 
     def robot_FK(self, center, orientation, joint_angles, unit='radians'):
-        """Returns X(Forward) Y(Up) Z(Left) in cm"""
+        """Returns X(Forward) Y(Up) Z(Left) in m"""
 
         if unit == "degrees":
             joint_angles = [math.radians(angle) for angle in joint_angles]
@@ -272,7 +269,7 @@ if __name__ == "__main__":
     print("Kinematics module loaded.")
     kinematics = Kinematics(LENGTH, WIDTH, L1, L2, L3)
 
-    theta = np.array([0, -30, 60, # FL
+    theta = np.array([30, -10, 60, # FL
                       0, -30, 60, # FR
                       0, -30, 60, # RL
                       0, -30, 60 ]) # RR
@@ -299,14 +296,14 @@ if __name__ == "__main__":
 
     
     orientation = [0, 0, 0]  # Roll, Pitch, Yaw in radians
-    center = [0, 0, 0]  # X, Y, Z in cm
+    center = [0, 0, 0]  # X, Y, Z in m
 
 
-    leg_points = kinematics.robot_FK(center, orientation, rads, unit='radians')
+    leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
     print(f"Front Left leg (cm):[{leg_points[0][0]:.2f}, {leg_points[0][1]:.2f}, {leg_points[0][2]:.2f}]")
     print(f"Front Right leg (cm):[{leg_points[1][0]:.2f}, {leg_points[1][1]:.2f}, {leg_points[1][2]:.2f}]")
     print(f"Rear Left leg (cm):[{leg_points[2][0]:.2f}, {leg_points[2][1]:.2f}, {leg_points[2][2]:.2f}]")
-    print(f"Rear Right leg (cm):[{leg_points[3][0]:.2f}, ={leg_points[3][1]:.2f}, {leg_points[3][2]:.2f}]")
+    print(f"Rear Right leg (cm):[{leg_points[3][0]:.2f}, {leg_points[3][1]:.2f}, {leg_points[3][2]:.2f}]")
 
     # Verify IK
     ef_positions = np.array([
