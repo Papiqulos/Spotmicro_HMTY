@@ -4,9 +4,7 @@ import time
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import style
-import gait_controller as gait
+import gait_controller_new as gait
 import kinematics_new as kinematics
 from utils import *
 from collections import deque
@@ -445,7 +443,7 @@ class PybulletSim:
                     T_cycle = 0.2
                     duty_factor = 0.5
                     swing_height = 0.03
-                    velocity = 0.9
+                    velocity = 1.
                     ef_vel, roll_error, pitch_error, yaw_error = self.gait_controller.trot(current_time, 
                                   T_cycle, 
                                   duty_factor, 
@@ -463,24 +461,24 @@ class PybulletSim:
                     pitch_data.append(pitch_error)
                     yaw_data.append(yaw_error)
 
-                    # Update plot every 10 steps (approx 24fps) to save performance
-                    # if plot_step % 10 == 0:
-                    #     roll_graph.set_data(x_data, roll_data)
-                    #     pitch_graph.set_data(x_data, pitch_data)
-                    #     yaw_graph.set_data(x_data, yaw_data)
+                    # Update plot every 50 steps (approx 24fps) to save performance
+                    if plot_step % 50 == 0:
+                        roll_graph.set_data(x_data, roll_data)
+                        pitch_graph.set_data(x_data, pitch_data)
+                        yaw_graph.set_data(x_data, yaw_data)
                         
-                    #     # Dynamic X-axis scrolling
-                    #     if len(x_data) > 1:
-                    #         axr.set_xlim(x_data[0], x_data[-1] + 0.1)
-                    #         axp.set_xlim(x_data[0], x_data[-1] + 0.1)
-                    #         axy.set_xlim(x_data[0], x_data[-1] + 0.1)
+                        # Dynamic X-axis scrolling
+                        if len(x_data) > 1:
+                            axr.set_xlim(x_data[0], x_data[-1] + 0.1)
+                            axp.set_xlim(x_data[0], x_data[-1] + 0.1)
+                            axy.set_xlim(x_data[0], x_data[-1] + 0.1)
                             
-                    #         # Dynamic Y-axis scaling
-                    #         axr.set_ylim(min(roll_data)-0.05, max(roll_data)+0.05)
-                    #         axp.set_ylim(min(pitch_data)-0.05, max(pitch_data)+0.05)
-                    #         axy.set_ylim(min(yaw_data)-0.05, max(yaw_data)+0.05)
+                            # Dynamic Y-axis scaling
+                            axr.set_ylim(min(roll_data)-0.05, max(roll_data)+0.05)
+                            axp.set_ylim(min(pitch_data)-0.05, max(pitch_data)+0.05)
+                            axy.set_ylim(min(yaw_data)-0.05, max(yaw_data)+0.05)
 
-                    #     plt.pause(0.0001)
+                        plt.pause(0.0001)
 
 
 
