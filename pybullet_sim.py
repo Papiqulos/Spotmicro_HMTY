@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
 import gait_controller as gait
-import kinematics_old
+import kinematics_new as kinematics
 from utils import *
 from collections import deque
 
@@ -24,7 +24,6 @@ class PybulletSim:
                  l1, 
                  l2, 
                  l3, 
-                 l4, 
                  center, 
                  orientation, 
                  center_plane, 
@@ -38,7 +37,6 @@ class PybulletSim:
         :param l1: 
         :param l2: 
         :param l3: 
-        :param l4: 
         :param center: initial center for the robot to spawn (in pybullet frame)
         :param orientation: initial orientation for the robot to spawn (in pybullet frame)
         :param center_plane: in pybullet frame
@@ -70,16 +68,15 @@ class PybulletSim:
         self.l1 = l1
         self.l2 = l2
         self.l3 = l3
-        self.l4 = l4
         self.center = center
-        self.center_kin = from_pybullet_pos(center)
+        self.center_kin = center
         self.orientation = orientation
-        self.orientation_kin = from_pybullet_orn(orientation)
+        self.orientation_kin = from_pybullet_orn(orientation) # Keep to handle PI offset
         self.center_plane = center_plane
         self.initial_theta = initial_theta
         self.angle_unit = angle_unit
 
-        self.initial_ef_positions = initial_ef_positions
+       
         
 
         # Pybullet Setup
@@ -93,12 +90,12 @@ class PybulletSim:
         self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
 
         # Kinematics Controller
-        self.kin_solver = kinematics_old.Kinematics(self.length, 
+        self.kin_solver = kinematics.Kinematics(self.length, 
                                                 self.width, 
                                                 self.l1, 
                                                 self.l2, 
-                                                self.l3, 
-                                                self.l4)
+                                                self.l3)
+        self.initial_ef_positions = self.kin_solver.robot_FK(self.center_kin, self.orientation_kin, self.initial_theta, self.angle_unit)
 
         # Gait Controller
         self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions, 
@@ -311,8 +308,10 @@ class PybulletSim:
             aKey = ord('a')
             dKey = ord('d')
             qKey = ord('q')
-            iKey = ord('i')
+            iKey = ord('i') 
             tKey = ord('t')
+            pKey = ord('p')
+
 
             # Not used at the moment
             # mouse_event = p.getMouseEvents()
@@ -325,7 +324,19 @@ class PybulletSim:
             #     event_type = None
             #     button_state = None
 
-            # Print imu data
+
+            # Print ef positions from the pybullet engine
+            if self.key_is_pressed(keyboard_event, pKey):
+                fl = self.get_ef_positions()[0]
+                fr = self.get_ef_positions()[1]
+                rl = self.get_ef_positions()[2]
+                rr = self.get_ef_positions()[3]
+                print(f"FL: {fl}")
+                print(f"FR: {fr}")
+                print(f"RL: {rl}")
+                print(f"RR: {rr}")
+            
+            # Print imu data and ef positions as returned by pybullet engine
             if self.key_is_pressed(keyboard_event, iKey):
                 imu_data_raw = self.get_imu_data()
                 imu_data_kin = from_pybullet_orn(imu_data_raw)
@@ -340,6 +351,13 @@ class PybulletSim:
                 print("---------------")
                 # print(f"roll: {roll_deg}\npitch: {pitch_deg}\nyaw: {yaw_deg}")
                 print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
+                ef_positions = self.get_ef_positions()
+                print(f"FL: {ef_positions[0]}")
+                print(f"FR: {ef_positions[1]}")
+                print(f"RL: {ef_positions[2]}")
+                print(f"RR: {ef_positions[3]}")
+                print("---------------")
+                
 
             # Test certain trajectories 
             if self.key_is_pressed(keyboard_event, tKey):
@@ -446,23 +464,23 @@ class PybulletSim:
                     yaw_data.append(yaw_error)
 
                     # Update plot every 10 steps (approx 24fps) to save performance
-                    if plot_step % 10 == 0:
-                        roll_graph.set_data(x_data, roll_data)
-                        pitch_graph.set_data(x_data, pitch_data)
-                        yaw_graph.set_data(x_data, yaw_data)
+                    # if plot_step % 10 == 0:
+                    #     roll_graph.set_data(x_data, roll_data)
+                    #     pitch_graph.set_data(x_data, pitch_data)
+                    #     yaw_graph.set_data(x_data, yaw_data)
                         
-                        # Dynamic X-axis scrolling
-                        if len(x_data) > 1:
-                            axr.set_xlim(x_data[0], x_data[-1] + 0.1)
-                            axp.set_xlim(x_data[0], x_data[-1] + 0.1)
-                            axy.set_xlim(x_data[0], x_data[-1] + 0.1)
+                    #     # Dynamic X-axis scrolling
+                    #     if len(x_data) > 1:
+                    #         axr.set_xlim(x_data[0], x_data[-1] + 0.1)
+                    #         axp.set_xlim(x_data[0], x_data[-1] + 0.1)
+                    #         axy.set_xlim(x_data[0], x_data[-1] + 0.1)
                             
-                            # Dynamic Y-axis scaling
-                            axr.set_ylim(min(roll_data)-0.05, max(roll_data)+0.05)
-                            axp.set_ylim(min(pitch_data)-0.05, max(pitch_data)+0.05)
-                            axy.set_ylim(min(yaw_data)-0.05, max(yaw_data)+0.05)
+                    #         # Dynamic Y-axis scaling
+                    #         axr.set_ylim(min(roll_data)-0.05, max(roll_data)+0.05)
+                    #         axp.set_ylim(min(pitch_data)-0.05, max(pitch_data)+0.05)
+                    #         axy.set_ylim(min(yaw_data)-0.05, max(yaw_data)+0.05)
 
-                        plt.pause(0.0001)
+                    #     plt.pause(0.0001)
 
 
 
@@ -599,7 +617,7 @@ class PybulletSim:
 
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
-          
+
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
         Generate a point in pybullet
@@ -616,7 +634,6 @@ if __name__ == "__main__":
     # X forward Y up Z left in meters
     center = [0, 0, 0.25]    
     center_plane = [0, 0, 0] 
-    # This is the default orientation of the pybullet frame which is equivalent to [0, 0, 0] in the kinematics frame
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     # Degrees
@@ -625,35 +642,24 @@ if __name__ == "__main__":
              0, -30, 60, # RL
              0, -30, 60 ] # RR
     
-    # X forward Y up Z left in milimeters
-    ef_positions = np.array([
-            [ 95, 48.13,  105, 1], # FL
-            [ 95, 48.13,  -105, 1], # FR
-            [-45, 48.13, 105, 1], # RL
-            [-45, 48.13, -105, 1] # RR
-            ])
-    
-    # X forward Y up Z left in milimeters
-    ef_positions2 = np.array([
-        [67.29, 46.12, 107, 1],
-        [67.29, 46.12, -107, 1],
-        [-72.21, 46.12, 107, 1],
-        [-72.21, 46.12, -107, 1]
-        ])
+    # X forward Y left Z up
+    ef_positions = np.array([[ 0.07,  0.11, 0.04],
+                             [ 0.07, -0.11, 0.04],
+                             [-0.07,  0.11, 0.04],
+                             [-0.07, -0.11, 0.04]])
 
 
-    test = kinematics_old.Kinematics()
-    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
+    test = kinematics.Kinematics()
+    # print(test.robot_FK([0, 0.25, 0], [0, 0, 0],theta, unit="degrees"))
 
-    pybullet_sim = PybulletSim(length=kinematics_old.LENGTH, 
-                               width=kinematics_old.WIDTH,
-                               l1=kinematics_old.L1, 
-                               l2=kinematics_old.L2, 
-                               l3=kinematics_old.L3, 
-                               l4=kinematics_old.L4,
+    pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
+                               width=kinematics.WIDTH,
+                               l1=kinematics.L1, 
+                               l2=kinematics.L2, 
+                               l3=kinematics.L3, 
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,
                                initial_theta=theta,
-                               initial_ef_positions=ef_positions2,
+                               initial_ef_positions=ef_positions,
                                angle_unit="degrees")

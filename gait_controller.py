@@ -1,6 +1,6 @@
 import numpy as np
 import bezier_curve_gen as bezier
-import kinematics_old
+import kinematics_new as kinematics
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import style
@@ -10,12 +10,11 @@ import time
 from pid_controller import PIDController, PIDControllerRP
 
 
-L1 = kinematics_old.L1
-L2 = kinematics_old.L2
-L3 = kinematics_old.L3
-L4 = kinematics_old.L4
-LENGTH = kinematics_old.LENGTH
-WIDTH = kinematics_old.WIDTH
+L1 = kinematics.L1
+L2 = kinematics.L2
+L3 = kinematics.L3
+LENGTH = kinematics.LENGTH
+WIDTH = kinematics.WIDTH
 
 class GaitController:
     
@@ -34,7 +33,7 @@ class GaitController:
                             [1, 1, 1],
                             [-1, 1, 1], 
                             [1, 1, 1]]
-        self.kin_solver = kinematics_old.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
+        self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3)
 
         self.gait_init = None
         self.deceleration_init = 0
@@ -288,6 +287,7 @@ class GaitController:
         # (0 means start of cycle, T_cycle means end of cycle)
         global_phase = (current_time % T_cycle) / T_cycle
 
+        legs_side = ["l", "r", "l", "r"]
         legs = ["FL", "FR", "RL", "RR"]
         joint_indices = [
             [3, 4, 6], 
@@ -359,19 +359,18 @@ class GaitController:
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offsets[i]) % 1
             
-            # Global Frame Positions (Kinematics Frame: mm, Y-up)
+            # Global Frame Positions (Kinematics Frame: m, Z-up)
             initial_pos = self.initial_ef_positions[i][:3]
             
             
             # Stance Length and Swing Height are given in meters
-            # Convert to mm
-            sl_mm = stance_length * 1000.0
-            sh_mm = swing_height * 1000.0
+            sl = stance_length
+            sh = swing_height
 
-            dl = 20.0
-            L_span = sl_mm / 2
-            h1 = sh_mm - 20.0
-            h2 = sh_mm
+            dl = 0.02
+            L_span = sl / 2
+            h1 = sh - 0.02
+            h2 = sh
             
             if leg_phase < duty_factor:
                 # Stance phase
@@ -383,18 +382,18 @@ class GaitController:
                 # end_x = -sl_mm / 2
                 
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
                 # we change the z axis because we are using the kinematics frame
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)]) 
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
+                    p0 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2] ]) 
+                    p1 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2] ])
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
+                    p0 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2] ])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2] ])
 
                 control_points = [p0, p1]
                 bezier_gen = bezier.BezierCurveGen(control_points)
@@ -412,29 +411,29 @@ class GaitController:
                 # Bezier Control Points apply the swing in the y because we are using the kinematics frame
                 # 12 point bezier unsuccesful
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])  
-                    p2 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1] + sh_mm, initial_pos[2] ])
+                    p0 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] + (sl / 2),   initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2] + sh ])  
+                    p2 = np.array([initial_pos[0] + (sl / 2),   initial_pos[1], initial_pos[2] + sh ])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                                       
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ]) 
-                    p2 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])
+                    p0 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2] + sh ]) 
+                    p2 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2] + sh ])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] + (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] - (sl_mm / 2) ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] + (sl_mm / 2)])
+                    p0 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2]   ])
+                    p3 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) ,   initial_pos[2] ])
+                    p1 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2]    + sh ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) ,   initial_pos[2]  + sh])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] - (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] + (sl_mm / 2) ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] - (sl_mm / 2)])
+                    p0 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2]   ])
+                    p3 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) ,   initial_pos[2] ])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2]    + sh ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) ,   initial_pos[2]  + sh])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
 
 
@@ -450,17 +449,13 @@ class GaitController:
 
             # Get the shoulder base transform
             shoulder_base_transform = transforms[i]
-            Ix = np.identity(4)
-            if leg == "FR" or leg == "RR":
-                Ix = self.kin_solver.Ix
-                
 
             # Now that the point is in the kinematics body frame, we convert it to shoulder frame
             # target_pos_shoulder = inv(T_shoulder_body) @ target_pos_body
-            target_pos_shoulder = Ix @ np.linalg.inv(shoulder_base_transform) @ target_pos
+            target_pos_shoulder = np.linalg.inv(shoulder_base_transform) @ target_pos
             
             # Get the angles through IK
-            angles = self.kin_solver.legIK(target_pos_shoulder)
+            angles = self.kin_solver.legIK(target_pos_shoulder, side=legs_side[i])
 
             # Apply theta direction
             angle_dirs = theta_dirs[i*3 : (i+1)*3]

@@ -55,7 +55,7 @@ ZEROES = np.array([[70, 92, 85],    # Right Front
 
 
 
-
+# AXIS X forward Y up Z left 
 class Kinematics:
 
     def __init__(self, length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4):
@@ -76,7 +76,7 @@ class Kinematics:
         self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
-    def legFK_hard_coded(self, angles):
+    def legFK(self, angles):
         '''
         Hard coded Forward kinematics for one leg.
         Everything relative to shoulder joint
@@ -204,10 +204,10 @@ class Kinematics:
         rr_angles = joint_angles[9:12]
 
         # Kinematic chain for every joint relative to shoulder
-        fl_chain = self.legFK_hard_coded(fl_angles)
-        fr_chain = self.legFK_hard_coded(fr_angles)
-        rl_chain = self.legFK_hard_coded(rl_angles)
-        rr_chain = self.legFK_hard_coded(rr_angles)
+        fl_chain = self.legFK(fl_angles)
+        fr_chain = self.legFK(fr_angles)
+        rl_chain = self.legFK(rl_angles)
+        rr_chain = self.legFK(rr_angles)
 
         # T_shoulder_base for each leg
         fl_shoulder_base, fr_shoulder_base, rl_shoulder_base, rr_shoulder_base = self.bodyIK(*orientation, *center)

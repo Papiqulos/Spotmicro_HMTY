@@ -269,7 +269,7 @@ if __name__ == "__main__":
     print("Kinematics module loaded.")
     kinematics = Kinematics(LENGTH, WIDTH, L1, L2, L3)
 
-    theta = np.array([30, -10, 60, # FL
+    theta = np.array([0, -30, 60, # FL
                       0, -30, 60, # FR
                       0, -30, 60, # RL
                       0, -30, 60 ]) # RR
@@ -295,8 +295,8 @@ if __name__ == "__main__":
     
 
     
-    orientation = [0, 0, 0]  # Roll, Pitch, Yaw in radians
-    center = [0, 0, 0]  # X, Y, Z in m
+    orientation = [0, 0, np.pi]  # Roll, Pitch, Yaw in radians
+    center = [0, 0, 0.25]  # X, Y, Z in m
 
 
     leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
