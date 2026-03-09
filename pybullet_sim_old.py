@@ -50,18 +50,31 @@ class PybulletSim:
                         1, 1, 1,
                         -1, 1, 1, 
                         1, 1, 1]
-        self.joint_dic = {"front_left_shoulder":3,
-                    "front_left_leg":4,
-                    "front_left_foot": 6,
-                    "front_right_shoulder" : 8,
-                    "front_right_leg": 9,
-                    "front_right_foot": 11,
-                    "rear_left_shoulder": 13,
-                    "rear_left_leg": 14,
-                    "rear_left_foot": 16,
-                    "rear_right_shoulder": 18,
-                    "rear_right_leg": 19,
-                    "rear_right_foot": 21}
+        # self.joint_dic = {"front_left_shoulder":3,
+        #             "front_left_leg":4,
+        #             "front_left_foot": 6,
+        #             "front_right_shoulder" : 8,
+        #             "front_right_leg": 9,
+        #             "front_right_foot": 11,
+        #             "rear_left_shoulder": 13,
+        #             "rear_left_leg": 14,
+        #             "rear_left_foot": 16,
+        #             "rear_right_shoulder": 18,
+        #             "rear_right_leg": 19,
+        #             "rear_right_foot": 21}
+
+        self.joint_dic = {"front_left_shoulder":2,
+                    "front_left_leg":3,
+                    "front_left_foot": 5,
+                    "front_right_shoulder" : 7,
+                    "front_right_leg": 8,
+                    "front_right_foot": 10,
+                    "rear_left_shoulder": 12,
+                    "rear_left_leg": 13,
+                    "rear_left_foot": 15,
+                    "rear_right_shoulder": 17,
+                    "rear_right_leg": 18,
+                    "rear_right_foot": 20}
         # Robot Parameters
         self.length = length
         self.width = width
@@ -203,6 +216,7 @@ class PybulletSim:
         p.stepSimulation()
         time.sleep(1./240.)
     
+    # NOT USED
     def execute_leg_trajectory(self, trajectory, leg="FL"):
         """ 
         Execute a trajectory for a single leg. Only for Testing.
@@ -234,7 +248,8 @@ class PybulletSim:
             for _ in range(3): 
                 p.stepSimulation()
                 time.sleep(1./240.)
-        
+    
+    # NOT USED
     def execute_robot_trajectory(self, trajectories):
         """
         For testing

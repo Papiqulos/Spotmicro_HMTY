@@ -286,11 +286,19 @@ class GaitController:
         global_phase = (current_time % T_cycle) / T_cycle
 
         legs = ["FL", "FR", "RL", "RR"]
+        # With lidar
+        # joint_indices = [
+        #     [3, 4, 6], 
+        #     [8, 9, 11], 
+        #     [13, 14, 16], 
+        #     [18, 19, 21]
+        # ]
+        # Without lidar
         joint_indices = [
-            [3, 4, 6], 
-            [8, 9, 11], 
-            [13, 14, 16], 
-            [18, 19, 21]
+            [2, 3, 5], 
+            [7, 8, 10], 
+            [12, 13, 15], 
+            [17, 18, 20]
         ]
         
         # Directions for the motors (from pybullet_sim.py)

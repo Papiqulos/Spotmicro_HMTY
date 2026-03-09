@@ -9,6 +9,11 @@
   <material name="grey">
     <color rgba="0.6 0.6 0.6 1"/>
   </material>
+
+
+
+
+
   <link name="base_link">
     <visual>
       <geometry>
@@ -28,7 +33,7 @@
       <inertia ixx="100" ixy="0" ixz="0" iyy="100" iyz="0" izz="100"/>
     </inertial>
   </link>
-  <link name="lidar_link">
+  <!-- <link name="lidar_link">
     <visual>
       <geometry>
         <mesh filename="stl/rplidar_main.STL" scale="0.001 0.001 0.001"/>
@@ -51,7 +56,7 @@
     <parent link="base_link"/>
     <child link="lidar_link"/>
     <origin xyz="0 0 0.035"/>
-  </joint>
+  </joint> -->
   <link name="rear_link">
     <visual>
       <geometry>

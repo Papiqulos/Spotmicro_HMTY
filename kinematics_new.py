@@ -83,12 +83,12 @@ class Kinematics:
                     [0,np.cos(roll),-np.sin(roll),0],
                     [0,np.sin(roll),np.cos(roll),0],[0,0,0,1]])
         
-        Ry = np.array([[np.cos(pitch),-np.sin(pitch),0,0],
-                    [np.sin(pitch),np.cos(pitch),0,0],[0,0,1,0],[0,0,0,1]])
-        
-        Rz = np.array([[np.cos(yaw),0,np.sin(yaw),0],
+        Ry = np.array([[np.cos(pitch),0,np.sin(pitch),0],
                     [0,1,0,0],
-                    [-np.sin(yaw),0,np.cos(yaw),0],[0,0,0,1]])
+                    [-np.sin(pitch),0,np.cos(pitch),0],[0,0,0,1]])
+        
+        Rz = np.array([[np.cos(yaw),-np.sin(yaw),0,0],
+                    [np.sin(yaw),np.cos(yaw),0,0],[0,0,1,0],[0,0,0,1]])
         
         
         Rxyz=Rx @ Ry @ Rz
@@ -296,11 +296,11 @@ if __name__ == "__main__":
 
     
     orientation = [0, 0, np.pi]  # Roll, Pitch, Yaw in radians
-    center = [0, 0, 0.25]  # X, Y, Z in m
+    center = [0, 0, 0.228]  # X, Y, Z in m
 
 
     leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
-    print(f"Front Left leg (cm):[{leg_points[0][0]:.2f}, {leg_points[0][1]:.2f}, {leg_points[0][2]:.2f}]")
+    print(f"Front Left leg (cm):[{leg_points[0][0]}, {leg_points[0][1]}, {leg_points[0][2]}]")
     print(f"Front Right leg (cm):[{leg_points[1][0]:.2f}, {leg_points[1][1]:.2f}, {leg_points[1][2]:.2f}]")
     print(f"Rear Left leg (cm):[{leg_points[2][0]:.2f}, {leg_points[2][1]:.2f}, {leg_points[2][2]:.2f}]")
     print(f"Rear Right leg (cm):[{leg_points[3][0]:.2f}, {leg_points[3][1]:.2f}, {leg_points[3][2]:.2f}]")
@@ -329,5 +329,3 @@ if __name__ == "__main__":
 
         
         
-
-

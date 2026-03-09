@@ -36,7 +36,7 @@ class GaitController:
         self.deceleration_init = 0
 
         self.pid_roll = PIDController(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_pitch = PIDController(kp=0.2, ki=0, kd=0.025)
         self.pid_yaw = PIDController(kp=0.5, ki=0.0, kd=0.025)
 
         self.pid_rp = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
@@ -306,6 +306,13 @@ class GaitController:
 
 
         # PID CONTROLLER for roll, pitch, yaw
+        roll_correction = 0
+        pitch_correction = 0
+        yaw_correction = 0
+        roll_error = 0
+        pitch_error = 0
+        yaw_error = 0
+
         if imu_data is not None:
             # Convert imu data to kinematics frame
             imu_data = from_pybullet_orn(imu_data)
@@ -314,8 +321,8 @@ class GaitController:
             dt = 1./240.
 
             # Calculate errors
-            roll_error = self.initial_orientation[0] - imu_data[0] 
-            pitch_error = self.initial_orientation[1] - imu_data[1]
+            # roll_error = self.initial_orientation[0] - imu_data[0] 
+            # pitch_error = self.initial_orientation[1] - imu_data[1]
             yaw_error = normalize_angle(self.initial_orientation[2] - imu_data[2])
 
             # print("---------------------------------")
@@ -335,8 +342,8 @@ class GaitController:
 
             
             # Correct orientation
-            roll_correction = self.pid_roll.update(roll_error, dt)
-            pitch_correction = self.pid_pitch.update(pitch_error, dt)
+            # roll_correction = self.pid_roll.update(roll_error, dt)
+            # pitch_correction = self.pid_pitch.update(pitch_error, dt)
             yaw_correction = self.pid_yaw.update(yaw_error, dt)
             
             # Different PID controller
