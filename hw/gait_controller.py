@@ -466,7 +466,7 @@ class GaitController:
 
             # Move the leg
             if move_callback is not None:
-                if leg == "FL":
+                
                     move_callback(leg, angles, unit="rad")
 
             

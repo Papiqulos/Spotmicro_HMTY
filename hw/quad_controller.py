@@ -13,12 +13,12 @@ kit = ServoKit(channels=16)
 #--- Real world parameters and connectivity ---
 # pca pin - joint name - zero angle - direction of rotation
 # 14 - front Left foot 125 -1
-# 13 - front Left leg 150 -1
-# 12 - front Left shoulder 85 -1
+# 13 - front Left leg 90 -1 ---------------------
+# 12 - front Left shoulder 75 -1
 
 # 11 - front Right foot 70 1
 # 10 - front Right leg 120 1
-# 9 - front Right shoulder 0 1
+# 9 - front Right shoulder 75 1 -------------------------
 
 # 3 - rear Left foot 130 -1
 # 2 - rear Left leg 95 -1
@@ -53,8 +53,8 @@ class RobotController:
                 
 
                 # Shoulder. leg, foot
-                self.zeros = [85, 150, 125, 
-                        0, 120, 70, 
+                self.zeros = [75, 90, 125, 
+                        75, 120, 70, 
                         120, 95, 130, 
                         70, 50, 70] # FL, FR, RL, RR
 
@@ -73,8 +73,8 @@ class RobotController:
                                         initial_theta=None, 
                                         initial_center=init_center, 
                                         initial_orientation=init_orientation)
-                # self.apply_angles_robot(self.init_angles)
-                time.sleep(0.5)
+                self.apply_angles_robot(self.init_angles)
+                time.sleep(1)
 
         def apply_angles_robot(self, angles, unit="deg"):
                 """Applies the angles to the real robot
@@ -91,8 +91,8 @@ class RobotController:
                         try:
                                 kit.servo[self.indexes[i]].angle = angle
 
-                        except ValueError:
-                                print(angle, self.indexes[i])
+                        except ValueError as e:
+                                print(f"Servo {self.indexes[i]} out of range: {angle:.1f}° — {e}")
 
         def apply_angles_leg(self, leg, angles, unit="deg"):
                 leg_indices = []
@@ -124,11 +124,12 @@ class RobotController:
                         # Convert the angle to the corresponding servo angle
                         angle = angle * leg_dirs[i] # Apply the direction
                         angle = rescale_number(angle, 0, 180, leg_zeros[i], leg_zeros[i]+180) # Scale it
+
                         try:
                                 kit.servo[leg_indices[i]].angle = angle
 
-                        except ValueError:
-                                print(angle, leg_indices[i])
+                        except ValueError as e:
+                                print(f"Servo {leg_indices[i]} out of range: {angle:.1f}° — {e}")
                         # kit.servo[leg_indices[i]].angle = angle # THIS NEEDS DEGREES
                                   
         def drive_leg_to_position(self, leg, position):
@@ -162,10 +163,10 @@ class RobotController:
         def go_forwards(self, velocity):
                 current_time = 0
                 time_step = 1./240
-                T_cycle = 0.3
+                T_cycle = 0.2
                 duty_factor = 0.5
                 swing_height = 0.03
-                while True:
+                for _ in range(5):
                         
                         current_time += time_step
                         ef_vel, _, _ , _,  = self.gait_controller.trot(current_time, 
@@ -223,14 +224,14 @@ if __name__ == "__main__":
 
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
-        robot_controller = RobotController(kin_solver, theta0, center, orientation)
+        robot_controller = RobotController(kin_solver, theta_default, center, orientation)
         
         
-        # robot_controller.apply_angles_leg("FR", [0, 0, 0])
+        # robot_controller.apply_angles_leg("FL", [0, 0, 0])
         # robot_controller.drive_leg_to_position("FR", [14.62, 53.77, -107.00])
         # robot_controller.change_orientation([0, 10, 0])
-        # robot_controller.apply_angles_robot(theta_default)
-        robot_controller.go_forwards(0.05)
+        # robot_controller.apply_angles_robot(theta0)
+        # robot_controller.go_forwards(0.2)
         # kit.servo[10].angle = rescale_number(-10, 0, 180, 120, 120+180) # THIS NEEDS DEGREES
 
         
