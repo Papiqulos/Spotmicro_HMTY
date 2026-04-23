@@ -1,12 +1,12 @@
 import numpy as np
-from math import *
 import math
-from utils import *
+from utils import to_homogenous
 
 #--- Useful constants ---
+pi = math.pi
 sHp=np.sin(pi/2)
 cHp=np.cos(pi/2)
-pi = math.pi
+
 
 # X(FORWARD), Y(UP), Z(LEFT), IDENTITY
 # Legend Origin (Identity)
@@ -89,10 +89,10 @@ class Kinematics:
         theta23 = theta2 + theta3
 
         T0 = Lo
-        T1 = T0 + np.array([-self.l1 * cos(theta1), self.l1 * sin(theta1), 0, 0])
-        T2 = T1 + np.array([-self.l2 * sin(theta1), -self.l2 * cos(theta1), 0, 0])
-        T3 = T2 + np.array([-self.l3 * sin(theta1) * cos(theta2), -self.l3 * cos(theta1) * cos(theta2), self.l3 * sin(theta2), 0])
-        T4 = T3 + np.array([-self.l4 * sin(theta1) * cos(theta23), -self.l4 * cos(theta1) * cos(theta23), self.l4 * sin(theta23), 0])
+        T1 = T0 + np.array([-self.l1 * np.cos(theta1), self.l1 * np.sin(theta1), 0, 0])
+        T2 = T1 + np.array([-self.l2 * np.sin(theta1), -self.l2 * np.cos(theta1), 0, 0])
+        T3 = T2 + np.array([-self.l3 * np.sin(theta1) * np.cos(theta2), -self.l3 * np.cos(theta1) * np.cos(theta2), self.l3 * np.sin(theta2), 0])
+        T4 = T3 + np.array([-self.l4 * np.sin(theta1) * np.cos(theta23), -self.l4 * np.cos(theta1) * np.cos(theta23), self.l4 * np.sin(theta23), 0])
         return np.array([T0, T1, T2, T3, T4])
     
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
@@ -139,21 +139,23 @@ class Kinematics:
         if x**2 + y**2 - self.l1**2 < 0:
             return (0, 0, 0) # Error safety
 
-        F = sqrt(x**2 + y**2 - self.l1**2)
+        F = math.sqrt(x**2 + y**2 - self.l1**2)
         G = F - self.l2  
-        H = sqrt(G**2 + z**2)
+        H = math.sqrt(G**2 + z**2)
         
-        theta1 = -atan2(y, x) - atan2(F, - self.l1)
+        theta1 = -math.atan2(y, x) - math.atan2(F, - self.l1)
 
         D = (H**2 - self.l3**2 - self.l4**2) / (2 * self.l3 * self.l4)
         
         # Domain check for acos
-        if D > 1: D = 1
-        if D < -1: D = -1
+        if D > 1: 
+            D = 1
+        if D < -1: 
+            D = -1
             
-        theta3 = acos(D)
+        theta3 = math.acos(D)
 
-        theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
+        theta2 = math.atan2(z, G) - math.atan2(self.l4 * math.sin(theta3), self.l3 + self.l4 * math.cos(theta3))
 
         return [theta1, theta2, theta3]
     

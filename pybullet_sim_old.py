@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gait_controller_old as gait
 import kinematics_old as kinematics_old
-from utils import *
+from utils import from_pybullet_orn, from_pybullet_pos
 from collections import deque
 
 
@@ -136,9 +136,7 @@ class PybulletSim:
             print(f"Robot has {num_joints} joints.")
             for i in range(num_joints):
                 info = p.getJointInfo(robotId, i)
-                joint_name = info[1].decode("utf-8")
-                joint_type = info[2]            
-                # We only care about movable joints (Revolute or Prismatic)
+                joint_name = info[1].decode("utf-8")          
                 print(f"Loaded Joint: {joint_name} (ID: {i})")
             return robotId, num_joints
         except Exception as e:
@@ -156,7 +154,7 @@ class PybulletSim:
         :param cameraPitch: 
         :param cameraTargetPosition: 
         """
-        physicsClient = p.connect(p.GUI)
+        p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
         p.resetDebugVisualizerCamera(cameraDistance=cameraDistance, cameraYaw=cameraYaw, cameraPitch=cameraPitch, cameraTargetPosition=cameraTargetPosition)
@@ -166,8 +164,8 @@ class PybulletSim:
 
 
 
-        orn= p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
-        planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
+        orn = p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
+        p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
 
     def get_imu_data(self):
         """
@@ -347,19 +345,19 @@ class PybulletSim:
                 pitch = imu_data_kin[1]
                 yaw = imu_data_kin[2]
 
-                roll_deg  = np.degrees(roll)
-                pitch_deg = np.degrees(pitch)
-                yaw_deg   = np.degrees(yaw)
+                # roll_deg  = np.degrees(roll)
+                # pitch_deg = np.degrees(pitch)
+                # yaw_deg   = np.degrees(yaw)
                 print("---------------")
                 # print(f"roll: {roll_deg}\npitch: {pitch_deg}\nyaw: {yaw_deg}")
                 print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
 
             # Test certain trajectories 
             if self.key_is_pressed(keyboard_event, tKey):
-                start = [(0.09915934827261777, 0.08800000001062948, 0.0414756133649455), 
-                         (0.09915934827261777, -0.0880000000106295, 0.0414756133649455), 
-                         (-0.08684065172738223, 0.0880000000106295, 0.0414756133649455), 
-                         (-0.0868406517273822, -0.08800000001062948, 0.041475613364945596)]
+                # start = [(0.09915934827261777, 0.08800000001062948, 0.0414756133649455), 
+                #          (0.09915934827261777, -0.0880000000106295, 0.0414756133649455), 
+                #          (-0.08684065172738223, 0.0880000000106295, 0.0414756133649455), 
+                #          (-0.0868406517273822, -0.08800000001062948, 0.041475613364945596)]
                 
                 # angles, points, control_points = self.gait_controller.swing_trajectory_control_points(start[0], 0.05)
                 

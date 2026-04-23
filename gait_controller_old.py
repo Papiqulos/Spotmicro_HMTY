@@ -1,8 +1,7 @@
 import numpy as np
 import bezier_curve_gen as bezier
 import kinematics_old
-from robot_mania_code import *
-from utils import *
+from utils import from_pybullet_orn, from_pybullet_pos, to_homogenous, normalize_angle
 import time
 from pid_controller import PIDController, PIDControllerRP
 
@@ -286,6 +285,14 @@ class GaitController:
         global_phase = (current_time % T_cycle) / T_cycle
 
         legs = ["FL", "FR", "RL", "RR"]
+        # legs = ["FR"]
+        
+        # Offset for the legs
+        # Where the legs are in the cycle          
+        leg_offsets = [0, 0.5, 0.5, 0]
+        # leg_offsets = [0.5]
+
+        
         # With lidar
         # joint_indices = [
         #     [3, 4, 6], 
@@ -301,6 +308,10 @@ class GaitController:
             [17, 18, 20]
         ]
         
+        # joint_indices = [
+        #     [7, 8, 10],]
+        
+        
         # Directions for the motors (from pybullet_sim.py)
         theta_dirs = [-1, 1, 1,   # FL
                        1, 1, 1,   # FR
@@ -308,9 +319,7 @@ class GaitController:
                        1, 1, 1]   # RR
 
 
-        # Offset for the legs
-        # Where the legs are in the cycle          
-        leg_offsets = [0, 0.5, 0.5, 0]
+        
 
 
         # PID CONTROLLER for roll, pitch, yaw
@@ -373,10 +382,10 @@ class GaitController:
             sl_mm = stance_length * 1000.0
             sh_mm = swing_height * 1000.0
 
-            dl = 20.0
-            L_span = sl_mm / 2
-            h1 = sh_mm - 20.0
-            h2 = sh_mm
+            # dl = 20.0
+            # L_span = sl_mm / 2
+            # h1 = sh_mm - 20.0
+            # h2 = sh_mm
             
             if leg_phase < duty_factor:
                 # Stance phase
