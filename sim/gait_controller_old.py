@@ -1,17 +1,17 @@
 import numpy as np
-import bezier_curve_gen as bezier
-import kinematics_new as kinematics
-from robot_mania_code import *
-from utils import *
+import sim.bezier_curve_gen as bezier
+import sim.kinematics_old as kinematics_old
+from sim.utils import from_pybullet_orn, from_pybullet_pos, to_homogenous, normalize_angle
 import time
-from pid_controller import PIDController, PIDControllerRP
+from sim.pid_controller import PIDController, PIDControllerRP
 
 
-L1 = kinematics.L1
-L2 = kinematics.L2
-L3 = kinematics.L3
-LENGTH = kinematics.LENGTH
-WIDTH = kinematics.WIDTH
+L1 = kinematics_old.L1
+L2 = kinematics_old.L2
+L3 = kinematics_old.L3
+L4 = kinematics_old.L4
+LENGTH = kinematics_old.LENGTH
+WIDTH = kinematics_old.WIDTH
 
 class GaitController:
     
@@ -30,14 +30,14 @@ class GaitController:
                             [1, 1, 1],
                             [-1, 1, 1], 
                             [1, 1, 1]]
-        self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3)
+        self.kin_solver = kinematics_old.Kinematics(length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4)
 
         self.gait_init = None
         self.deceleration_init = 0
 
         self.pid_roll = PIDController(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_pitch = PIDController(kp=0.2, ki=0, kd=0.025)
-        self.pid_yaw = PIDController(kp=0.5, ki=0.0, kd=0.025)
+        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_yaw = PIDController(kp=0.2, ki=0.0, kd=0.025)
 
         self.pid_rp = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
 
@@ -284,14 +284,33 @@ class GaitController:
         # (0 means start of cycle, T_cycle means end of cycle)
         global_phase = (current_time % T_cycle) / T_cycle
 
-        legs_side = ["l", "r", "l", "r"]
         legs = ["FL", "FR", "RL", "RR"]
+        # legs = ["FR"]
+        
+        # Offset for the legs
+        # Where the legs are in the cycle          
+        leg_offsets = [0, 0.5, 0.5, 0]
+        # leg_offsets = [0.5]
+
+        
+        # With lidar
+        # joint_indices = [
+        #     [3, 4, 6], 
+        #     [8, 9, 11], 
+        #     [13, 14, 16], 
+        #     [18, 19, 21]
+        # ]
+        # Without lidar
         joint_indices = [
-            [3, 4, 6], 
-            [8, 9, 11], 
-            [13, 14, 16], 
-            [18, 19, 21]
+            [2, 3, 5], 
+            [7, 8, 10], 
+            [12, 13, 15], 
+            [17, 18, 20]
         ]
+        
+        # joint_indices = [
+        #     [7, 8, 10],]
+        
         
         # Directions for the motors (from pybullet_sim.py)
         theta_dirs = [-1, 1, 1,   # FL
@@ -300,19 +319,10 @@ class GaitController:
                        1, 1, 1]   # RR
 
 
-        # Offset for the legs
-        # Where the legs are in the cycle          
-        leg_offsets = [0, 0.5, 0.5, 0]
+        
 
 
         # PID CONTROLLER for roll, pitch, yaw
-        roll_correction = 0
-        pitch_correction = 0
-        yaw_correction = 0
-        roll_error = 0
-        pitch_error = 0
-        yaw_error = 0
-
         if imu_data is not None:
             # Convert imu data to kinematics frame
             imu_data = from_pybullet_orn(imu_data)
@@ -321,8 +331,8 @@ class GaitController:
             dt = 1./240.
 
             # Calculate errors
-            # roll_error = self.initial_orientation[0] - imu_data[0] 
-            # pitch_error = self.initial_orientation[1] - imu_data[1]
+            roll_error = self.initial_orientation[0] - imu_data[0] 
+            pitch_error = self.initial_orientation[1] - imu_data[1]
             yaw_error = normalize_angle(self.initial_orientation[2] - imu_data[2])
 
             # print("---------------------------------")
@@ -342,8 +352,8 @@ class GaitController:
 
             
             # Correct orientation
-            # roll_correction = self.pid_roll.update(roll_error, dt)
-            # pitch_correction = self.pid_pitch.update(pitch_error, dt)
+            roll_correction = self.pid_roll.update(roll_error, dt)
+            pitch_correction = self.pid_pitch.update(pitch_error, dt)
             yaw_correction = self.pid_yaw.update(yaw_error, dt)
             
             # Different PID controller
@@ -363,18 +373,19 @@ class GaitController:
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offsets[i]) % 1
             
-            # Global Frame Positions (Kinematics Frame: m, Z-up)
+            # Global Frame Positions (Kinematics Frame: mm, Y-up)
             initial_pos = self.initial_ef_positions[i][:3]
             
             
             # Stance Length and Swing Height are given in meters
-            sl = stance_length
-            sh = swing_height
+            # Convert to mm
+            sl_mm = stance_length * 1000.0
+            sh_mm = swing_height * 1000.0
 
-            dl = 0.02
-            L_span = sl / 2
-            h1 = sh - 0.02
-            h2 = sh
+            # dl = 20.0
+            # L_span = sl_mm / 2
+            # h1 = sh_mm - 20.0
+            # h2 = sh_mm
             
             if leg_phase < duty_factor:
                 # Stance phase
@@ -386,18 +397,18 @@ class GaitController:
                 # end_x = -sl_mm / 2
                 
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
+                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
                 # we change the z axis because we are using the kinematics frame
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2] ]) 
-                    p1 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2] ])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)]) 
+                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2] ])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2] ])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
 
                 control_points = [p0, p1]
                 bezier_gen = bezier.BezierCurveGen(control_points)
@@ -415,29 +426,29 @@ class GaitController:
                 # Bezier Control Points apply the swing in the y because we are using the kinematics frame
                 # 12 point bezier unsuccesful
                 if dir == "+x":
-                    p0 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] + (sl / 2),   initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2] + sh ])  
-                    p2 = np.array([initial_pos[0] + (sl / 2),   initial_pos[1], initial_pos[2] + sh ])
+                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])  
+                    p2 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1] + sh_mm, initial_pos[2] ])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                                       
                 elif dir == "-x":
-                    p0 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl / 2), initial_pos[1], initial_pos[2] + sh ]) 
-                    p2 = np.array([initial_pos[0] - (sl / 2), initial_pos[1], initial_pos[2] + sh ])
+                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p3 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
+                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ]) 
+                    p2 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                 elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2]   ])
-                    p3 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) ,   initial_pos[2] ])
-                    p1 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) , initial_pos[2]    + sh ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) ,   initial_pos[2]  + sh])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
+                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] + (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] - (sl_mm / 2) ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] + (sl_mm / 2)])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
                 elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2]   ])
-                    p3 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) ,   initial_pos[2] ])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + (sl / 2) , initial_pos[2]    + sh ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] - (sl / 2) ,   initial_pos[2]  + sh])
+                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
+                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] - (sl_mm / 2)])
+                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] + (sl_mm / 2) ]) 
+                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] - (sl_mm / 2)])
                     # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
 
 
@@ -453,13 +464,17 @@ class GaitController:
 
             # Get the shoulder base transform
             shoulder_base_transform = transforms[i]
+            Ix = np.identity(4)
+            if leg == "FR" or leg == "RR":
+                Ix = self.kin_solver.Ix
+                
 
             # Now that the point is in the kinematics body frame, we convert it to shoulder frame
             # target_pos_shoulder = inv(T_shoulder_body) @ target_pos_body
-            target_pos_shoulder = np.linalg.inv(shoulder_base_transform) @ target_pos
+            target_pos_shoulder = Ix @ np.linalg.inv(shoulder_base_transform) @ target_pos
             
             # Get the angles through IK
-            angles = self.kin_solver.legIK(target_pos_shoulder, side=legs_side[i])
+            angles = self.kin_solver.legIK(target_pos_shoulder)
 
             # Apply theta direction
             angle_dirs = theta_dirs[i*3 : (i+1)*3]

@@ -4,9 +4,9 @@ import time
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import gait_controller_old as gait
-import kinematics_old as kinematics_old
-from utils import from_pybullet_orn, from_pybullet_pos
+import sim.gait_controller_new as gait
+import sim.kinematics_new as kinematics
+from sim.utils import *
 from collections import deque
 
 
@@ -22,12 +22,11 @@ class PybulletSim:
                  l1, 
                  l2, 
                  l3, 
-                 l4, 
                  center, 
                  orientation, 
                  center_plane, 
                  initial_theta, 
-                 initial_ef_positions,
+                 initial_ef_positions, 
                  angle_unit='degrees'):
         """
         
@@ -36,7 +35,6 @@ class PybulletSim:
         :param l1: 
         :param l2: 
         :param l3: 
-        :param l4: 
         :param center: initial center for the robot to spawn (in pybullet frame)
         :param orientation: initial orientation for the robot to spawn (in pybullet frame)
         :param center_plane: in pybullet frame
@@ -50,47 +48,33 @@ class PybulletSim:
                         1, 1, 1,
                         -1, 1, 1, 
                         1, 1, 1]
-        # self.joint_dic = {"front_left_shoulder":3,
-        #             "front_left_leg":4,
-        #             "front_left_foot": 6,
-        #             "front_right_shoulder" : 8,
-        #             "front_right_leg": 9,
-        #             "front_right_foot": 11,
-        #             "rear_left_shoulder": 13,
-        #             "rear_left_leg": 14,
-        #             "rear_left_foot": 16,
-        #             "rear_right_shoulder": 18,
-        #             "rear_right_leg": 19,
-        #             "rear_right_foot": 21}
-
-        self.joint_dic = {"front_left_shoulder":2,
-                    "front_left_leg":3,
-                    "front_left_foot": 5,
-                    "front_right_shoulder" : 7,
-                    "front_right_leg": 8,
-                    "front_right_foot": 10,
-                    "rear_left_shoulder": 12,
-                    "rear_left_leg": 13,
-                    "rear_left_foot": 15,
-                    "rear_right_shoulder": 17,
-                    "rear_right_leg": 18,
-                    "rear_right_foot": 20}
+        self.joint_dic = {"front_left_shoulder":3,
+                    "front_left_leg":4,
+                    "front_left_foot": 6,
+                    "front_right_shoulder" : 8,
+                    "front_right_leg": 9,
+                    "front_right_foot": 11,
+                    "rear_left_shoulder": 13,
+                    "rear_left_leg": 14,
+                    "rear_left_foot": 16,
+                    "rear_right_shoulder": 18,
+                    "rear_right_leg": 19,
+                    "rear_right_foot": 21}
         # Robot Parameters
         self.length = length
         self.width = width
         self.l1 = l1
         self.l2 = l2
         self.l3 = l3
-        self.l4 = l4
         self.center = center
-        self.center_kin = from_pybullet_pos(center)
+        self.center_kin = center
         self.orientation = orientation
-        self.orientation_kin = from_pybullet_orn(orientation)
+        self.orientation_kin = from_pybullet_orn(orientation) # Keep to handle PI offset
         self.center_plane = center_plane
         self.initial_theta = initial_theta
         self.angle_unit = angle_unit
 
-        self.initial_ef_positions = initial_ef_positions
+       
         
 
         # Pybullet Setup
@@ -104,12 +88,12 @@ class PybulletSim:
         self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
 
         # Kinematics Controller
-        self.kin_solver = kinematics_old.Kinematics(self.length, 
+        self.kin_solver = kinematics.Kinematics(self.length, 
                                                 self.width, 
                                                 self.l1, 
                                                 self.l2, 
-                                                self.l3, 
-                                                self.l4)
+                                                self.l3)
+        self.initial_ef_positions = initial_ef_positions
 
         # Gait Controller
         self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions, 
@@ -136,7 +120,9 @@ class PybulletSim:
             print(f"Robot has {num_joints} joints.")
             for i in range(num_joints):
                 info = p.getJointInfo(robotId, i)
-                joint_name = info[1].decode("utf-8")          
+                joint_name = info[1].decode("utf-8")
+                joint_type = info[2]            
+                # We only care about movable joints (Revolute or Prismatic)
                 print(f"Loaded Joint: {joint_name} (ID: {i})")
             return robotId, num_joints
         except Exception as e:
@@ -154,7 +140,7 @@ class PybulletSim:
         :param cameraPitch: 
         :param cameraTargetPosition: 
         """
-        p.connect(p.GUI)
+        physicsClient = p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
         p.resetDebugVisualizerCamera(cameraDistance=cameraDistance, cameraYaw=cameraYaw, cameraPitch=cameraPitch, cameraTargetPosition=cameraTargetPosition)
@@ -164,8 +150,8 @@ class PybulletSim:
 
 
 
-        orn = p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
-        p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
+        orn= p.getQuaternionFromEuler(plane_orientation)  # Roll, Pitch, Yaw in radians
+        planeId = p.loadURDF("plane.urdf", center_plane, orn, useFixedBase=True)
 
     def get_imu_data(self):
         """
@@ -182,7 +168,7 @@ class PybulletSim:
         # roll_rate = ang_vel[0]
         # pitch_rate = ang_vel[1]
         
-        return roll, pitch, yaw
+        return roll, pitch, yaw, pos
 
     def get_ef_positions(self):
         """
@@ -214,7 +200,6 @@ class PybulletSim:
         p.stepSimulation()
         time.sleep(1./240.)
     
-    # NOT USED
     def execute_leg_trajectory(self, trajectory, leg="FL"):
         """ 
         Execute a trajectory for a single leg. Only for Testing.
@@ -246,8 +231,7 @@ class PybulletSim:
             for _ in range(3): 
                 p.stepSimulation()
                 time.sleep(1./240.)
-    
-    # NOT USED
+        
     def execute_robot_trajectory(self, trajectories):
         """
         For testing
@@ -322,8 +306,10 @@ class PybulletSim:
             aKey = ord('a')
             dKey = ord('d')
             qKey = ord('q')
-            iKey = ord('i')
+            iKey = ord('i') 
             tKey = ord('t')
+            pKey = ord('p')
+
 
             # Not used at the moment
             # mouse_event = p.getMouseEvents()
@@ -335,8 +321,8 @@ class PybulletSim:
             #     # keyboard_event = None
             #     event_type = None
             #     button_state = None
-
-            # Print imu data
+            
+            # Print imu data and ef positions as returned by pybullet engine
             if self.key_is_pressed(keyboard_event, iKey):
                 imu_data_raw = self.get_imu_data()
                 imu_data_kin = from_pybullet_orn(imu_data_raw)
@@ -344,20 +330,29 @@ class PybulletSim:
                 roll = imu_data_kin[0]
                 pitch = imu_data_kin[1]
                 yaw = imu_data_kin[2]
+                center_imu = imu_data_raw[3]
 
-                # roll_deg  = np.degrees(roll)
-                # pitch_deg = np.degrees(pitch)
-                # yaw_deg   = np.degrees(yaw)
+
+                roll_deg  = np.degrees(roll)
+                pitch_deg = np.degrees(pitch)
+                yaw_deg   = np.degrees(yaw)
                 print("---------------")
                 # print(f"roll: {roll_deg}\npitch: {pitch_deg}\nyaw: {yaw_deg}")
                 print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
-
+                print(f"center: {center_imu}")
+                ef_positions = self.get_ef_positions()
+                print(f"FL: {ef_positions[0]}")
+                print(f"FR: {ef_positions[1]}")
+                print(f"RL: {ef_positions[2]}")
+                print(f"RR: {ef_positions[3]}")
+                print("---------------")
+                
             # Test certain trajectories 
             if self.key_is_pressed(keyboard_event, tKey):
-                # start = [(0.09915934827261777, 0.08800000001062948, 0.0414756133649455), 
-                #          (0.09915934827261777, -0.0880000000106295, 0.0414756133649455), 
-                #          (-0.08684065172738223, 0.0880000000106295, 0.0414756133649455), 
-                #          (-0.0868406517273822, -0.08800000001062948, 0.041475613364945596)]
+                start = [(0.09915934827261777, 0.08800000001062948, 0.0414756133649455), 
+                         (0.09915934827261777, -0.0880000000106295, 0.0414756133649455), 
+                         (-0.08684065172738223, 0.0880000000106295, 0.0414756133649455), 
+                         (-0.0868406517273822, -0.08800000001062948, 0.041475613364945596)]
                 
                 # angles, points, control_points = self.gait_controller.swing_trajectory_control_points(start[0], 0.05)
                 
@@ -392,7 +387,7 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, wKey) or self.key_is_pressed(keyboard_event, upArrowKey):
-                # print("GOING FORWARDS")
+                # print("GOING FORWARDS WITH PID")
                 deceleration_flag = False
 
                 # PID Controller graphs for the RPY angles
@@ -438,7 +433,7 @@ class PybulletSim:
                     T_cycle = 0.2
                     duty_factor = 0.5
                     swing_height = 0.03
-                    velocity = 0.9
+                    velocity = 1.
                     ef_vel, roll_error, pitch_error, yaw_error = self.gait_controller.trot(current_time, 
                                   T_cycle, 
                                   duty_factor, 
@@ -450,14 +445,15 @@ class PybulletSim:
                                   dir="+x", 
                                   deceleration_flag=deceleration_flag)
                     
+
                     # Live plot of RPY errors
                     x_data.append(current_time)
                     roll_data.append(roll_error)
                     pitch_data.append(pitch_error)
                     yaw_data.append(yaw_error)
 
-                    # Update plot every 10 steps (approx 24fps) to save performance
-                    if plot_step % 10 == 0:
+                    # Update plot every 50 steps (approx 24fps) to save performance
+                    if plot_step % 50 == 0:
                         roll_graph.set_data(x_data, roll_data)
                         pitch_graph.set_data(x_data, pitch_data)
                         yaw_graph.set_data(x_data, yaw_data)
@@ -486,7 +482,50 @@ class PybulletSim:
                         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                         self.move_robot_to_pose(self.robotId, angles, unit="rad")
                         break
-                               
+            
+            if self.key_is_pressed(keyboard_event, pKey):
+                # print("GOING FORWARDS NO PID")
+                deceleration_flag = False
+
+                while True:
+                    current_time += 1./240.
+                    p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                    keyboard_event = p.getKeyboardEvents()
+
+                    if self.key_is_pressed(keyboard_event, qKey):
+                        deceleration_flag = True
+                        print("DECELERATING")
+                    T_cycle = 0.2
+                    duty_factor = 0.5
+                    swing_height = 0.03
+                    velocity = 1.
+                    ef_vel, _, _, _ = self.gait_controller.trot(current_time, 
+                                  T_cycle, 
+                                  duty_factor, 
+                                  velocity, 
+                                  swing_height, 
+                                  p, 
+                                  self.robotId, 
+                                  
+                                  dir="+x", 
+                                  deceleration_flag=deceleration_flag)
+                    
+
+                    
+                    
+
+
+
+                    # print(f"Current Speed in m/s: {ef_vel}")
+                    # print(f"dec flag : {deceleration_flag}")
+
+                    # Once speed is 0 return to default pose
+                    if ef_vel == 0.0 and deceleration_flag:
+                        # print("STOPPED")
+                        angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
+                        self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                        break
+
             # Go Backward
             if self.key_is_pressed(keyboard_event, sKey) or self.key_is_pressed(keyboard_event, downArrowKey):
                 print("GOING BACKWARDS")
@@ -537,7 +576,7 @@ class PybulletSim:
                         # print("DECELERATING")
                     T_cycle = 0.2
                     duty_factor = 0.5
-                    swing_height = 0.03
+                    swing_height = 0.04
                     velocity = 0.9
                     ef_vel, _, _ , _  = self.gait_controller.trot(current_time, 
                                   T_cycle, 
@@ -610,7 +649,7 @@ class PybulletSim:
 
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
-          
+
     def debug_point(self, point, colour=[1, 0, 0, 1], radius=0.01):
         """
         Generate a point in pybullet
@@ -625,9 +664,8 @@ class PybulletSim:
 if __name__ == "__main__":
 
     # X forward Y up Z left in meters
-    center = [0, 0, 0.25]    
+    center = [0, 0, 0.228]    
     center_plane = [0, 0, 0] 
-    # This is the default orientation of the pybullet frame which is equivalent to [0, 0, 0] in the kinematics frame
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     # Degrees
@@ -636,35 +674,24 @@ if __name__ == "__main__":
              0, -30, 60, # RL
              0, -30, 60 ] # RR
     
-    # X forward Y up Z left in milimeters
-    ef_positions = np.array([
-            [ 95, 48.13,  105, 1], # FL
-            [ 95, 48.13,  -105, 1], # FR
-            [-45, 48.13, 105, 1], # RL
-            [-45, 48.13, -105, 1] # RR
-            ])
-    
-    # X forward Y up Z left in milimeters
-    ef_positions2 = np.array([
-        [67.29, 46.12, 107, 1],
-        [67.29, 46.12, -107, 1],
-        [-72.21, 46.12, 107, 1],
-        [-72.21, 46.12, -107, 1]
-        ])
+    # X forward Y left Z up
+    ef_positions = np.array([[ 0.06542,  0.107, 0.02],
+                             [ 0.06542, -0.107, 0.02],
+                             [-0.06542,  0.107, 0.02],
+                             [-0.06542, -0.107, 0.02]])
 
 
-    test = kinematics_old.Kinematics()
-    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
+    test = kinematics.Kinematics()
+    # print(test.robot_FK([0, 0.25, 0], [0, 0, 0],theta, unit="degrees"))
 
-    pybullet_sim = PybulletSim(length=kinematics_old.LENGTH, 
-                               width=kinematics_old.WIDTH,
-                               l1=kinematics_old.L1, 
-                               l2=kinematics_old.L2, 
-                               l3=kinematics_old.L3, 
-                               l4=kinematics_old.L4,
+    pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
+                               width=kinematics.WIDTH,
+                               l1=kinematics.L1, 
+                               l2=kinematics.L2, 
+                               l3=kinematics.L3, 
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,
                                initial_theta=theta,
-                               initial_ef_positions=ef_positions2,
+                               initial_ef_positions=ef_positions,
                                angle_unit="degrees")

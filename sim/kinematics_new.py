@@ -3,7 +3,7 @@
 import numpy as np
 from math import *
 import math
-from utils import *
+from sim.utils import *
 
 #--- Useful constants ---
 pi = math.pi

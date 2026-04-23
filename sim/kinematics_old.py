@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from utils import to_homogenous
+from sim.utils import to_homogenous
 
 #--- Useful constants ---
 pi = math.pi
