@@ -1,7 +1,14 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 from math import *
 import math
 from tools.utils import *
+import yaml
+
+with open("config/robot_config.yaml") as f:
+    robot_cfg = yaml.safe_load(f)
 
 #--- Useful constants ---
 pi = math.pi
@@ -15,25 +22,17 @@ Lo = np.array([0, 0, 0, 1])
 
 
 #--- Robot Dimensions ---
-LENGTH = 140 # Length of Robot's base in mm
-WIDTH = 110  # Width of Robot's base in mm
+LENGTH = robot_cfg["body"]["length"]
+WIDTH = robot_cfg["body"]["width"] 
 
 # Lengths of leg segments
-L1 = 52    # Horizontal offset from shoulder to leg in mm
-L2 = 0    # Vertical offset from shoulder to leg in mm
-L3 = 120.416  # Upper Leg Length in mm
-L4 = 115   # Lower Leg Length in mm
+L1 = robot_cfg["leg_segments"]["L1"]    # Horizontal offset from shoulder to leg in mm
+L2 = robot_cfg["leg_segments"]["L2"]    # Vertical offset from shoulder to leg in mm
+L3 = robot_cfg["leg_segments"]["L3"]  # Upper Leg Length in mm
+L4 = robot_cfg["leg_segments"]["L4"]   # Lower Leg Length in mm
 
 
-DIRECTIONS = np.array([[1, 1, -1],    # Right Front
-                       [-1, -1, -1],  # Left Front
-                       [-1, -1, -1],  # Left Rear
-                       [1, 1, -1]])   # Right Rear
 
-ZEROES = np.array([[70, 92, 85],    # Right Front
-                   [125, 95, 100],  # Left Front
-                   [130, 95, 95],   # Left Rear
-                   [70, 92, 70]])   # Right Rear
 
 
 

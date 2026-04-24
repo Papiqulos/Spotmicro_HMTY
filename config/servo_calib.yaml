@@ -1,0 +1,21 @@
+# zero_deg: angle (0-180) that corresponds to neutral position
+# direction: 1 = normal, -1 = reversed
+fl:
+  shoulder: { channel: 12, zero_deg:  75, direction: -1 }
+  leg:      { channel: 13, zero_deg:  90, direction: -1 }
+  foot:     { channel: 14, zero_deg: 125, direction: -1 }
+
+fr:
+  shoulder: { channel:  9, zero_deg:  75, direction:  1 }
+  leg:      { channel: 10, zero_deg: 120, direction:  1 }
+  foot:     { channel: 11, zero_deg:  70, direction:  1 }
+
+rl:
+  shoulder: { channel:  1, zero_deg: 120, direction: -1 }
+  leg:      { channel:  2, zero_deg:  95, direction: -1 }
+  foot:     { channel:  3, zero_deg: 130, direction: -1 }
+
+rr:
+  shoulder: { channel:  5, zero_deg:  87, direction:  1 }
+  leg:      { channel:  6, zero_deg:  50, direction:  1 }
+  foot:     { channel:  7, zero_deg:  70, direction:  1 }

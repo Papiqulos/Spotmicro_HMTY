@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from adafruit_servokit import ServoKit
 import time
 import core.kinematics as kinematics
@@ -9,27 +10,16 @@ import numpy as np
 import math
 from tools.utils import to_homogenous, rescale_number
 from hw.gait_controller_hw import GaitController
+import yaml
+
+with open("config/servo_calib.yaml") as f:
+    calib = yaml.safe_load(f)
 
 
 kit = ServoKit(channels=16)
 
-#--- Real world parameters and connectivity ---
-# pca pin - joint name - zero angle - direction of rotation
-# 14 - front Left foot 125 -1
-# 13 - front Left leg 90 -1 ---------------------
-# 12 - front Left shoulder 75 -1
-
-# 11 - front Right foot 70 1
-# 10 - front Right leg 120 1
-# 9 - front Right shoulder 75 1 -------------------------
-
-# 3 - rear Left foot 130 -1
-# 2 - rear Left leg 95 -1
-# 1 - rear Left shoulder 120 -1
-
-# 7 - rear Right foot 70 1
-# 6 - rear Right leg 50 1
-# 5 - rear Right shoulder 87 1
+LEGS    = ["fl", "fr", "rl", "rr"]
+JOINTS  = ["shoulder", "leg", "foot"]
 
 
 
@@ -53,23 +43,18 @@ class RobotController:
                 for i, leg in enumerate(leg_names):
                         x, y, z = self.init_ef_positions[i][:3]
                         print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+
+
+
                 
 
+
                 # Shoulder. leg, foot
-                self.zeros = [75, 90, 125, 
-                        75, 120, 70, 
-                        120, 95, 130, 
-                        70, 50, 70] # FL, FR, RL, RR
+                self.zeros = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
 
-                self.indexes = [12, 13, 14, 
-                        9, 10, 11, 
-                        1, 2, 3, 
-                        5, 6, 7] # FL, FR, RL, RR
+                self.indexes = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]# FL, FR, RL, RR
 
-                self.theta_dirs = [-1, -1, -1, 
-                        1, 1, 1, 
-                        -1, -1, -1, 
-                        1, 1, 1] # FL, FR, RL, RR
+                self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
 
 
                 self.gait_controller = GaitController(initial_ef_positions=self.init_ef_positions, 

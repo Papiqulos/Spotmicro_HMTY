@@ -1,0 +1,17 @@
+# SpotMicro physical dimensions (all in mm)
+body:
+  length: 140
+  width: 110
+
+leg_segments:
+  L1: 52.000    # Horizontal offset shoulder to leg
+  L2: 0.000     # Vertical offset shoulder to leg
+  L3: 120.416   # Upper leg length
+  L4: 115.000   # Lower leg length
+
+# PCA9685 channel assignments per leg/joint
+servo_channels:
+  fl: { shoulder: 12, leg: 13, foot: 14 }
+  fr: { shoulder:  9, leg: 10, foot: 11 }
+  rl: { shoulder:  1, leg:  2, foot:  3 }
+  rr: { shoulder:  5, leg:  6, foot:  7 }
