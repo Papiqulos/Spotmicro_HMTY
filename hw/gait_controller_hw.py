@@ -1,9 +1,9 @@
 import numpy as np
-import bezier_curve_gen as bezier
-import kinematics as kinematics
-from utils import normalize_angle, from_pybullet_orn, to_homogenous, from_pybullet_pos
+import core.bezier_curve_gen as bezier
+import core.kinematics as kinematics
+from tools.utils import normalize_angle, from_pybullet_orn, to_homogenous, from_pybullet_pos
 import time
-from pid_controller import PIDController, PIDControllerRP
+from tools.pid_controller import PIDController, PIDControllerRP
 # from quad_controller import RobotController
 
 

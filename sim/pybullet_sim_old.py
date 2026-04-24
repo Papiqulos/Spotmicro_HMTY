@@ -4,9 +4,9 @@ import time
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import sim.gait_controller_old as gait
+import sim.gait_controller_sim_old as gait
 import sim.kinematics_old as kinematics_old
-from sim.utils import from_pybullet_orn, from_pybullet_pos
+from tools.utils import from_pybullet_orn, from_pybullet_pos
 from collections import deque
 
 

@@ -1,11 +1,14 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from adafruit_servokit import ServoKit
 import time
-import kinematics as kinematics
-from kinematics import LENGTH, WIDTH, L1, L2, L3, L4
+import core.kinematics as kinematics
+from core.kinematics import LENGTH, WIDTH, L1, L2, L3, L4
 import numpy as np
 import math
-from utils import to_homogenous, rescale_number
-from gait_controller import GaitController
+from tools.utils import to_homogenous, rescale_number
+from hw.gait_controller_hw import GaitController
 
 
 kit = ServoKit(channels=16)
@@ -166,8 +169,8 @@ class RobotController:
                 T_cycle = 0.2
                 duty_factor = 0.5
                 swing_height = 0.03
-                for _ in range(5):
-                        
+
+                for _ in range(150):        
                         current_time += time_step
                         ef_vel, _, _ , _,  = self.gait_controller.trot(current_time, 
                                         time_step,
@@ -231,7 +234,7 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FR", [14.62, 53.77, -107.00])
         # robot_controller.change_orientation([0, 10, 0])
         # robot_controller.apply_angles_robot(theta0)
-        # robot_controller.go_forwards(0.2)
+        robot_controller.go_forwards(0.2)
         # kit.servo[10].angle = rescale_number(-10, 0, 180, 120, 120+180) # THIS NEEDS DEGREES
 
         

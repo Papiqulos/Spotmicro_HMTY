@@ -1,0 +1,5 @@
+numpy
+matplotlib
+pybullet
+smbus2
+adafruit-circuitpython-servokit
