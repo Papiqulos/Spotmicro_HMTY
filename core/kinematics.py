@@ -28,8 +28,8 @@ WIDTH = robot_cfg["body"]["width"]
 # Lengths of leg segments
 L1 = robot_cfg["leg_segments"]["L1"]    # Horizontal offset from shoulder to leg in mm
 L2 = robot_cfg["leg_segments"]["L2"]    # Vertical offset from shoulder to leg in mm
-L3 = robot_cfg["leg_segments"]["L3"]  # Upper Leg Length in mm
-L4 = robot_cfg["leg_segments"]["L4"]   # Lower Leg Length in mm
+L3 = robot_cfg["leg_segments"]["L3"]    # Upper Leg Length in mm
+L4 = robot_cfg["leg_segments"]["L4"]    # Lower Leg Length in mm
 
 
 

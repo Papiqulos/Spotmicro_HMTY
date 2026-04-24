@@ -10,10 +10,9 @@ old_methods.txt
 matplotlib_sim_old.py
 matplotlib_sim_new.py
 old_methods.py
-test_pca.py
 old_methods_.py
-test_pca_.py
-sim/kinematics_old.py
+sim/kinematics_new.py
 sim/gait_controller_sim_new.py
-tests/
 sim/pybullet_sim_new.py
+tests/
+

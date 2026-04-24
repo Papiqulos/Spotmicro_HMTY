@@ -45,10 +45,6 @@ class RobotController:
                         print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
 
 
-
-                
-
-
                 # Shoulder. leg, foot
                 self.zeros = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
 
