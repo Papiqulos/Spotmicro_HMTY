@@ -3,4 +3,4 @@ smbus2
 adafruit-circuitpython-servokit
 smbus-cffi
 adafruit-circuitpython-adxl34x
-hmc5883l
+qmc5883l

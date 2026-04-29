@@ -52,8 +52,3 @@ def get_rpy():
 
 if __name__ == "__main__":
     print(f"X: {get_rpy()[2]}, Y: {get_rpy()[1]}, Z: {get_rpy()[0]}")
-
-# Output data to screen
-# print "X-Axis of Rotation : %d" %xGyro
-# print "Y-Axis of Rotation : %d" %yGyro
-# print "Z-Axis of Rotation : %d" %zGyro
