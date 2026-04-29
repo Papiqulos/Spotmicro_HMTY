@@ -5,13 +5,12 @@
 # https://www.controleverything.com/content/Gyro?sku=ITG-3200_I2CS#tabs-0-product_tabset-2
 
 # Slightly altered so that the code is in a method
-
 import smbus
 import time
 
 
 	
-
+# X-imu -> Z-robot, Y-imu -> X-robot, Z-imu -> Y-robot
 def get_rpy():
     """Returns pitch, roll, yaw in that order"""
 	# Get I2C bus
@@ -49,6 +48,10 @@ def get_rpy():
 
 
     return xGyro, yGyro, zGyro
+
+
+if __name__ == "__main__":
+    print(f"X: {get_rpy()[2]}, Y: {get_rpy()[1]}, Z: {get_rpy()[0]}")
 
 # Output data to screen
 # print "X-Axis of Rotation : %d" %xGyro
