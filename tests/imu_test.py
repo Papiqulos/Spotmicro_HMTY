@@ -9,7 +9,8 @@ import tools.imu as imu
 
 while True:
     readings = imu.get_sensor_readings()
-    print(readings)
+    print(f"Gyro: {readings['gyro']}\nAccelerometer: {readings['accelerometer']}\nMagnetometer: {readings['magnetometer']}")
+    print("----------------------------------")
     time.sleep(0.5)
 
 
