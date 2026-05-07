@@ -1,6 +1,8 @@
 numpy
 smbus2
 adafruit-circuitpython-servokit
-smbus-cffi
 adafruit-circuitpython-adxl34x
 ahrs
+lgpio
+PyYAML
+

@@ -211,11 +211,11 @@ if __name__ == "__main__":
         robot_controller = RobotController(kin_solver, theta_default, center, orientation)
         
         
-        # robot_controller.apply_angles_leg("RR", [0, 0, 0])
+        # robot_controller.apply_angles_leg("RL", [0, 0, 0])
         # robot_controller.drive_leg_to_position("FR", [14.62, 53.77, -107.00])
         # robot_controller.change_orientation([0, 10, 0])
         # robot_controller.apply_angles_robot(theta0)
-        # robot_controller.go_forwards(0.2)
+        robot_controller.go_forwards(0.2)
         # kit.servo[10].angle = rescale_number(-10, 0, 180, 120, 120+180) # THIS NEEDS DEGREES
 
         

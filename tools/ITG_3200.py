@@ -5,7 +5,7 @@
 # https://www.controleverything.com/content/Gyro?sku=ITG-3200_I2CS#tabs-0-product_tabset-2
 
 # Slightly altered
-import smbus
+import smbus2
 import time
 import numpy as np
 
@@ -14,7 +14,7 @@ import numpy as np
 class ITG_3200:
     def __init__(self):
         # Get I2C bus
-        self.bus = smbus.SMBus(1)
+        self.bus = smbus2.SMBus(1)
 
         # ITG3200 address, 0x68(104)
         # Select Power management register 0x3E(62)
