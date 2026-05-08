@@ -89,6 +89,7 @@ class RobotController:
                 leg_indices = []
                 leg_dirs = []
                 leg_zeros = []
+                leg_kit = []
                 if unit == "rad":
                         angles = [math.degrees(angle) for angle in angles]
                         
@@ -102,16 +103,18 @@ class RobotController:
                         leg_indices = self.indexes[3:6]
                         leg_dirs = self.theta_dirs[3:6]
                         leg_zeros = self.zeros[3:6]
-                        self.kits[3:6]
+                        leg_kit =self.kits[3:6]
                         
                 elif leg == "RL":
                         leg_indices = self.indexes[6:9]
                         leg_dirs = self.theta_dirs[6:9]
                         leg_zeros = self.zeros[6:9]
+                        leg_kit =self.kits[6:9]
                 elif leg == "RR":
                         leg_indices = self.indexes[9:12]
                         leg_dirs = self.theta_dirs[9:12]
                         leg_zeros = self.zeros[9:12]
+                        leg_kit =self.kits[9:12]
                         
                 for i, angle in enumerate(angles):
                         # Convert the angle to the corresponding servo angle
@@ -119,9 +122,10 @@ class RobotController:
                         angle = rescale_number(angle, 0, 180, leg_zeros[i], leg_zeros[i]+180) # Scale it
 
                         try:
-                                
-                                kit_front.servo[leg_indices[i]].angle = angle
-
+                                if leg_kit[i] == 1:
+                                        kit_front.servo[leg_indices[i]].angle = angle
+                                elif leg_kit[i] == 2:
+                                        kit_rear.servo[leg_indices[i]].angle = angle
                         except ValueError as e:
                                 print(f"Servo {leg_indices[i]} out of range: {angle:.1f}° — {e}")
                         # kit.servo[leg_indices[i]].angle = angle # THIS NEEDS DEGREES
