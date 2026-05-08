@@ -16,7 +16,8 @@ with open("config/servo_calib.yaml") as f:
     calib = yaml.safe_load(f)
 
 
-kit = ServoKit(channels=16)
+kit_front = ServoKit(channels=16)
+kit_rear = ServoKit(channels=16, address=0x41)
 
 LEGS    = ["fl", "fr", "rl", "rr"]
 JOINTS  = ["shoulder", "leg", "foot"]
@@ -49,15 +50,18 @@ class RobotController:
                 self.zeros = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
 
                 self.indexes = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]# FL, FR, RL, RR
-
+                
                 self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
+                
+                self.kits = [calib[leg][joint]["kit"] for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
+                print(self.kits)
 
 
                 self.gait_controller = GaitController(initial_ef_positions=self.init_ef_positions, 
                                         initial_theta=None, 
                                         initial_center=init_center, 
                                         initial_orientation=init_orientation)
-                self.apply_angles_robot(self.init_angles)
+                # self.apply_angles_robot(self.init_angles)
                 time.sleep(1)
 
         def apply_angles_robot(self, angles, unit="deg"):
@@ -73,7 +77,10 @@ class RobotController:
                         angle = angle * self.theta_dirs[i] # Apply the direction
                         angle = rescale_number(angle, 0, 180, self.zeros[i], self.zeros[i]+180) # Scale it
                         try:
-                                kit.servo[self.indexes[i]].angle = angle
+                                if self.kits[i] == 1:
+                                        kit_front.servo[self.indexes[i]].angle = angle
+                                elif self.kits[i] == 2:
+                                        kit_rear.servo[self.indexes[i]].angle = angle
 
                         except ValueError as e:
                                 print(f"Servo {self.indexes[i]} out of range: {angle:.1f}° — {e}")
@@ -89,11 +96,13 @@ class RobotController:
                         leg_indices = self.indexes[0:3]
                         leg_dirs = self.theta_dirs[0:3]
                         leg_zeros = self.zeros[0:3]
+                        leg_kit = self.kits[0:3]
                         
                 elif leg == "FR":
                         leg_indices = self.indexes[3:6]
                         leg_dirs = self.theta_dirs[3:6]
                         leg_zeros = self.zeros[3:6]
+                        self.kits[3:6]
                         
                 elif leg == "RL":
                         leg_indices = self.indexes[6:9]
@@ -110,7 +119,8 @@ class RobotController:
                         angle = rescale_number(angle, 0, 180, leg_zeros[i], leg_zeros[i]+180) # Scale it
 
                         try:
-                                kit.servo[leg_indices[i]].angle = angle
+                                
+                                kit_front.servo[leg_indices[i]].angle = angle
 
                         except ValueError as e:
                                 print(f"Servo {leg_indices[i]} out of range: {angle:.1f}° — {e}")
@@ -151,7 +161,7 @@ class RobotController:
                 duty_factor = 0.5
                 swing_height = 0.03
 
-                for _ in range(150):        
+                for _ in range(1500):        
                         current_time += time_step
                         ef_vel, _, _ , _,  = self.gait_controller.trot(current_time, 
                                         time_step,
@@ -215,7 +225,7 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FR", [14.62, 53.77, -107.00])
         # robot_controller.change_orientation([0, 10, 0])
         # robot_controller.apply_angles_robot(theta0)
-        robot_controller.go_forwards(0.2)
+        # robot_controller.go_forwards(0.3)
         # kit.servo[10].angle = rescale_number(-10, 0, 180, 120, 120+180) # THIS NEEDS DEGREES
 
         

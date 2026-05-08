@@ -13,5 +13,5 @@ leg_segments:
 servo_channels:
   fl: { shoulder: 12, leg: 13, foot: 14 }
   fr: { shoulder:  9, leg: 10, foot: 11 }
-  rl: { shoulder:  1, leg:  2, foot:  3 }
-  rr: { shoulder:  5, leg:  6, foot:  7 }
+  rl: { shoulder:  4, leg:  6, foot:  5 }
+  rr: { shoulder:  3, leg:  2, foot:  1 }
