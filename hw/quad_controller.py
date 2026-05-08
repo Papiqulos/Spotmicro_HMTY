@@ -111,15 +111,20 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    def go_forwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
-        current_time = 0
-        time_step = 1.0 / 240
+    def go_forwards(self, velocity, T_cycle=0.3, duty_factor=0.5, swing_height=0.03, steps=150):
+        loop_period = 1.0 / 100
+        start_time = time.time()
         for _ in range(steps):
-            current_time += time_step
+            t0 = time.time()
+            current_time = t0 - start_time
             self.gait_controller.trot(
-                current_time, time_step, T_cycle, duty_factor, velocity, swing_height,
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height,
                 move_callback=self.apply_angles_leg,
             )
+            elapsed = time.time() - t0
+            remaining = loop_period - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
 
     def go_backwards(self):
         raise NotImplementedError
@@ -132,16 +137,17 @@ class RobotController:
 
 
 if __name__ == "__main__":
-    orientation = [0, 0, 0]
-    center = [0, 250, 0]
+        orientation = [0, 0, 0]
+        center = [0, 250, 0]
 
-    theta_default = [
-        0, -30, 60,  # FL
-        0, -30, 60,  # FR
-        0, -30, 60,  # RL
-        0, -30, 60,  # RR
-    ]
+        theta_default = [
+                0, -30, 60,  # FL
+                0, -30, 60,  # FR
+                0, -30, 60,  # RL
+                0, -30, 60,  # RR
+        ]
 
-    kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
-    robot_controller = RobotController(kin_solver, theta_default, center, orientation)
-#     robot_controller.go_forwards(0.3)
+        kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
+        robot_controller = RobotController(kin_solver, theta_default, center, orientation)
+        robot_controller.go_forwards(0.02)
+        # robot_controller.go_backwards()

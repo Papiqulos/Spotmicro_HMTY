@@ -3,7 +3,6 @@ import math
 import core.bezier_curve_gen as bezier
 import core.kinematics as kinematics
 from tools.utils import normalize_angle, to_homogenous, from_pybullet_orn
-import time
 from tools.pid_controller import PIDController, PIDControllerRP
 
 
@@ -183,7 +182,6 @@ class GaitController:
             if move_callback is not None:
                 move_callback(leg, angles, unit="rad")
 
-        time.sleep(time_step)
         return effective_velocity, roll_error, pitch_error, yaw_error
 
     def turn(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x"):

@@ -52,6 +52,8 @@ requirements_sim.txt            # Python packages for simulation
 
 - The pybullet axis are different than the robot axis as such: X-pybullet-> X-robot, Y-pybullet-> Z-robot, Z-pybullet-> Y-robot
 - THe imu axis are differnt than the robot axis as such: X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
+- Servos are position controlled
+- No encoders present, the only feedback is the IMU
 
 
 ## Style

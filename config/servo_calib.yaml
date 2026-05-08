@@ -12,11 +12,11 @@ fr:
   foot:     { channel: 11, zero_deg: 64 , direction:  1, kit: 1 }
 
 rl:
-  shoulder: { channel:  4, zero_deg: 120, direction: -1, kit: 2 }
-  leg:      { channel:  6, zero_deg:  74, direction: -1, kit: 2 }
-  foot:     { channel:  5, zero_deg: 128, direction: -1, kit: 2 }
+  shoulder: { channel:  14, zero_deg: 120, direction: -1, kit: 2 }
+  leg:      { channel:  15, zero_deg: 76 , direction: -1, kit: 2 }
+  foot:     { channel:  13, zero_deg: 126, direction: -1, kit: 2 }
 
 rr:
-  shoulder: { channel:  3, zero_deg:  50, direction:  1, kit: 2 }
-  leg:      { channel:  2, zero_deg:  47, direction:  1, kit: 2 }
-  foot:     { channel:  1, zero_deg:  50, direction:  1, kit: 2 }
+  shoulder: { channel:  6, zero_deg:  50, direction:  1, kit: 2 }
+  leg:      { channel:  8, zero_deg:  46, direction:  1, kit: 2 }
+  foot:     { channel:  12, zero_deg:  50, direction:  1, kit: 2 }
