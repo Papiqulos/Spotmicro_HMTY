@@ -24,11 +24,7 @@ def Rz(theta):
                      [0, 0, 0, 1]])
 
 def rescale_number(value, original_min, original_max, new_min, new_max):
-        """
-        Rescale a number from one range to another
-        """
-        return ((value - original_min) / (original_max - original_min)) * \
-                (new_max - new_min) + new_min
+    return ((value - original_min) / (original_max - original_min)) * (new_max - new_min) + new_min
 
 
 def to_homogenous(vec):

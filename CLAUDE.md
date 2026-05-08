@@ -50,7 +50,8 @@ requirements_sim.txt            # Python packages for simulation
 
 ## Common Pitfalls
 
-- In the simulation files there are two coordinates systems: the real robot and the pybullet world.
+- The pybullet axis are different than the robot axis as such: X-pybullet-> X-robot, Y-pybullet-> Z-robot, Z-pybullet-> Y-robot
+- THe imu axis are differnt than the robot axis as such: X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 
 
 ## Style

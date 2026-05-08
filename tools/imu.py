@@ -70,7 +70,8 @@ class IMU:
         pitch = math.degrees(pitch)
         yaw = math.degrees(yaw)
 
-        return roll, pitch, yaw
+        # Swap roll and pitch according to the robot orientation
+        return pitch, roll, yaw
             
 
 if __name__ == "__main__":
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         # raw_mag = imu.magnetometer.get_magnetometer()["magnet"]
 
         # Update the orientation
-        pitch, roll, yaw = imu.update(raw_gyro, raw_acc)
+        roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
         print(f"Roll: {roll:.2f}°\tPitch: {pitch:.2f}°\tYaw: {yaw:.2f}°")
         time.sleep(0.01)
 
