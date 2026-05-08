@@ -54,14 +54,13 @@ class RobotController:
                 self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
                 
                 self.kits = [calib[leg][joint]["kit"] for leg in LEGS for joint in JOINTS] # FL, FR, RL, RR
-                print(self.kits)
 
 
                 self.gait_controller = GaitController(initial_ef_positions=self.init_ef_positions, 
                                         initial_theta=None, 
                                         initial_center=init_center, 
                                         initial_orientation=init_orientation)
-                # self.apply_angles_robot(self.init_angles)
+                self.apply_angles_robot(self.init_angles)
                 time.sleep(1)
 
         def apply_angles_robot(self, angles, unit="deg"):
@@ -160,12 +159,12 @@ class RobotController:
 
         def go_forwards(self, velocity):
                 current_time = 0
-                time_step = 1./240
+                time_step = 1./120
                 T_cycle = 0.2
                 duty_factor = 0.5
                 swing_height = 0.03
 
-                for _ in range(1500):        
+                for _ in range(150):        
                         current_time += time_step
                         ef_vel, _, _ , _,  = self.gait_controller.trot(current_time, 
                                         time_step,
@@ -229,7 +228,7 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FR", [14.62, 53.77, -107.00])
         # robot_controller.change_orientation([0, 10, 0])
         # robot_controller.apply_angles_robot(theta0)
-        # robot_controller.go_forwards(0.3)
+        robot_controller.go_forwards(0.3)
         # kit.servo[10].angle = rescale_number(-10, 0, 180, 120, 120+180) # THIS NEEDS DEGREES
 
         
