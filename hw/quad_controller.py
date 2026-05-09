@@ -111,7 +111,7 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    def go_forwards(self, velocity, T_cycle=0.3, duty_factor=0.5, swing_height=0.03, steps=150):
+    def go_forwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
         loop_period = 1.0 / 100
         start_time = time.time()
         for _ in range(steps):
@@ -143,11 +143,12 @@ if __name__ == "__main__":
         theta_default = [
                 0, -30, 60,  # FL
                 0, -30, 60,  # FR
-                0, -30, 60,  # RL
-                0, -30, 60,  # RR
+                0, -30, 50,  # RL
+                0, -30, 50,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
         robot_controller = RobotController(kin_solver, theta_default, center, orientation)
-        robot_controller.go_forwards(0.02)
+        # robot_controller.change_orientation([0, -10, 0])
+        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.25, duty_factor=0.5, swing_height=0.05, steps=100)
         # robot_controller.go_backwards()

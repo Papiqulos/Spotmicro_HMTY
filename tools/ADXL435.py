@@ -105,4 +105,6 @@ class ADXL435:
 
 if __name__ == "__main__":
     acc = ADXL435()
-    acc.run_interactive_calibration(samples=2000)
+    # acc.run_interactive_calibration(samples=2000)
+    readings = acc.get_acceleration()
+    print(readings)

@@ -28,7 +28,7 @@ class IMU:
         self.accelerometer = imu_accelerometer.ADXL435()
         # self.magnetometer = imu_magnetometer.HMC5883L()
 
-        self.madgwick = Madgwick(gain=0.02)
+        self.madgwick = Madgwick(gain=0.05)
 
         self.quaternion = np.array([1, 0, 0, 0])
 
