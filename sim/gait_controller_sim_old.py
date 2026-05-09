@@ -10,6 +10,13 @@ import time
 from tools.pid_controller import PIDController, PIDControllerRP
 
 
+# MIT Cheetah 12-point Bezier swing parameters (normalized, from Bledt et al.)
+# _X: horizontal progression 0=liftoff, 1=touchdown
+#     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
+# _H: height factor (1.0 = swing_height, 1.1 = slight overshoot for natural arc)
+_SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
+_SWING_H_NORM = [0.00, 0.10, 0.80, 1.00, 1.10, 1.10, 1.10, 1.10, 1.00, 0.80, 0.10, 0.00]
+
 L1 = kinematics_old.L1
 L2 = kinematics_old.L2
 L3 = kinematics_old.L3
@@ -89,129 +96,52 @@ class GaitController:
 
         return joint_angles, curve, control_points
 
-    # NOT USED
-    def swing_trajectory_control_points(self, initial_pos, L_span, dl, h1, h2, dir="+x"):
+    def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
+        """12-point MIT Cheetah Bezier swing control points.
+        Frame: kinematics (X-forward, Y-up, Z-lateral), units mm.
 
-        """Generates a swing trajectory for a single leg using an 12-point Bezier curve
-
-        :param initial_pos: 
-        :param L_span: in milimeters
-        :param dl: in milimeters
-        :param h1: in milimeters
-        :param h2: in milimeters
-        :param dir: direction of the trajectory
+        3-point clusters at liftoff/touchdown force zero endpoint tangent velocity.
+        1.1x height overshoot gives a natural parabolic crown.
         """
-
-        
-
-        if dir=="+x":
-
-            p0 = np.array([initial_pos[0] - L_span, initial_pos[1], initial_pos[2]])
-            p1 = np.array([initial_pos[0] - L_span - dl, initial_pos[1], initial_pos[2]])
-
-            p2 = np.array([initial_pos[0] - L_span - dl - 0.05, initial_pos[1] , initial_pos[2]+ h1])
-            p3 = np.array([initial_pos[0] - L_span - dl - 0.05, initial_pos[1] , initial_pos[2]+ h1])
-            p4 = np.array([initial_pos[0] - L_span - dl - 0.05, initial_pos[1] , initial_pos[2]+ h1])
-
-            p5 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h1])
-            p6 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h1])
-
-            p7 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h2])
-
-            p8 = np.array([initial_pos[0] + L_span + dl + 0.05, initial_pos[1] , initial_pos[2]+ h2])
-            p9 = np.array([initial_pos[0] + L_span + dl + 0.05, initial_pos[1] , initial_pos[2]+ h2])
-
-            p10 = np.array([initial_pos[0] + L_span + dl, initial_pos[1], initial_pos[2]])
-            p11 = np.array([initial_pos[0] + L_span, initial_pos[1], initial_pos[2]])
-        elif dir=="-x":
-
-            p0 = np.array([initial_pos[0] + L_span, initial_pos[1], initial_pos[2]])
-            p1 = np.array([initial_pos[0] + L_span + dl, initial_pos[1], initial_pos[2]])
-
-            p2 = np.array([initial_pos[0] + L_span + dl + 0.05, initial_pos[1] , initial_pos[2]+ h1])
-            p3 = np.array([initial_pos[0] + L_span + dl + 0.05, initial_pos[1] , initial_pos[2]+ h1])
-            p4 = np.array([initial_pos[0] + L_span + dl + 0.05, initial_pos[1] , initial_pos[2]+ h1])
-
-            p5 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h1])
-            p6 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h1])
-
-            p7 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2]+ h2])
-            p8 = np.array([initial_pos[0] - L_span - dl - 0.05, initial_pos[1] , initial_pos[2]+ h2])
-            p9 = np.array([initial_pos[0] - L_span - dl - 0.05, initial_pos[1] , initial_pos[2]+ h2])
-
-            p10 = np.array([initial_pos[0] - L_span - dl, initial_pos[1], initial_pos[2]])
-            p11 = np.array([initial_pos[0] - L_span, initial_pos[1], initial_pos[2]])
-        elif dir=="+y":
-
-            p0 = np.array([initial_pos[0], initial_pos[1] - L_span , initial_pos[2]])
-            p1 = np.array([initial_pos[0], initial_pos[1] - L_span - dl, initial_pos[2]])
-
-            p2 = np.array([initial_pos[0], initial_pos[1] - L_span - dl - 0.05 , initial_pos[2]+ h1])
-            p3 = np.array([initial_pos[0], initial_pos[1] - L_span - dl - 0.05 , initial_pos[2]+ h1])
-            p4 = np.array([initial_pos[0], initial_pos[1] - L_span - dl - 0.05 , initial_pos[2]+ h1])
-
-            p5 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h1])
-            p6 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h1])
-
-            p7 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h2])
-            p8 = np.array([initial_pos[0], initial_pos[1] + L_span + dl + 0.05, initial_pos[2]+ h2])
-            p9 = np.array([initial_pos[0], initial_pos[1] + L_span + dl + 0.05, initial_pos[2]+ h2])
-
-            p10 = np.array([initial_pos[0], initial_pos[1] + L_span + dl, initial_pos[2]])
-            p11 = np.array([initial_pos[0], initial_pos[1] + L_span, initial_pos[2]])
-        elif dir=="-y":
-
-            p0 = np.array([initial_pos[0], initial_pos[1] + L_span , initial_pos[2]])
-            p1 = np.array([initial_pos[0], initial_pos[1] + L_span + dl, initial_pos[2]])
-            
-            p2 = np.array([initial_pos[0], initial_pos[1] + L_span + dl + 0.05 , initial_pos[2]+ h1])
-            p3 = np.array([initial_pos[0], initial_pos[1] + L_span + dl + 0.05 , initial_pos[2]+ h1])
-            p4 = np.array([initial_pos[0], initial_pos[1] + L_span + dl + 0.05 , initial_pos[2]+ h1])
-
-            p5 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h1])
-            p6 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h1])
-
-            p7 = np.array([initial_pos[0], initial_pos[1], initial_pos[2]+ h2])
-            p8 = np.array([initial_pos[0], initial_pos[1] - L_span - dl - 0.05, initial_pos[2]+ h2])
-            p9 = np.array([initial_pos[0], initial_pos[1] - L_span - dl - 0.05, initial_pos[2]+ h2])
-
-            p10 = np.array([initial_pos[0], initial_pos[1] - L_span - dl, initial_pos[2]])
-            p11 = np.array([initial_pos[0], initial_pos[1] - L_span, initial_pos[2]])
-
-
-
-        control_points = [p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11]
-
-
-        return control_points
-    
-    # NOT USED 
-    def stance_sine_trajectory(self, initial_pos, L_span, delta, stance_progress, dir="+x", ):
-        """
-        Generates a stance trajectory for a single leg using a sine wave
-
-        :param initial_pos: 
-        :param L_span: in milimeters
-        :param delta: in milimeters
-        :param dir: direction of the trajectory
-        """
-
+        pts = []
         if dir == "+x":
-            p0 = np.array([initial_pos[0] - L_span, initial_pos[1], initial_pos[2]])
-            p11 = np.array([initial_pos[0] + L_span, initial_pos[1], initial_pos[2]])
+            x0 = initial_pos[0] - sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([x0 + xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
         elif dir == "-x":
-            p0 = np.array([initial_pos[0] + L_span, initial_pos[1], initial_pos[2]])
-            p11 = np.array([initial_pos[0] - L_span, initial_pos[1], initial_pos[2]])
+            x0 = initial_pos[0] + sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([x0 - xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
         elif dir == "+y":
-            p0 = np.array([initial_pos[0], initial_pos[1] + L_span, initial_pos[2]])
-            p11 = np.array([initial_pos[0] , initial_pos[1] - L_span, initial_pos[2]])
+            z0 = initial_pos[2] - sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 + xn * sl_mm]))
         elif dir == "-y":
-            p0 = np.array([initial_pos[0] , initial_pos[1] - L_span, initial_pos[2]])
-            p11 = np.array([initial_pos[0] , initial_pos[1] + L_span, initial_pos[2]])
+            z0 = initial_pos[2] + sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 - xn * sl_mm]))
+        return pts
 
-        point  = p0 + (p11 - p0) * stance_progress + delta*np.sin(2*np.pi*stance_progress)
+    def stance_sine_trajectory(self, initial_pos, sl_mm, stance_progress, delta, dir="+x"):
+        """Stance foot position with MIT Cheetah complementary sine dip.
 
-        return point
+        Horizontal: linear sweep from +sl/2 (front) to -sl/2 (back).
+        Vertical (Y-up): y0 - delta * sin(pi * t)
+
+        As the body COM rises slightly at mid-stance during a trot, commanding
+        the foot delta lower maintains consistent ground contact force.
+        sin(pi*t) completes exactly one half-cycle over stance (0->peak->0).
+        """
+        t = stance_progress
+        y = initial_pos[1] - delta * np.sin(np.pi * t)
+        if dir == "+x":
+            return np.array([initial_pos[0] + sl_mm / 2 - t * sl_mm, y, initial_pos[2]])
+        elif dir == "-x":
+            return np.array([initial_pos[0] - sl_mm / 2 + t * sl_mm, y, initial_pos[2]])
+        elif dir == "+y":
+            return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 2 - t * sl_mm])
+        elif dir == "-y":
+            return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 2 + t * sl_mm])
 
 
     def trot(self, current_time, T_cycle, duty_factor, desired_velocity, swing_height, p, robotId, imu_data=None, dir="+x", deceleration_flag=False):
@@ -326,44 +256,18 @@ class GaitController:
         
 
 
-        # PID CONTROLLER for roll, pitch, yaw
+        roll_correction = pitch_correction = yaw_correction = 0.0
+        roll_error = pitch_error = yaw_error = 0.0
+
         if imu_data is not None:
-            # Convert imu data to kinematics frame
             imu_data = from_pybullet_orn(imu_data)
-
-            # Default time step
-            dt = 1./240.
-
-            # Calculate errors
-            roll_error = self.initial_orientation[0] - imu_data[0] 
+            dt = 1. / 240.
+            roll_error  = self.initial_orientation[0] - imu_data[0]
             pitch_error = self.initial_orientation[1] - imu_data[1]
-            yaw_error = normalize_angle(self.initial_orientation[2] - imu_data[2])
-
-            # print("---------------------------------")
-            # print(f"target_roll : {self.initial_orientation[0]}")
-            # print(f"target_pitch : {self.initial_orientation[1]}")
-            # print(f"target_yaw : {self.initial_orientation[2]}")
-            # print("---------------------------------")
-            # print(f"imu_roll : {imu_data[0]}")
-            # print(f"imu_pitch : {imu_data[1]}")
-            # print(f"imu_yaw : {imu_data[2]}")
-            # print("---------------------------------")
-            # print(f"roll_error : {roll_error}")
-            # print(f"pitch_error : {pitch_error}")
-            # print(f"yaw_error : {yaw_error}")
-            # print("---------------------------------")
-
-
-            
-            # Correct orientation
-            roll_correction = self.pid_roll.update(roll_error, dt)
+            yaw_error   = normalize_angle(self.initial_orientation[2] - imu_data[2])
+            roll_correction  = self.pid_roll.update(roll_error, dt)
             pitch_correction = self.pid_pitch.update(pitch_error, dt)
-            yaw_correction = self.pid_yaw.update(yaw_error, dt)
-            
-            # Different PID controller
-            # compensation = self.pid_rp.run(imu_data[0], imu_data[1], dt)
-            # roll_correction = compensation[0]
-            # pitch_correction = compensation[1]
+            yaw_correction   = self.pid_yaw.update(yaw_error, dt)
 
         corrected_orientation = (
             self.initial_orientation[0] + roll_correction, 
@@ -392,72 +296,14 @@ class GaitController:
             # h2 = sh_mm
             
             if leg_phase < duty_factor:
-                # Stance phase
                 stance_progress = leg_phase / duty_factor
-
-                # Stance moves backwards 
-                # So foot moves from SL/2 to -SL/2
-                # start_x = sl_mm / 2
-                # end_x = -sl_mm / 2
-                
-                if dir == "+x":
-                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                elif dir == "-x":
-                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                # we change the z axis because we are using the kinematics frame
-                elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)]) 
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
-                elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
-
-                control_points = [p0, p1]
-                bezier_gen = bezier.BezierCurveGen(control_points)
-                current_pos = bezier_gen.n_point_curve(control_points, stance_progress)
-            
-                # Unsuccesful sine wave stance
-                # current_pos = self.stance_trajectory(initial_pos, L_span, dl, stance_progress, dir)
+                # 5% of swing height gives a ~1-2 mm dip: subtle but effective
+                stance_delta = sh_mm * 0.05
+                current_pos = self.stance_sine_trajectory(initial_pos, sl_mm, stance_progress, stance_delta, dir)
 
             else:
-                # Swing phase
                 swing_progress = (leg_phase - duty_factor) / (1 - duty_factor)
-                
-                # start_x = -sl_mm / 2
-                # end_x = sl_mm / 2
-                # Bezier Control Points apply the swing in the y because we are using the kinematics frame
-                # 12 point bezier unsuccesful
-                if dir == "+x":
-                    p0 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])  
-                    p2 = np.array([initial_pos[0] + (sl_mm / 2),   initial_pos[1] + sh_mm, initial_pos[2] ])
-                    # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
-                                      
-                elif dir == "-x":
-                    p0 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p3 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1], initial_pos[2]])
-                    p1 = np.array([initial_pos[0] + (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ]) 
-                    p2 = np.array([initial_pos[0] - (sl_mm / 2), initial_pos[1] + sh_mm, initial_pos[2] ])
-                    # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
-                elif dir == "+y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] - (sl_mm / 2)])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] + (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] - (sl_mm / 2) ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] + (sl_mm / 2)])
-                    # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
-                elif dir == "-y":
-                    p0 = np.array([initial_pos[0], initial_pos[1] , initial_pos[2] + (sl_mm / 2)])
-                    p3 = np.array([initial_pos[0], initial_pos[1] ,   initial_pos[2] - (sl_mm / 2)])
-                    p1 = np.array([initial_pos[0], initial_pos[1] + sh_mm , initial_pos[2] + (sl_mm / 2) ]) 
-                    p2 = np.array([initial_pos[0], initial_pos[1] + sh_mm ,   initial_pos[2] - (sl_mm / 2)])
-                    # control_points = self.swing_trajectory_control_points(initial_pos, L_span, dl, h1, h2, dir)
-
-
-
-                control_points = [p0, p1, p2, p3]
+                control_points = self.swing_trajectory_control_points(initial_pos, sl_mm, sh_mm, dir)
                 bezier_gen = bezier.BezierCurveGen(control_points)
                 current_pos = bezier_gen.n_point_curve(control_points, swing_progress)
 
