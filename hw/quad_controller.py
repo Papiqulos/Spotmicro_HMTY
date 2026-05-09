@@ -143,8 +143,8 @@ if __name__ == "__main__":
         theta_default = [
                 0, -30, 60,  # FL
                 0, -30, 60,  # FR
-                0, -30, 50,  # RL
-                0, -30, 50,  # RR
+                0, -30, 60,  # RL
+                0, -30, 60,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
