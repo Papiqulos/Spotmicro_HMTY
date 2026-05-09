@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from tools import ITG_3200 as imu_gyro
 from tools import ADXL435 as imu_accelerometer
-# from tools import HMC5883L as imu_magnetometer
+from tools import QMC5883L as imu_magnetometer
 import time
 import math
 import numpy as np
@@ -26,9 +26,9 @@ class IMU:
     def __init__(self):
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
-        # self.magnetometer = imu_magnetometer.HMC5883L()
+        self.magnetometer = imu_magnetometer.QMC5883L()
 
-        self.madgwick = Madgwick(gain=0.05)
+        self.madgwick = Madgwick()
 
         self.quaternion = np.array([1, 0, 0, 0])
 
@@ -81,10 +81,10 @@ if __name__ == "__main__":
         # Get the raw sensor readings
         raw_gyro = imu.gyro.get_xyzGyro()
         raw_acc = imu.accelerometer.get_acceleration()["acceleration"]
-        # raw_mag = imu.magnetometer.get_magnetometer()["magnet"]
+        raw_mag = imu.magnetometer.get_magnetometer()["magnet"]
 
         # Update the orientation
-        roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
+        roll, pitch, yaw = imu.update(raw_gyro, raw_acc, raw_mag)
         print(f"Roll: {roll:.2f}°\tPitch: {pitch:.2f}°\tYaw: {yaw:.2f}°")
         time.sleep(0.01)
 

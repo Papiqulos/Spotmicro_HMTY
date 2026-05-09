@@ -25,6 +25,9 @@ class QMC5883L:
 if __name__ == "__main__":
     mag = QMC5883L()
     mag.calibrate()
-    while True:
-        data = mag.get_magnetometer()
-        print(f"Bearing: {data['bearing']:.1f}°\nMagnet: {data['magnet']} G")
+    N = 100
+    for i in range(N):
+        with  open("mag.txt", "a") as f:
+            data = mag.get_magnetometer()
+            f.write(f"{data["magnet"][0]} {data['magnet'][1]} {data['magnet'][2]}\n")
+    
