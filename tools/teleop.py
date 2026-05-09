@@ -34,7 +34,7 @@ class KeyboardController:
             if key == '\x03': # Ctrl+C was pressed
                 self.running = False
                 print("\nExiting...")
-                sys.exit(0)
+                return
                 
             self.current_key = key
 
