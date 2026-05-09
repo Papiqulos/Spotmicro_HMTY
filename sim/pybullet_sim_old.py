@@ -49,7 +49,7 @@ class PybulletSim:
         :param angle_unit: unit of initial_theta
         """
         # --- CONFIGURATION ---
-        self.urdf_path = "./urdf/spotmicroai_gen_ros.urdf"  
+        self.urdf_path = "sim/urdf/spotmicroai_gen_ros.urdf"  
         self.theta_dirs = [-1, 1, 1,
                         1, 1, 1,
                         -1, 1, 1, 
