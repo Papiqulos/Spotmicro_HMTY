@@ -7,7 +7,7 @@ import core.bezier_curve_gen as bezier
 import sim.kinematics_old as kinematics_old
 from tools.utils import from_pybullet_orn, from_pybullet_pos, to_homogenous, normalize_angle
 import time
-from core.pid_controller import PIDController, PIDControllerRP
+from tools.pid_controller import PIDController, PIDControllerRP
 
 
 L1 = kinematics_old.L1
