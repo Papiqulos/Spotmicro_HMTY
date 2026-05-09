@@ -54,6 +54,7 @@ requirements_sim.txt            # Python packages for simulation
 - THe imu axis are differnt than the robot axis as such: X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 - Servos are position controlled
 - No encoders present, the only feedback is the IMU
+- Ignore file with the _new suffix they are for future development
 
 
 ## Style

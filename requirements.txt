@@ -3,7 +3,7 @@ smbus2
 adafruit-circuitpython-servokit
 adafruit-circuitpython-adxl34x
 ahrs
-lgpio
+# lgpio
 PyYAML
 setuptools
 

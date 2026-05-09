@@ -8,8 +8,8 @@ import time
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import sim.gait_controller_sim_old as gait
-import sim.kinematics_old as kinematics_old
+import core.gait_controller as gait
+import core.kinematics as kinematics_old
 from tools.utils import from_pybullet_orn, from_pybullet_pos
 from collections import deque
 
@@ -17,6 +17,7 @@ from collections import deque
 
 # CONSTANTS
 PI = math.pi
+TIME_STEP = 1. / 240.
 
 class PybulletSim:
     
@@ -116,10 +117,18 @@ class PybulletSim:
                                                 self.l4)
 
         # Gait Controller
-        self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions, 
-                                                initial_theta=self.initial_theta, 
-                                                initial_center=self.center_kin, 
-                                                initial_orientation=self.orientation_kin)
+        self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions,
+                                                   initial_theta=self.initial_theta,
+                                                   initial_center=self.center_kin,
+                                                   initial_orientation=self.orientation_kin)
+
+        self._leg_joint_map = {
+            "FL": [self.joint_dic["front_left_shoulder"],  self.joint_dic["front_left_leg"],  self.joint_dic["front_left_foot"]],
+            "FR": [self.joint_dic["front_right_shoulder"], self.joint_dic["front_right_leg"], self.joint_dic["front_right_foot"]],
+            "RL": [self.joint_dic["rear_left_shoulder"],   self.joint_dic["rear_left_leg"],   self.joint_dic["rear_left_foot"]],
+            "RR": [self.joint_dic["rear_right_shoulder"],  self.joint_dic["rear_right_leg"],  self.joint_dic["rear_right_foot"]],
+        }
+        self._leg_order = ["FL", "FR", "RL", "RR"]
 
         # Start simulation
         self.initial_state = p.saveState()
@@ -299,6 +308,20 @@ class PybulletSim:
             p.stepSimulation()
             time.sleep(1./240.)
         
+    def move_callback(self, leg, angles, unit="rad"):
+        """Apply IK angles for one leg to pybullet joints.
+
+        :param leg:    leg name FL / FR / RL / RR
+        :param angles: [shoulder, leg, foot] in radians (or degrees)
+        :param unit:   "rad" or "degrees"
+        """
+        if unit == "degrees":
+            angles = [math.radians(a) for a in angles]
+        leg_idx = self._leg_order.index(leg)
+        dirs = self.theta_dirs[leg_idx * 3: (leg_idx + 1) * 3]
+        angles = [a * d for a, d in zip(angles, dirs)]
+        p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg], p.POSITION_CONTROL, angles)
+
     def start_simulation(self):
         
         current_time = 0
@@ -443,16 +466,12 @@ class PybulletSim:
                     duty_factor = 0.5
                     swing_height = 0.03
                     velocity = 0.9
-                    ef_vel, roll_error, pitch_error, yaw_error = self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="+x", 
-                                  deceleration_flag=deceleration_flag)
+                    ef_vel, roll_error, pitch_error, yaw_error = self.gait_controller.trot(
+                                  current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
+                                  self.get_imu_data(), dir="+x", deceleration_flag=deceleration_flag,
+                                  move_callback=self.move_callback)
+                    p.stepSimulation()
+                    time.sleep(TIME_STEP)
                     
                     # Live plot of RPY errors
                     x_data.append(current_time)
@@ -507,16 +526,12 @@ class PybulletSim:
                     duty_factor = 0.5
                     swing_height = 0.03
                     velocity = 0.9
-                    ef_vel, _, _ , _  = self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="-x", 
-                                  deceleration_flag=deceleration_flag)
+                    ef_vel, _, _, _ = self.gait_controller.trot(
+                                  current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
+                                  self.get_imu_data(), dir="-x", deceleration_flag=deceleration_flag,
+                                  move_callback=self.move_callback)
+                    p.stepSimulation()
+                    time.sleep(TIME_STEP)
                     # print(f"Current Speed in m/s: {ef_vel}")
                     # print(f"dec flag : {deceleration_flag}")
 
@@ -543,16 +558,12 @@ class PybulletSim:
                     duty_factor = 0.5
                     swing_height = 0.03
                     velocity = 0.9
-                    ef_vel, _, _ , _  = self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="+y", 
-                                  deceleration_flag=deceleration_flag)
+                    ef_vel, _, _, _ = self.gait_controller.trot(
+                                  current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
+                                  self.get_imu_data(), dir="+y", deceleration_flag=deceleration_flag,
+                                  move_callback=self.move_callback)
+                    p.stepSimulation()
+                    time.sleep(TIME_STEP)
                     # print(f"Current Speed in m/s: {ef_vel}")
                     # print(f"dec flag : {deceleration_flag}")
 
@@ -579,16 +590,12 @@ class PybulletSim:
                     duty_factor = 0.5
                     swing_height = 0.03
                     velocity = 0.9
-                    ef_vel, _, _ , _ = self.gait_controller.trot(current_time, 
-                                  T_cycle, 
-                                  duty_factor, 
-                                  velocity, 
-                                  swing_height, 
-                                  p, 
-                                  self.robotId, 
-                                  self.get_imu_data(), 
-                                  dir="-y", 
-                                  deceleration_flag=deceleration_flag)
+                    ef_vel, _, _, _ = self.gait_controller.trot(
+                                  current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
+                                  self.get_imu_data(), dir="-y", deceleration_flag=deceleration_flag,
+                                  move_callback=self.move_callback)
+                    p.stepSimulation()
+                    time.sleep(TIME_STEP)
                     # print(f"Current Speed in m/s: {ef_vel}")
                     # print(f"dec flag : {deceleration_flag}")
 
