@@ -10,12 +10,21 @@ import time
 from tools.pid_controller import PIDController, PIDControllerRP
 
 
-# MIT Cheetah 12-point Bezier swing parameters (normalized, from Bledt et al.)
+# 12-point Bezier swing parameters (normalized).
+# Values from open-source community implementations (spot_mini_mini et al.),
+# inspired by MIT Cheetah.
 # _X: horizontal progression 0=liftoff, 1=touchdown
 #     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
 # _H: height factor (1.0 = swing_height, 1.1 = slight overshoot for natural arc)
+
+# Claude's values based on the 12-point Bezier curve
 _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
-_SWING_H_NORM = [0.00, 0.10, 0.80, 1.00, 1.10, 1.10, 1.10, 1.10, 1.00, 0.80, 0.10, 0.00]
+# _SWING_H_NORM = [0.00, 0.10, 0.80, 1.00, 1.10, 1.10, 1.10, 1.10, 1.00, 0.80, 0.10, 0.00]
+
+# Extracted normalized values from spot_mini_mini
+# https://github.com/OpenQuadruped/spot_mini_mini/blob/spotmicroai/spotmicro/GaitGenerator/Bezier.py 
+# _SWING_X_NORM = [0.00, 1.4, 1.5, 1.5, 1.5, 0.00, 0.00, 0.00, 1.5, 1.5, 1.40, 0.00]
+_SWING_H_NORM = [0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 0.9, 1.10, 1.10, 1.1, 0.00, 0.00]
 
 L1 = kinematics_old.L1
 L2 = kinematics_old.L2
