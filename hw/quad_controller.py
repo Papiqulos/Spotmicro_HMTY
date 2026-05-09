@@ -9,7 +9,7 @@ from core.kinematics import LENGTH, WIDTH, L1, L2, L3, L4
 import numpy as np
 import math
 from tools.utils import to_homogenous, rescale_number
-from hw.gait_controller_hw import GaitController
+from core.gait_controller import GaitController
 import yaml
 from tools.imu import IMU
 

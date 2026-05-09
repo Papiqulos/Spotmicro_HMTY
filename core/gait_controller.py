@@ -1,0 +1,208 @@
+import numpy as np
+from tools.utils import from_pybullet_orn, to_homogenous, normalize_angle
+from tools.pid_controller import PIDController
+import core.kinematics as kinematics
+import core.bezier_curve_gen as bezier
+
+L1 = kinematics.L1
+L2 = kinematics.L2
+L3 = kinematics.L3
+L4 = kinematics.L4
+LENGTH = kinematics.LENGTH
+WIDTH = kinematics.WIDTH
+
+# 12-point Bezier swing parameters (normalized).
+# Values from open-source community implementations (spot_mini_mini et al.),
+# inspired by MIT Cheetah.
+# _X: horizontal progression 0=liftoff, 1=touchdown
+#     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
+# _H: height factor relative to swing_height
+_SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
+_SWING_H_NORM = [0.00, 0.00, 0.90, 0.90, 0.90, 0.90, 0.90, 1.10, 1.10, 1.10, 0.00, 0.00]
+
+
+class GaitController:
+
+    def __init__(self, initial_ef_positions=None, initial_theta=None,
+                 initial_center=None, initial_orientation=None):
+        """
+        :param initial_ef_positions: foot positions in kinematics frame (mm, Y-up)
+        :param initial_theta:        initial joint angles
+        :param initial_center:       body center in kinematics frame (mm)
+        :param initial_orientation:  body RPY in kinematics frame (rad)
+        """
+        self.initial_ef_positions = initial_ef_positions
+        self.initial_theta = initial_theta
+        self.initial_center = initial_center
+        self.initial_orientation = initial_orientation
+
+        self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH,
+                                                l1=L1, l2=L2, l3=L3, l4=L4)
+        self.gait_init = None
+        self.deceleration_init = 0
+
+        self.pid_roll  = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_yaw   = PIDController(kp=0.2, ki=0.0,   kd=0.025)
+
+    def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
+        """12-point Bezier swing control points.
+        Frame: kinematics (X-forward, Y-up, Z-left), units mm.
+
+        3-point clusters at liftoff/touchdown force zero endpoint tangent velocity.
+        """
+        pts = []
+        if dir == "+x":
+            x0 = initial_pos[0] - sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([x0 + xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
+        elif dir == "-x":
+            x0 = initial_pos[0] + sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([x0 - xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
+        elif dir == "+y":
+            z0 = initial_pos[2] - sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 + xn * sl_mm]))
+        elif dir == "-y":
+            z0 = initial_pos[2] + sl_mm / 2
+            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 - xn * sl_mm]))
+        return pts
+
+    def stance_sine_trajectory(self, initial_pos, sl_mm, stance_progress, delta, dir="+x"):
+        """Stance foot position with complementary sine dip.
+
+        Horizontal: linear sweep from +sl/2 (front) to -sl/2 (back).
+        Vertical (Y-up): y0 - delta * sin(pi * t)
+
+        sin(pi*t) completes one half-cycle over stance (0 -> peak -> 0).
+        delta = 5% of swing_height keeps the perturbation subtle.
+        """
+        t = stance_progress
+        y = initial_pos[1] - delta * np.sin(np.pi * t)
+        if dir == "+x":
+            return np.array([initial_pos[0] + sl_mm / 2 - t * sl_mm, y, initial_pos[2]])
+        elif dir == "-x":
+            return np.array([initial_pos[0] - sl_mm / 2 + t * sl_mm, y, initial_pos[2]])
+        elif dir == "+y":
+            return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 2 - t * sl_mm])
+        elif dir == "-y":
+            return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 2 + t * sl_mm])
+
+    def trot(self,
+             current_time,
+             time_step,
+             T_cycle,
+             duty_factor,
+             desired_velocity,
+             swing_height,
+             imu_data=None,
+             dir="+x",
+             deceleration_flag=False,
+             move_callback=None):
+        """
+        Diagonal trot using 12-point Bezier swing and sinusoidal stance.
+
+        :param current_time:      elapsed time in seconds
+        :param time_step:         control loop period in seconds (used for PID dt)
+        :param T_cycle:           gait cycle duration in seconds
+        :param duty_factor:       stance fraction of cycle (0-1)
+        :param desired_velocity:  target body speed in m/s
+        :param swing_height:      peak foot clearance above nominal in meters
+        :param imu_data:          orientation tuple in pybullet frame, or None
+        :param dir:               motion direction: +x / -x / +y / -y
+        :param deceleration_flag: when True, ramp velocity to zero over 0.5 s
+        :param move_callback:     callable(leg, angles, unit="rad")
+                                  handles hardware servo writes or pybullet joints
+        """
+        if self.gait_init is None:
+            self.gait_init = current_time
+
+        ramp_duration = 0.5
+        time_since_start = current_time - self.gait_init
+        ramp_factor = 1.0
+
+        if time_since_start < ramp_duration:
+            ramp_factor = time_since_start / ramp_duration
+        elif not deceleration_flag:
+            ramp_factor = 1.0
+
+        if deceleration_flag and self.deceleration_init == 0:
+            self.deceleration_init = current_time
+
+        time_since_dec = current_time - self.deceleration_init
+        if time_since_dec < ramp_duration and deceleration_flag:
+            ramp_factor = 1.0 - (time_since_dec / ramp_duration)
+        elif time_since_dec >= ramp_duration and deceleration_flag:
+            self.gait_init = None
+            self.deceleration_init = 0
+            ramp_factor = 0.0
+
+        effective_velocity = desired_velocity * ramp_factor
+        stance_length = effective_velocity * T_cycle * duty_factor
+        global_phase = (current_time % T_cycle) / T_cycle
+
+        legs = ["FL", "FR", "RL", "RR"]
+        leg_offsets = [0.0, 0.5, 0.5, 0.0]
+
+        roll_correction = pitch_correction = yaw_correction = 0.0
+        roll_error = pitch_error = yaw_error = 0.0
+
+        if imu_data is not None:
+            imu_data = from_pybullet_orn(imu_data)
+            roll_error  = self.initial_orientation[0] - imu_data[0]
+            pitch_error = self.initial_orientation[1] - imu_data[1]
+            yaw_error   = normalize_angle(self.initial_orientation[2] - imu_data[2])
+            roll_correction  = self.pid_roll.update(roll_error,  time_step)
+            pitch_correction = self.pid_pitch.update(pitch_error, time_step)
+            yaw_correction   = self.pid_yaw.update(yaw_error,   time_step)
+
+        corrected_orientation = (
+            self.initial_orientation[0] + roll_correction,
+            self.initial_orientation[1] + pitch_correction,
+            self.initial_orientation[2] + yaw_correction,
+        )
+
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+        transforms = [T_fl, T_fr, T_rl, T_rr]
+
+        sl_mm = stance_length * 1000.0
+        sh_mm = swing_height * 1000.0
+        stance_delta = sh_mm * 0.05
+
+        for i, leg in enumerate(legs):
+            leg_phase = (global_phase + leg_offsets[i]) % 1.0
+            initial_pos = self.initial_ef_positions[i][:3]
+
+            if leg_phase < duty_factor:
+                t = leg_phase / duty_factor
+                current_pos = self.stance_sine_trajectory(initial_pos, sl_mm, t, stance_delta, dir)
+            else:
+                t = (leg_phase - duty_factor) / (1.0 - duty_factor)
+                cps = self.swing_trajectory_control_points(initial_pos, sl_mm, sh_mm, dir)
+                bezier_gen = bezier.BezierCurveGen(cps)
+                current_pos = bezier_gen.n_point_curve(cps, t)
+
+            target_pos = to_homogenous(current_pos)
+            Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
+            target_pos_shoulder = Ix @ np.linalg.inv(transforms[i]) @ target_pos
+            angles = self.kin_solver.legIK(target_pos_shoulder)
+
+            if move_callback is not None:
+                move_callback(leg, angles, unit="rad")
+
+        return effective_velocity, roll_error, pitch_error, yaw_error
+
+    def turn(self):
+        raise NotImplementedError
+
+    def turn_in_place(self):
+        raise NotImplementedError
+
+    def body_manipulation(self):
+        raise NotImplementedError
+
+
+if __name__ == "__main__":
+    pass
