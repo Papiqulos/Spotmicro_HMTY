@@ -22,7 +22,7 @@ class ADXL435:
         print("Accelerometer Ready")
         self.calibrate()
 
-    def calibrate(self, samples=1000):
+    def calibrate(self):
         self.zmax = 11.34
         self.zmin = -8.49
 

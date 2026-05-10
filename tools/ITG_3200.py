@@ -33,7 +33,7 @@ class ITG_3200:
         print("Gyro Ready")
         self.calibrate()
 
-    def calibrate(self, samples=1000):
+    def calibrate(self, samples=2000):
         values = []
         for i in range(samples):
             values.append(self.get_xyzGyro())

@@ -1,5 +1,7 @@
 # zero_deg: angle (0-180) that corresponds to neutral position
 # direction: 1 = normal, -1 = reversed
+# min_pulse/max_pulse: PWM pulse width range in microseconds (default 750/2250)
+#   adjust these to shift the angle mapping without moving the horn
 
 fl:
   shoulder: { channel: 12, zero_deg: 76 , direction: -1, kit: 1 }
@@ -7,16 +9,16 @@ fl:
   foot:     { channel: 14, zero_deg: 137, direction: -1, kit: 1 }
 
 fr:
-  shoulder: { channel:  9, zero_deg: 70 , direction:  1, kit: 1 }
-  leg:      { channel: 10, zero_deg: 126, direction:  1, kit: 1 }
-  foot:     { channel: 11, zero_deg: 64 , direction:  1, kit: 1 }
+  shoulder: { channel:  9, zero_deg: 70 , direction:  1, kit: 1  }
+  leg:      { channel: 10, zero_deg: 126, direction:  1, kit: 1  }
+  foot:     { channel: 11, zero_deg: 64 , direction:  1, kit: 1  }
 
 rl:
-  shoulder: { channel:  14, zero_deg: 120, direction: -1, kit: 2 }
-  leg:      { channel:  15, zero_deg: 76 , direction: -1, kit: 2 }
-  foot:     { channel:  13, zero_deg: 126, direction: -1, kit: 2 }
+  shoulder: { channel:  14, zero_deg: 120, direction: -1, kit: 2  }
+  leg:      { channel:  15, zero_deg: 76 , direction: -1, kit: 2  }
+  foot:     { channel:  13, zero_deg: 126, direction: -1, kit: 2  }
 
 rr:
-  shoulder: { channel:  6, zero_deg:  50, direction:  1, kit: 2 }
-  leg:      { channel:  8, zero_deg:  46, direction:  1, kit: 2 }
-  foot:     { channel:  12, zero_deg:  50, direction:  1, kit: 2 }
+  shoulder: { channel:  6, zero_deg: 85, direction:  1, kit: 2  }
+  leg:      { channel:  8, zero_deg: 94, direction:  1, kit: 2  }
+  foot:     { channel: 12, zero_deg: 50, direction:  1, kit: 2 }

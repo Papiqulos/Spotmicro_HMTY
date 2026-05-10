@@ -28,7 +28,7 @@ class IMU:
         self.accelerometer = imu_accelerometer.ADXL435()
         self.magnetometer = imu_magnetometer.QMC5883L()
 
-        self.madgwick = Madgwick()
+        self.madgwick = Madgwick(gain=0.045)
 
         self.quaternion = np.array([1, 0, 0, 0])
 
@@ -46,6 +46,11 @@ class IMU:
         
         # Convert acceleration to m/s^2
         raw_acc = raw_acc * 9.81
+        
+        # Convert magnetometer to uT from nT
+        if raw_mag is not None:
+            raw_mag = np.array([raw_mag[0] , -raw_mag[1], -raw_mag[2]])
+        
         
         if dt <= 0.0:
             dt = 0.001
@@ -69,23 +74,39 @@ class IMU:
         roll = math.degrees(roll)
         pitch = math.degrees(pitch)
         yaw = math.degrees(yaw)
+        
+        # Fixed IMU corrections
+        roll_correction  = 0
+        pitch_correction = 0
+        yaw_correction   = 0
+        
+        roll = roll + roll_correction
+        pitch = pitch + pitch_correction
+        yaw = yaw + yaw_correction
 
-        # Swap roll and pitch according to the robot orientation
-        return pitch, roll, yaw
+        return roll, pitch, yaw
+    
+    def get_rpy(self):
+        roll, pitch, yaw = 0, 0, 0
+        for _ in range(10):
+
+            # Get the raw sensor readings
+            raw_gyro = self.gyro.get_xyzGyro()
+            raw_acc = self.accelerometer.get_acceleration()["acceleration"]
+            raw_mag = self.magnetometer.get_magnetometer()["magnet"]
+
+            # Update the orientation
+            roll, pitch, yaw = self.update(raw_gyro, raw_acc, raw_mag=raw_mag)
+            
+            # print(f"Roll: {roll:.2f}°\tPitch: {pitch:.2f}°\tYaw: {yaw:.2f}°", end="\r")
+            time.sleep(0.01)
+        return roll, pitch, yaw
             
 
 if __name__ == "__main__":
     imu = IMU()
-    while True:
-
-        # Get the raw sensor readings
-        raw_gyro = imu.gyro.get_xyzGyro()
-        raw_acc = imu.accelerometer.get_acceleration()["acceleration"]
-        raw_mag = imu.magnetometer.get_magnetometer()["magnet"]
-
-        # Update the orientation
-        roll, pitch, yaw = imu.update(raw_gyro, raw_acc, raw_mag)
-        print(f"Roll: {roll:.2f}°\tPitch: {pitch:.2f}°\tYaw: {yaw:.2f}°")
-        time.sleep(0.01)
+    
+    print(imu.get_rpy())
+    
 
 

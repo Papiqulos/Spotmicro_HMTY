@@ -28,8 +28,8 @@ kit1.servo[10].angle = 126 # THIS NEEDS DEGREES
 kit1.servo[11].angle = 64 # THIS NEEDS DEGREES
 
 # rr
-kit2.servo[6].angle =  50 # THIS NEEDS DEGREES
-kit2.servo[8].angle =  46 # THIS NEEDS DEGREES
+kit2.servo[6].angle =  85 # THIS NEEDS DEGREES
+kit2.servo[8].angle =  94 # THIS NEEDS DEGREES
 kit2.servo[12].angle = 50 # THIS NEEDS DEGREES
 
 # print("hello")

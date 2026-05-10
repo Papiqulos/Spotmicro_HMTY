@@ -29,11 +29,38 @@ class RobotController:
         self.init_center = init_center
         self.init_orientation = init_orientation
         self.init_angles = init_angles
+        
+
+        leg_names = ["FL", "FR", "RL", "RR"]
+        
+
+        self.zeros      = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS]
+        self.indexes    = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]
+        self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS]
+        self.kits       = [calib[leg][joint]["kit"]       for leg in LEGS for joint in JOINTS]
+      
+
+        self.kit_front = ServoKit(channels=16)
+        self.kit_rear  = ServoKit(channels=16, address=0x41)
+
+        self.imu = IMU()
+        
+        self.apply_angles_robot(self.init_angles)
+        time.sleep(1)
+        # self.init_orientation = self.get_current_orientation() 
+        self.init_orientation = init_orientation # static orientation. Placeholder until IMU is implemented
+        print(f"Initial Orientation: {self.init_orientation}")
         self.init_ef_positions = self.kin_solver.robot_FK(
             self.init_center, self.init_orientation, self.init_angles, unit="degrees"
         )
-
-        leg_names = ["FL", "FR", "RL", "RR"]
+        self.gait_controller = GaitController(
+            initial_ef_positions=self.init_ef_positions,
+            initial_theta=init_angles,
+            initial_center=init_center,
+            initial_orientation=self.init_orientation,
+        )
+        
+        
         print("--- Robot Initial Angles ---")
         for i, leg in enumerate(leg_names):
             shoulder, leg_joint, foot = self.init_angles[i*3 : i*3+3]
@@ -44,29 +71,13 @@ class RobotController:
             x, y, z = self.init_ef_positions[i][:3]
             print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
 
-        self.zeros      = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS]
-        self.indexes    = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]
-        self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS]
-        self.kits       = [calib[leg][joint]["kit"]       for leg in LEGS for joint in JOINTS]
-
-        self.kit_front = ServoKit(channels=16)
-        self.kit_rear  = ServoKit(channels=16, address=0x41)
-
-        self.imu = IMU()
-        self.gait_controller = GaitController(
-            initial_ef_positions=self.init_ef_positions,
-            initial_theta=None,
-            initial_center=init_center,
-            initial_orientation=init_orientation,
-        )
-        self.apply_angles_robot(self.init_angles)
-        time.sleep(1)
-
     def _write_servo(self, i, angle):
         try:
             if self.kits[i] == 1:
+                
                 self.kit_front.servo[self.indexes[i]].angle = angle
             elif self.kits[i] == 2:
+                
                 self.kit_rear.servo[self.indexes[i]].angle = angle
         except ValueError as e:
             print(f"Servo {self.indexes[i]} out of range: {angle:.1f}° — {e}")
@@ -90,10 +101,13 @@ class RobotController:
             angle = rescale_number(angle, 0, 180, zeros[i], zeros[i] + 180)
             self._write_servo(s.start + i, angle)
 
+    # DOESN'T WORK YET
     def get_current_orientation(self):
         raw_gyro = self.imu.gyro.get_xyzGyro()
         raw_acc  = self.imu.accelerometer.get_acceleration()["acceleration"]
-        roll, pitch, yaw = self.imu.update(raw_gyro, raw_acc)
+        raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"]
+        for _ in range(100):
+            roll, pitch, yaw = self.imu.update(raw_gyro, raw_acc, raw_mag=raw_mag)
         return [roll, pitch, yaw]
 
     def drive_leg_to_position(self, leg, position):
@@ -126,14 +140,52 @@ class RobotController:
             if remaining > 0:
                 time.sleep(remaining)
 
-    def go_backwards(self):
-        raise NotImplementedError
+    def go_backwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
+        loop_period = 1.0 / 100
+        start_time = time.time()
+        for _ in range(steps):
+            t0 = time.time()
+            current_time = t0 - start_time
+            self.gait_controller.trot(
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="-x",
+                move_callback=self.apply_angles_leg,
+            )
+            elapsed = time.time() - t0
+            remaining = loop_period - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+        
 
-    def go_right(self):
-        raise NotImplementedError
+    def go_right(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
+        loop_period = 1.0 / 100
+        start_time = time.time()
+        for _ in range(steps):
+            t0 = time.time()
+            current_time = t0 - start_time
+            self.gait_controller.trot(
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="+y",
+                move_callback=self.apply_angles_leg,
+            )
+            elapsed = time.time() - t0
+            remaining = loop_period - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
+        
 
-    def go_left(self):
-        raise NotImplementedError
+    def go_left(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
+        loop_period = 1.0 / 100
+        start_time = time.time()
+        for _ in range(steps):
+            t0 = time.time()
+            current_time = t0 - start_time
+            self.gait_controller.trot(
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="-y",
+                move_callback=self.apply_angles_leg,
+            )
+            elapsed = time.time() - t0
+            remaining = loop_period - elapsed
+            if remaining > 0:
+                time.sleep(remaining)
 
 
 if __name__ == "__main__":
@@ -141,14 +193,15 @@ if __name__ == "__main__":
         center = [0, 250, 0]
 
         theta_default = [
-                0, -30, 60,  # FL
-                0, -30, 60,  # FR
-                0, -30, 60,  # RL
-                0, -30, 60,  # RR
+                0, -40, 60,  # FL
+                0, -40, 60,  # FR
+                0, -40, 60,  # RL
+                0, -40, 60,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
         robot_controller = RobotController(kin_solver, theta_default, center, orientation)
+        # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.25, duty_factor=0.5, swing_height=0.05, steps=100)
-        # robot_controller.go_backwards()
+        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=150)
+        # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)
