@@ -8,10 +8,3 @@ leg_segments:
   L2: 0.000     # Vertical offset shoulder to leg
   L3: 120.416   # Upper leg length
   L4: 115.000   # Lower leg length
-
-# PCA9685 channel assignments per leg/joint
-servo_channels:
-  fl: { shoulder: 12, leg: 13, foot: 14 }
-  fr: { shoulder:  9, leg: 10, foot: 11 }
-  rl: { shoulder:  4, leg:  6, foot:  5 }
-  rr: { shoulder:  3, leg:  2, foot:  1 }

@@ -11,6 +11,7 @@ import math
 import numpy as np
 from ahrs.filters import Madgwick
 from ahrs.common.orientation import q2euler
+from tools import utils
 
 # Roll angle (rotation around x-axis-FORWARD)
 # Pitch angle (rotation around z-axis-LEFT)
@@ -26,11 +27,21 @@ class IMU:
     def __init__(self):
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
-        self.magnetometer = imu_magnetometer.QMC5883L()
+        init_acc = self.accelerometer.get_acceleration()["acceleration"]
+        
+        self.initial_roll = np.atan2(init_acc[1], init_acc[2])
+        self.initial_pitch = np.atan2(-init_acc[0], np.sqrt(init_acc[1]**2 + init_acc[2]**2))
+        self.intitial_yaw = 0
+        
+        self.initial_orientation = np.array([self.initial_roll, self.initial_pitch, self.intitial_yaw])
+        print(f"Initial Orientation: {self.initial_orientation}")
+        
+        # self.magnetometer = imu_magnetometer.QMC5883L()
 
         self.madgwick = Madgwick(gain=0.045)
 
-        self.quaternion = np.array([1, 0, 0, 0])
+        self.quaternion = utils.euler2q(self.initial_roll, self.initial_pitch, self.intitial_yaw)
+        # self.quaternion = np.array([1, 0, 0, 0])
 
         self.last_time = time.time()
         print("IMU Ready")
@@ -68,45 +79,31 @@ class IMU:
                                                        dt=dt)
 
         self.last_time = current_time
-        roll, pitch, yaw = q2euler(self.quaternion)
+        pitch, roll, yaw = q2euler(self.quaternion)
 
         # Convert to degrees
-        roll = math.degrees(roll)
-        pitch = math.degrees(pitch)
+        roll = math.degrees(roll) + 2.3
+        pitch = math.degrees(pitch) + 1.5
         yaw = math.degrees(yaw)
         
-        # Fixed IMU corrections
-        roll_correction  = 0
-        pitch_correction = 0
-        yaw_correction   = 0
-        
-        roll = roll + roll_correction
-        pitch = pitch + pitch_correction
-        yaw = yaw + yaw_correction
 
-        return roll, pitch, yaw
+        return roll, -pitch, yaw
     
-    def get_rpy(self):
-        roll, pitch, yaw = 0, 0, 0
-        for _ in range(10):
 
-            # Get the raw sensor readings
-            raw_gyro = self.gyro.get_xyzGyro()
-            raw_acc = self.accelerometer.get_acceleration()["acceleration"]
-            raw_mag = self.magnetometer.get_magnetometer()["magnet"]
-
-            # Update the orientation
-            roll, pitch, yaw = self.update(raw_gyro, raw_acc, raw_mag=raw_mag)
-            
-            # print(f"Roll: {roll:.2f}°\tPitch: {pitch:.2f}°\tYaw: {yaw:.2f}°", end="\r")
-            time.sleep(0.01)
-        return roll, pitch, yaw
             
 
 if __name__ == "__main__":
     imu = IMU()
     
-    print(imu.get_rpy())
+    while True:
+        raw_gyro = imu.gyro.get_xyzGyro()
+        raw_acc = imu.accelerometer.get_acceleration()["acceleration"]
+        # raw_mag = imu.magnetometer.read()
+
+        roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
+
+        print("Roll: {:.2f} Pitch: {:.2f} Yaw: {:.2f}".format(roll, pitch, yaw), end="\r")
+        time.sleep(0.01)
     
 
 

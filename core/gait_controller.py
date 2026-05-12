@@ -154,23 +154,27 @@ class GaitController:
 
         roll_correction = pitch_correction = yaw_correction = 0.0
         roll_error = pitch_error = yaw_error = 0.0
+        
+        corrected_orientation = self.initial_orientation
 
         if imu_data is not None:
             imu_data = from_pybullet_orn(imu_data)
             roll_error  = self.initial_orientation[0] - imu_data[0]
             pitch_error = self.initial_orientation[1] - imu_data[1]
-            yaw_error   = normalize_angle(self.initial_orientation[2] - imu_data[2])
+            # yaw_error   = self.initial_orientation[2] - imu_data[2]
             roll_correction  = self.pid_roll.update(roll_error,  time_step)
             pitch_correction = self.pid_pitch.update(pitch_error, time_step)
-            yaw_correction   = self.pid_yaw.update(yaw_error,   time_step)
+            # yaw_correction   = self.pid_yaw.update(yaw_error,   time_step)
 
         corrected_orientation = (
             self.initial_orientation[0] + roll_correction,
             self.initial_orientation[1] + pitch_correction,
-            self.initial_orientation[2] + yaw_correction,
+            self.initial_orientation[2],
         )
-
-        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+        
+        print(f"Corrected Roll: {corrected_orientation[0]}, Pitch: {corrected_orientation[1]}, Yaw: {corrected_orientation[2]}")
+        print("--------------------------------")
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center)
         transforms = [T_fl, T_fr, T_rl, T_rr]
 
         sl_mm = stance_length * 1000.0

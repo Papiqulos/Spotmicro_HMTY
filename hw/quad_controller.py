@@ -24,10 +24,9 @@ _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": sli
 
 class RobotController:
 
-    def __init__(self, kin_solver, init_angles, init_center, init_orientation):
+    def __init__(self, kin_solver, init_angles, init_center):
         self.kin_solver = kin_solver
         self.init_center = init_center
-        self.init_orientation = init_orientation
         self.init_angles = init_angles
         
 
@@ -47,9 +46,7 @@ class RobotController:
         
         self.apply_angles_robot(self.init_angles)
         time.sleep(1)
-        # self.init_orientation = self.get_current_orientation() 
-        self.init_orientation = init_orientation # static orientation. Placeholder until IMU is implemented
-        print(f"Initial Orientation: {self.init_orientation}")
+        self.init_orientation = self.imu.initial_orientation
         self.init_ef_positions = self.kin_solver.robot_FK(
             self.init_center, self.init_orientation, self.init_angles, unit="degrees"
         )
@@ -101,15 +98,6 @@ class RobotController:
             angle = rescale_number(angle, 0, 180, zeros[i], zeros[i] + 180)
             self._write_servo(s.start + i, angle)
 
-    # DOESN'T WORK YET
-    def get_current_orientation(self):
-        raw_gyro = self.imu.gyro.get_xyzGyro()
-        raw_acc  = self.imu.accelerometer.get_acceleration()["acceleration"]
-        raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"]
-        for _ in range(100):
-            roll, pitch, yaw = self.imu.update(raw_gyro, raw_acc, raw_mag=raw_mag)
-        return [roll, pitch, yaw]
-
     def drive_leg_to_position(self, leg, position):
         orientation = self.get_current_orientation()
         (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*orientation, *self.init_center)
@@ -131,10 +119,26 @@ class RobotController:
         for _ in range(steps):
             t0 = time.time()
             current_time = t0 - start_time
-            self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height,
-                move_callback=self.apply_angles_leg,
-            )
+            
+            
+            raw_gyro = self.imu.gyro.get_xyzGyro()
+            raw_acc  = self.imu.accelerometer.get_acceleration()["acceleration"]
+            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"]
+            imu_data = self.imu.update(raw_gyro, raw_acc)
+            print(f"Read IMU: {imu_data}")
+            
+            # Dont use the pid controller for the first few steps to let the IMU readings converge
+            if steps < 200:
+                self.gait_controller.trot(
+                    current_time, loop_period, T_cycle, duty_factor, velocity, swing_height,
+                    move_callback=self.apply_angles_leg,
+                )
+            else:
+                self.gait_controller.trot(
+                    current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data,
+                    move_callback=self.apply_angles_leg,
+                )
+            
             elapsed = time.time() - t0
             remaining = loop_period - elapsed
             if remaining > 0:
@@ -189,7 +193,7 @@ class RobotController:
 
 
 if __name__ == "__main__":
-        orientation = [0, 0, 0]
+        orientation = [0, 0, 0] # static orientation
         center = [0, 250, 0]
 
         theta_default = [
@@ -200,8 +204,8 @@ if __name__ == "__main__":
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
-        robot_controller = RobotController(kin_solver, theta_default, center, orientation)
+        robot_controller = RobotController(kin_solver, theta_default, center)
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=150)
+        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=250)
         # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)
