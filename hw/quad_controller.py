@@ -132,7 +132,7 @@ class RobotController:
             raw_acc  = self.imu.accelerometer.read()["acceleration"]
             # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
             imu_data = self.imu.update(raw_gyro, raw_acc)
-            print(f"IMU: {imu_data}")
+            # print(f"IMU: {imu_data}")
             
             
             self.gait_controller.trot(
@@ -155,7 +155,7 @@ class RobotController:
             raw_acc  = self.imu.accelerometer.read()["acceleration"]
             # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
             imu_data = self.imu.update(raw_gyro, raw_acc)
-            print(f"IMU: {imu_data}")
+            # print(f"IMU: {imu_data}")
             
             
             ef_vel = self.gait_controller.trot(
@@ -220,13 +220,13 @@ class RobotController:
 
 if __name__ == "__main__":
         orientation = [0, 0, 0] # static orientation
-        center = [0, 220, 0]
+        center = [0, 270, 0]
 
         theta_default = [
-                0, -30, 60,  # FL
-                0, -30, 60,  # FR
-                0, -30, 60,  # RL
-                0, -30, 60,  # RR
+                0, -40, 60,  # FL
+                0, -40, 60,  # FR
+                0, -40, 60,  # RL
+                0, -40, 60,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
@@ -234,5 +234,5 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FL", [36.84, 21.47, 111.96])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        robot_controller.go_forwards(velocity=0.09, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=500)
+        robot_controller.go_forwards(velocity=0.26, T_cycle=0.28, duty_factor=0.5, swing_height=0.035, steps=90)
         # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)

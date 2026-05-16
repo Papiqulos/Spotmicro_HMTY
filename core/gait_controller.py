@@ -4,6 +4,7 @@ from tools.utils import to_homogenous
 from tools.pid_controller import PIDController, PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
+from collections import deque
 
 L1 = kinematics.L1
 L2 = kinematics.L2
@@ -49,9 +50,11 @@ class GaitController:
         self.deceleration_init = 0
 
         self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
-        self._imu_ema = None
-        self._ema_alpha = 0.2
         self._pid_last_time = None
+        self._imu_window = deque(maxlen=30)
+
+        
+
 
         with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "w") as f:
             f.write("")
@@ -60,7 +63,7 @@ class GaitController:
 
     def _set_pid(self, kp, ki, kd):
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
-        self._imu_ema = None
+        self._imu_window.clear()
         self._pid_last_time = None
 
     def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
@@ -69,21 +72,23 @@ class GaitController:
 
         3-point clusters at liftoff/touchdown force zero endpoint tangent velocity.
         """
+        # Touchdown at S/6 ahead of nominal (He 2020), liftoff at -5S/6.
+        # Swing starts at liftoff (-5S/6) and ends at touchdown (+S/6).
         pts = []
         if dir == "+x":
-            x0 = initial_pos[0] - sl_mm / 2
+            x0 = initial_pos[0] - 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([x0 + xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
         elif dir == "-x":
-            x0 = initial_pos[0] + sl_mm / 2
+            x0 = initial_pos[0] + 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([x0 - xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
         elif dir == "+y":
-            z0 = initial_pos[2] - sl_mm / 2
+            z0 = initial_pos[2] - 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 + xn * sl_mm]))
         elif dir == "-y":
-            z0 = initial_pos[2] + sl_mm / 2
+            z0 = initial_pos[2] + 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 - xn * sl_mm]))
         return pts
@@ -91,22 +96,19 @@ class GaitController:
     def stance_sine_trajectory(self, initial_pos, sl_mm, stance_progress, delta, dir="+x"):
         """Stance foot position with complementary sine dip.
 
-        Horizontal: linear sweep from +sl/2 (front) to -sl/2 (back).
+        Horizontal: touchdown at +S/6 ahead of nominal, sweeps back by S to liftoff at -5S/6.
         Vertical (Y-up): y0 - delta * sin(pi * t)
-
-        sin(pi*t) completes one half-cycle over stance (0 -> peak -> 0).
-        delta = 5% of swing_height keeps the perturbation subtle.
         """
         t = stance_progress
         y = initial_pos[1] - delta * np.sin(np.pi * t)
         if dir == "+x":
-            return np.array([initial_pos[0] + sl_mm / 2 - t * sl_mm, y, initial_pos[2]])
+            return np.array([initial_pos[0] + sl_mm / 6 - t * sl_mm, y, initial_pos[2]])
         elif dir == "-x":
-            return np.array([initial_pos[0] - sl_mm / 2 + t * sl_mm, y, initial_pos[2]])
+            return np.array([initial_pos[0] - sl_mm / 6 + t * sl_mm, y, initial_pos[2]])
         elif dir == "+y":
-            return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 2 - t * sl_mm])
+            return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 6 - t * sl_mm])
         elif dir == "-y":
-            return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 2 + t * sl_mm])
+            return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 6 + t * sl_mm])
 
     def trot(self,
              current_time,
@@ -168,39 +170,48 @@ class GaitController:
 
         if imu_data is not None:
             raw = np.array([imu_data[0], imu_data[1]])
-            if self._imu_ema is None:
-                self._imu_ema = raw.copy()
-            else:
-                self._imu_ema = self._ema_alpha * raw + (1.0 - self._ema_alpha) * self._imu_ema
+            
+            # Moving average filter for noisy IMU data
+            self._imu_window.append(raw)
+            filtered = np.mean(self._imu_window, axis=0)
 
             now = time.time()
             pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
             self._pid_last_time = now
 
-            correction = self.pid.run(self._imu_ema[0], self._imu_ema[1], pid_dt)
+            correction = self.pid.run(filtered[0], filtered[1], pid_dt)
 
             with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "a") as f:
                 f.write(f"{correction[0]} {correction[1]}\n")
             with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/imu.txt", "a") as f:
-                f.write(f"{self._imu_ema[0]} {self._imu_ema[1]}\n")
+                f.write(f"{filtered[0]} {filtered[1]}\n")
 
             corrected_orientation = np.array([
                 correction[0],
                 correction[1],
                 self.initial_orientation[2],
             ])
-
-            print(f"PID: {corrected_orientation}")
-        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+            
+        # Foot position correction based on corrected roll, pitch
+        dy_fl = + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_fr = - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_rl = + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_rr = - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+        
+        # Direct correction through IK
+        # (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center)
         transforms = [T_fl, T_fr, T_rl, T_rr]
 
         sl_mm = stance_length * 1000.0
         sh_mm = swing_height * 1000.0
-        stance_delta = sh_mm * 0.05
+        delta_base = sh_mm * 0.05
 
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offsets[i]) % 1.0
-            initial_pos = self.initial_ef_positions[i][:3]
+            initial_pos = np.array([self.initial_ef_positions[i][0], self.initial_ef_positions[i][1] + dy_dic[i], self.initial_ef_positions[i][2]])
+            stance_delta = delta_base + abs(dy_dic[i]) * 0.2
 
             if leg_phase < duty_factor:
                 t = leg_phase / duty_factor
