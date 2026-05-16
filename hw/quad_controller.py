@@ -45,16 +45,21 @@ class RobotController:
         self.imu = IMU()
         
         self.apply_angles_robot(self.init_angles)
-        time.sleep(1)
-        self.init_orientation = self.imu.initial_orientation
+        
+        self.init_orientation_rad = np.array([0, 0, 0])
+        self.init_orientation_deg = self.imu.initial_orientation_deg
+        
+        self.rad_offset = self.imu.initial_orientation_rad
+        self.deg_offset = self.imu.initial_orientation_deg
+        
         self.init_ef_positions = self.kin_solver.robot_FK(
-            self.init_center, self.init_orientation, self.init_angles, unit="degrees"
+            self.init_center, self.init_orientation_rad, self.init_angles, unit="degrees"
         )
         self.gait_controller = GaitController(
             initial_ef_positions=self.init_ef_positions,
             initial_theta=init_angles,
             initial_center=init_center,
-            initial_orientation=self.init_orientation,
+            initial_orientation=self.init_orientation_rad,
         )
         
         
@@ -67,6 +72,7 @@ class RobotController:
         for i, leg in enumerate(leg_names):
             x, y, z = self.init_ef_positions[i][:3]
             print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+        time.sleep(1)
 
     def _write_servo(self, i, angle):
         try:
@@ -99,7 +105,7 @@ class RobotController:
             self._write_servo(s.start + i, angle)
 
     def drive_leg_to_position(self, leg, position):
-        orientation = self.get_current_orientation()
+        orientation = self.init_orientation_rad
         (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*orientation, *self.init_center)
         transforms = {"FL": T_fl, "FR": T_fr, "RL": T_rl, "RR": T_rr}
         Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
@@ -116,33 +122,53 @@ class RobotController:
     def go_forwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
         loop_period = 1.0 / 100
         start_time = time.time()
+        self.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
         for _ in range(steps):
             t0 = time.time()
             current_time = t0 - start_time
             
             
-            raw_gyro = self.imu.gyro.get_xyzGyro()
-            raw_acc  = self.imu.accelerometer.get_acceleration()["acceleration"]
-            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"]
+            raw_gyro = self.imu.gyro.read()
+            raw_acc  = self.imu.accelerometer.read()["acceleration"]
+            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
             imu_data = self.imu.update(raw_gyro, raw_acc)
-            print(f"Read IMU: {imu_data}")
+            print(f"IMU: {imu_data}")
             
-            # Dont use the pid controller for the first few steps to let the IMU readings converge
-            if steps < 200:
-                self.gait_controller.trot(
-                    current_time, loop_period, T_cycle, duty_factor, velocity, swing_height,
-                    move_callback=self.apply_angles_leg,
-                )
-            else:
-                self.gait_controller.trot(
-                    current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data,
-                    move_callback=self.apply_angles_leg,
-                )
             
+            self.gait_controller.trot(
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data,
+                move_callback=self.apply_angles_leg,
+            )
             elapsed = time.time() - t0
             remaining = loop_period - elapsed
             if remaining > 0:
                 time.sleep(remaining)
+                
+        # After the given number steps, we decelerate into the default position
+        print("\nDecelerating...")
+        while True:
+            
+            t0 = time.time()
+            current_time = t0 - start_time
+            
+            raw_gyro = self.imu.gyro.read()
+            raw_acc  = self.imu.accelerometer.read()["acceleration"]
+            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
+            imu_data = self.imu.update(raw_gyro, raw_acc)
+            print(f"IMU: {imu_data}")
+            
+            
+            ef_vel = self.gait_controller.trot(
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, deceleration_flag=True,
+                move_callback=self.apply_angles_leg,
+            )
+            
+            if ef_vel == 0.0:
+                self.apply_angles_robot(self.init_angles)
+                print("Deceleration complete!")
+                break
+                
+            
 
     def go_backwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
         loop_period = 1.0 / 100
@@ -194,18 +220,19 @@ class RobotController:
 
 if __name__ == "__main__":
         orientation = [0, 0, 0] # static orientation
-        center = [0, 250, 0]
+        center = [0, 220, 0]
 
         theta_default = [
-                0, -40, 60,  # FL
-                0, -40, 60,  # FR
-                0, -40, 60,  # RL
-                0, -40, 60,  # RR
+                0, -30, 60,  # FL
+                0, -30, 60,  # FR
+                0, -30, 60,  # RL
+                0, -30, 60,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
         robot_controller = RobotController(kin_solver, theta_default, center)
+        # robot_controller.drive_leg_to_position("FL", [36.84, 21.47, 111.96])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        # robot_controller.go_forwards(velocity=0.1, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=250)
+        robot_controller.go_forwards(velocity=0.09, T_cycle=0.35, duty_factor=0.5, swing_height=0.035, steps=500)
         # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)

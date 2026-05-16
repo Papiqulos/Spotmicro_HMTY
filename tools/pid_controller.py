@@ -50,9 +50,14 @@ class PIDControllerRP:
         self.D_term = np.array([0.0, 0.0])
         self.max_I = 0.2
         self.last_error = np.array([0.0, 0.0])
+        self.first_run = True
 
     def run(self, roll, pitch, dt):
         error = self.desired_roll_pitch - np.array([roll, pitch])
+
+        if self.first_run:
+            self.last_error = error.copy()
+            self.first_run = False
 
         self.I_term = self.I_term + error * dt
         for i in range(2):
@@ -70,6 +75,7 @@ class PIDControllerRP:
         self.I_term = np.array([0.0, 0.0])
         self.D_term = np.array([0.0, 0.0])
         self.last_error = np.array([0.0, 0.0])
+        self.first_run = True
 
     def desired_RP_angles(self, des_roll, des_pitch):
         self.desired_roll_pitch = np.array([des_roll, des_pitch])

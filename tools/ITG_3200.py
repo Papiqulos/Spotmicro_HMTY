@@ -36,7 +36,7 @@ class ITG_3200:
     def calibrate(self, samples=2000):
         values = []
         for i in range(samples):
-            values.append(self.get_xyzGyro())
+            values.append(self.read())
         # Average the values
         average = np.mean(values, axis=0)
         self.x_offset = average[0]
@@ -44,7 +44,7 @@ class ITG_3200:
         self.z_offset = average[2]
         print("Gyro Calibrated")
 
-    def get_xyzGyro(self):
+    def read(self):
         """Returns angular velocity in 3-axis in degress/s. The axis are in the order of the sensor"""
         
 
@@ -76,4 +76,4 @@ class ITG_3200:
 
 if __name__ == "__main__":
     gyro = ITG_3200()
-    print(f"X: {gyro.get_xyzGyro()[0]}, Y: {gyro.get_xyzGyro()[2]}, Z: {gyro.get_xyzGyro()[1]}")
+    print(f"X: {gyro.read()[0]}, Y: {gyro.read()[2]}, Z: {gyro.read()[1]}")

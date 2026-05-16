@@ -9,8 +9,8 @@ from tools import QMC5883L as imu_magnetometer
 import time
 import math
 import numpy as np
-from ahrs.filters import Madgwick
-from ahrs.common.orientation import q2euler
+from ahrs.filters import Madgwick, EKF
+from ahrs.common.orientation import q2euler, q2rpy, acc2q
 from tools import utils
 
 # Roll angle (rotation around x-axis-FORWARD)
@@ -24,30 +24,52 @@ from tools import utils
 # X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 
 class IMU:
-    def __init__(self):
+    def __init__(self, filter_type="Madgwick"):
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
-        init_acc = self.accelerometer.get_acceleration()["acceleration"]
+        init_acc = self.accelerometer.read()["acceleration"]
+        # self.magnetometer = imu_magnetometer.QMC5883L() # not used because of too much noise
         
-        self.initial_roll = np.atan2(init_acc[1], init_acc[2])
-        self.initial_pitch = np.atan2(-init_acc[0], np.sqrt(init_acc[1]**2 + init_acc[2]**2))
-        self.intitial_yaw = 0
         
-        self.initial_orientation = np.array([self.initial_roll, self.initial_pitch, self.intitial_yaw])
-        print(f"Initial Orientation: {self.initial_orientation}")
+        # Calculate initial orientation through the accelerometer
+        self.q0 = acc2q(init_acc)
+        # self.q0 = np.array([1, 0, 0, 0]) # static orientation
+        self.initial_orientation_rad = q2rpy(self.q0)
+        self.initial_orientation_deg = q2rpy(self.q0, in_deg=True)
         
-        # self.magnetometer = imu_magnetometer.QMC5883L()
+        print(f"Initial Orientation\nRoll: {self.initial_orientation_deg[1]:.4f}°, Pitch: {self.initial_orientation_deg[0]:.4f}°, Yaw: {self.initial_orientation_deg[2]:.4f}")
+        print(f"Roll: {self.initial_orientation_rad[0]:.4f}, Pitch: {self.initial_orientation_rad[1]:.4f}, Yaw: {self.initial_orientation_rad[2]:.4f}")
+        
+        
+        
+        self.filter_type = filter_type
 
-        self.madgwick = Madgwick(gain=0.045)
+        if filter_type == "Madgwick":
+            self.filter = Madgwick(gain=0.045)
+        elif filter_type == "EKF":
+            self.filter = EKF()
+        else:
+            raise ValueError(f"Unknown filter: {filter_type}")
 
-        self.quaternion = utils.euler2q(self.initial_roll, self.initial_pitch, self.intitial_yaw)
-        # self.quaternion = np.array([1, 0, 0, 0])
+        
 
         self.last_time = time.time()
         print("IMU Ready")
+        
 
 
-    def update(self, raw_gyro, raw_acc, raw_mag=None):
+    def update(self, raw_gyro, raw_acc, raw_mag=None, in_deg=False):
+        """Update the orientation using raw IMU data.
+
+        Args:
+            raw_gyro (numpy.ndarray): raw gyroscope readings in degrees/s
+            raw_acc (numpy.ndarray): raw accelerometer readings in g force
+            raw_mag (numpy.ndarray, optional): raw magnetometer readings in nano tesla. Defaults to None.
+            in_deg (bool, optional): Return the angles in degrees. Defaults to False.
+
+        Returns:
+            numpy.ndarray: orientation in roll, pitch, yaw in radians or degrees
+        """
 
         current_time = time.time()
         dt = current_time - self.last_time
@@ -58,7 +80,6 @@ class IMU:
         # Convert acceleration to m/s^2
         raw_acc = raw_acc * 9.81
         
-        # Convert magnetometer to uT from nT
         if raw_mag is not None:
             raw_mag = np.array([raw_mag[0] , -raw_mag[1], -raw_mag[2]])
         
@@ -67,43 +88,61 @@ class IMU:
             dt = 0.001
 
         if raw_mag is None:
-            self.quaternion = self.madgwick.updateIMU(q=self.quaternion,
+            if self.filter_type == "Madgwick":
+                self.q0 = self.filter.updateIMU(q=self.q0,
                                                       gyr=raw_gyro,
                                                       acc=raw_acc,
                                                       dt=dt)
-        else:
-            self.quaternion = self.madgwick.updateMARG(q=self.quaternion,
+            elif self.filter_type == "EKF":
+                self.q0 = self.filter.update(q=self.q0,
                                                        gyr=raw_gyro,
                                                        acc=raw_acc,
-                                                       mag=raw_mag,
+                                                       dt=dt)
+        else:
+            if self.filter_type == "Madgwick":
+                self.q0 = self.filter.updateMARG(q=self.q0,
+                                                        gyr=raw_gyro,
+                                                        acc=raw_acc,
+                                                        mag=raw_mag,
+                                                        dt=dt)
+            elif self.filter_type == "EKF":
+                self.q0 = self.filter.update(q=self.q0,
+                                                       gyr=raw_gyro,
+                                                       acc=raw_acc,
+                                                       mag=raw_mag, 
                                                        dt=dt)
 
         self.last_time = current_time
-        pitch, roll, yaw = q2euler(self.quaternion)
-
-        # Convert to degrees
-        roll = math.degrees(roll) + 2.3
-        pitch = math.degrees(pitch) + 1.5
-        yaw = math.degrees(yaw)
         
+        pitch, roll, yaw = q2rpy(self.q0, in_deg=in_deg)
+        if in_deg:
+            pitch = pitch - self.initial_orientation_deg[0]
+            roll = roll   - self.initial_orientation_deg[1]
+        else:
+            pitch = pitch - self.initial_orientation_rad[0]
+            roll = roll   - self.initial_orientation_rad[1]
+        return np.array([roll, pitch, yaw])
 
-        return roll, -pitch, yaw
+        
+        
     
 
             
 
 if __name__ == "__main__":
-    imu = IMU()
-    
-    while True:
-        raw_gyro = imu.gyro.get_xyzGyro()
-        raw_acc = imu.accelerometer.get_acceleration()["acceleration"]
+    imu = IMU(filter_type="EKF")
+
+    for _ in range(100):
+        raw_gyro = imu.gyro.read()
+        raw_acc = imu.accelerometer.read()["acceleration"]
         # raw_mag = imu.magnetometer.read()
 
         roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
 
-        print("Roll: {:.2f} Pitch: {:.2f} Yaw: {:.2f}".format(roll, pitch, yaw), end="\r")
-        time.sleep(0.01)
+        print(f"Roll: {np.degrees(roll):.4f}° Pitch: {np.degrees(pitch):.4f}° Yaw: {np.degrees(yaw):.4f}°")
+        print(f"Roll: {roll:.6f} Pitch: {pitch:.6f} Yaw: {yaw:.6f}")
+        print("--------------------------------")
+        
     
 
 

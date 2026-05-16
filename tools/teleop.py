@@ -3,6 +3,9 @@ import tty
 import termios
 import threading
 
+
+################### DOESNT WORK ###################
+
 class KeyboardController:
     def __init__(self):
         self.current_key = None

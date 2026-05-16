@@ -9,4 +9,7 @@ sim/old_methods_.py
 sim/kinematics_new.py
 sim/gait_controller_sim_new.py
 sim/pybullet_sim_new.py
+ros2_ws/ 
 
+tools/pid.txt
+tools/imu.txt

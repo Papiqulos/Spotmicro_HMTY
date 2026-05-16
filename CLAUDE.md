@@ -1,13 +1,13 @@
 # Design, Implementation and Control of a Quadruped Robot
 
-## Project
+# Project
 
 Quadruped robot based on the SpotMicro v2 open source design as part of a Graduate Thesis at the University of Patras.
 
-## Stack
+# Stack
 
---Hardware--
-- 3d printed parts: Robot body, legs without the feet, servo mounts (https://www.thingiverse.com/thing:4155673)
+## Hardware
+- 3d printed parts: Robot body, legs(feet excluded), servo mounts (https://www.thingiverse.com/thing:4155673)
 - Feet: Rubber balls cut into hemispheres
 - Battery: Gens ace G-Tech 1100mAh 11.1V 3S1P 60C GRP-76 Hardcase Lipo Battery Pack with XT60 Plug
 - Microcontroller: Raspberry Pi 5 powered by a 5V/5A type-c power supply
@@ -16,13 +16,13 @@ Quadruped robot based on the SpotMicro v2 open source design as part of a Gradua
 - IMU: GY-85 Gyro-Accel-Mag Sensor
 - Lab power supply: for testing purposes only
 
---Software--
+# Software
 - Ubuntu server 24.04 
 - Python
 - Pybullet for simulation
 
 
-## Workspace Layout
+# Workspace Layout
 
 ```
 config/
@@ -31,16 +31,17 @@ config/
 core/
     kinematics.py               # Kinematics Controller
     bezier_curve_gen.py         # Bezier Curve Generator
+    gait_controller.py          # Robot Gait Controller
 hw/
     quad_controller.py          # General Robot Controller
-    gait_controller_hw.py       # Robot Gait Controller for the real robot
+    
 sim/                            # Simulation files and old code
 tests/                          # Test files
 tools/
     utils.py                    # Utility functions
     ADXL345.py                  # Accelerometer driver
     ITG_3200.py                 # Gyroscope driver
-    HMC5883L.py                 # Magnetometer driver
+    QMC5883L.py                 # Magnetometer driver
     imu.py                      # IMU driver
     pid_controller.py           # PID Controllers
     teleop.py                   # Teleoperation
@@ -48,7 +49,7 @@ requirements.txt                # Python packages
 requirements_sim.txt            # Python packages for simulation
 ```
 
-## Common Pitfalls
+# Common Pitfalls
 
 - The pybullet axis are different than the robot axis as such: X-pybullet-> X-robot, Y-pybullet-> Z-robot, Z-pybullet-> Y-robot
 - THe imu axis are differnt than the robot axis as such: X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
@@ -57,7 +58,7 @@ requirements_sim.txt            # Python packages for simulation
 - Ignore file with the _new suffix they are for future development
 
 
-## Style
+# Style
 
 - Minimal comments. No "AI-generated" style explanatory comments.
 - Direct, technical language. No filler adjectives.

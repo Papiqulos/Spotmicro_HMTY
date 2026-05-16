@@ -85,7 +85,7 @@ class ADXL435:
         print(f"        self.zmax = {zmax:.4f}")
         print(f"        self.zmin = {zmin:.4f}")
 
-    def get_acceleration(self):
+    def read(self):
         "Returns (x, y, z) acceleration in g-force, tap detection, freefall detection, motion detection"
         calibrated_x = (self.accelerometer.acceleration[0] - self.x_offset) / self.x_scale
         calibrated_y = (self.accelerometer.acceleration[1] - self.y_offset) / self.y_scale
@@ -106,5 +106,5 @@ class ADXL435:
 if __name__ == "__main__":
     acc = ADXL435()
     # acc.run_interactive_calibration(samples=2000)
-    readings = acc.get_acceleration()
+    readings = acc.read()
     print(readings)

@@ -1,6 +1,7 @@
+import time
 import numpy as np
-from tools.utils import from_pybullet_orn, to_homogenous, normalize_angle
-from tools.pid_controller import PIDController
+from tools.utils import to_homogenous
+from tools.pid_controller import PIDController, PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 
@@ -47,9 +48,20 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
-        self.pid_roll  = PIDController(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_pitch = PIDController(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_yaw   = PIDController(kp=0.2, ki=0.0,   kd=0.025)
+        self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
+        self._imu_ema = None
+        self._ema_alpha = 0.2
+        self._pid_last_time = None
+
+        with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "w") as f:
+            f.write("")
+        with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/imu.txt", "w") as f:
+            f.write("")
+
+    def _set_pid(self, kp, ki, kd):
+        self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
+        self._imu_ema = None
+        self._pid_last_time = None
 
     def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
         """12-point Bezier swing control points.
@@ -152,29 +164,34 @@ class GaitController:
         legs = ["FL", "FR", "RL", "RR"]
         leg_offsets = [0.0, 0.5, 0.5, 0.0]
 
-        roll_correction = pitch_correction = yaw_correction = 0.0
-        roll_error = pitch_error = yaw_error = 0.0
-        
         corrected_orientation = self.initial_orientation
 
         if imu_data is not None:
-            imu_data = from_pybullet_orn(imu_data)
-            roll_error  = self.initial_orientation[0] - imu_data[0]
-            pitch_error = self.initial_orientation[1] - imu_data[1]
-            # yaw_error   = self.initial_orientation[2] - imu_data[2]
-            roll_correction  = self.pid_roll.update(roll_error,  time_step)
-            pitch_correction = self.pid_pitch.update(pitch_error, time_step)
-            # yaw_correction   = self.pid_yaw.update(yaw_error,   time_step)
+            raw = np.array([imu_data[0], imu_data[1]])
+            if self._imu_ema is None:
+                self._imu_ema = raw.copy()
+            else:
+                self._imu_ema = self._ema_alpha * raw + (1.0 - self._ema_alpha) * self._imu_ema
 
-        corrected_orientation = (
-            self.initial_orientation[0] + roll_correction,
-            self.initial_orientation[1] + pitch_correction,
-            self.initial_orientation[2],
-        )
-        
-        print(f"Corrected Roll: {corrected_orientation[0]}, Pitch: {corrected_orientation[1]}, Yaw: {corrected_orientation[2]}")
-        print("--------------------------------")
-        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center)
+            now = time.time()
+            pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
+            self._pid_last_time = now
+
+            correction = self.pid.run(self._imu_ema[0], self._imu_ema[1], pid_dt)
+
+            with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "a") as f:
+                f.write(f"{correction[0]} {correction[1]}\n")
+            with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/imu.txt", "a") as f:
+                f.write(f"{self._imu_ema[0]} {self._imu_ema[1]}\n")
+
+            corrected_orientation = np.array([
+                correction[0],
+                correction[1],
+                self.initial_orientation[2],
+            ])
+
+            print(f"PID: {corrected_orientation}")
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
         transforms = [T_fl, T_fr, T_rl, T_rr]
 
         sl_mm = stance_length * 1000.0
@@ -202,7 +219,7 @@ class GaitController:
             if move_callback is not None:
                 move_callback(leg, angles, unit="rad")
 
-        return effective_velocity, roll_error, pitch_error, yaw_error
+        return effective_velocity
 
     def turn(self):
         raise NotImplementedError
