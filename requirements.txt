@@ -6,5 +6,7 @@ ahrs
 # lgpio
 PyYAML
 setuptools
+pandas
+matplotlib
 
 
