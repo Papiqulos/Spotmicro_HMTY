@@ -231,8 +231,8 @@ if __name__ == "__main__":
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
         robot_controller = RobotController(kin_solver, theta_default, center)
-        # robot_controller.drive_leg_to_position("FL", [36.84, 21.47, 111.96])
+        # robot_controller.drive_leg_to_position("FL", [31.93, 69.69, 107.00])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        robot_controller.go_forwards(velocity=0.26, T_cycle=0.28, duty_factor=0.5, swing_height=0.035, steps=90)
+        # robot_controller.go_forwards(velocity=0.26, T_cycle=0.28, duty_factor=0.5, swing_height=0.035, steps=90)
         # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)

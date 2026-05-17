@@ -65,6 +65,8 @@ class GaitController:
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self._imu_window.clear()
         self._pid_last_time = None
+        self.gait_init = None
+        self.deceleration_init = 0
 
     def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
         """12-point Bezier swing control points.
@@ -144,7 +146,7 @@ class GaitController:
         ramp_factor = 1.0
 
         if time_since_start < ramp_duration:
-            ramp_factor = time_since_start / ramp_duration
+            ramp_factor = ramp_factor = 0.5 * (1.0 - np.cos(np.pi * time_since_start / ramp_duration))
         elif not deceleration_flag:
             ramp_factor = 1.0
 
@@ -153,7 +155,7 @@ class GaitController:
 
         time_since_dec = current_time - self.deceleration_init
         if time_since_dec < ramp_duration and deceleration_flag:
-            ramp_factor = 1.0 - (time_since_dec / ramp_duration)
+            ramp_factor = ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_start / ramp_duration))
         elif time_since_dec >= ramp_duration and deceleration_flag:
             self.gait_init = None
             self.deceleration_init = 0
