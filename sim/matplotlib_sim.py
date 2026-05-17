@@ -1,6 +1,9 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 import matplotlib.pyplot as plt
-from sim.kinematics_old import Kinematics, WIDTH, LENGTH, L1, L2, L3, L4
+from core.kinematics import Kinematics, WIDTH, LENGTH, L1, L2, L3, L4
 from math import *
 
 

@@ -26,25 +26,29 @@ Quadruped robot based on the SpotMicro v2 open source design as part of a Gradua
 
 ```
 config/
-  robot_config.yaml             # Robot physical dimensions
-  servo_calib.yaml              # Servo calibration
+    robot_config.yaml           # Robot physical dimensions
+    servo_calib.yaml            # Servo calibration
 core/
-    kinematics.py               # Kinematics Controller
-    bezier_curve_gen.py         # Bezier Curve Generator
-    gait_controller.py          # Robot Gait Controller
+    kinematics.py               # Kinematics and IK/FK solver
+    bezier_curve_gen.py         # Bezier curve generator for swing trajectories
+    gait_controller.py          # Trot gait, PID stabilization, CSV logging
 hw/
-    quad_controller.py          # General Robot Controller
-    imu.py                      # IMU driver (Madgwick/EKF fusion)
-    ADXL435.py                  # Accelerometer driver
-    ITG_3200.py                 # Gyroscope driver
-    QMC5883L.py                 # Magnetometer driver
-
-sim/                            # Simulation files and old code
-tests/                          # Test files
+    quad_controller.py          # High-level robot controller (servos + gait)
+    imu.py                      # IMU driver (Madgwick/EKF sensor fusion)
+    ADXL435.py                  # Accelerometer driver (ADXL345 via adafruit)
+    ITG_3200.py                 # Gyroscope driver (I2C)
+    QMC5883L.py                 # Magnetometer driver (disabled, too noisy)
+    teleop.py                   # Keyboard teleoperation
+log/
+    log_plotter.py              # Matplotlib plotter for PID CSV logs
+    log_plotter.m               # MATLAB plotter for PID CSV logs
+sim/
+    pybullet_sim.py             # PyBullet simulation
+    matplotlib_sim.py           # Matplotlib kinematics visualizer
+tests/                          # Hardware-level tests (IMU, PCA9685, servos)
 tools/
     utils.py                    # Utility functions
-    pid_controller.py           # PID Controllers
-    teleop.py                   # Teleoperation
+    pid_controller.py           # PIDController and PIDControllerRP
 requirements.txt                # Python packages
 requirements_sim.txt            # Python packages for simulation
 ```
