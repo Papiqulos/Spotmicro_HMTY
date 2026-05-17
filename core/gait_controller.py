@@ -4,7 +4,7 @@ import atexit
 from pathlib import Path
 import numpy as np
 from tools.utils import to_homogenous
-from tools.pid_controller import PIDController, PIDControllerRP
+from tools.pid_controller import PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 from collections import deque
@@ -24,6 +24,7 @@ WIDTH = kinematics.WIDTH
 # _X: horizontal progression 0=liftoff, 1=touchdown
 #     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
 # _H: height factor relative to swing_height
+
 # Claude's values based on the 12-point Bezier curve
 _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
 # _SWING_H_NORM = [0.00, 0.10, 0.80, 1.00, 1.10, 1.10, 1.10, 1.10, 1.00, 0.80, 0.10, 0.00]
@@ -44,20 +45,26 @@ class GaitController:
         :param initial_center:       body center in kinematics frame (mm)
         :param initial_orientation:  body RPY in kinematics frame (rad)
         """
+        # Initial state
         self.initial_ef_positions = initial_ef_positions
         self.initial_theta = initial_theta
         self.initial_center = initial_center
         self.initial_orientation = initial_orientation
 
+        # Kinematics
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH,
                                                 l1=L1, l2=L2, l3=L3, l4=L4)
+        
+        # Initializing variables for gait
         self.gait_init = None
         self.deceleration_init = 0
 
+        # PID controller
         self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
+        # CSV logging
         _LOG_DIR.mkdir(exist_ok=True)
         _ts = time.strftime("%Y%m%d_%H%M%S")
         self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
@@ -66,6 +73,7 @@ class GaitController:
         atexit.register(self._log_file.close)
 
     def _set_pid(self, kp, ki, kd):
+        """Set PID controller gains."""
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self._imu_window.clear()
         self._pid_last_time = None
@@ -143,6 +151,7 @@ class GaitController:
         if self.gait_init is None:
             self.gait_init = current_time
 
+
         ramp_duration = 0.5
         time_since_start = current_time - self.gait_init
         ramp_factor = 1.0
@@ -214,6 +223,7 @@ class GaitController:
 
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offsets[i]) % 1.0
+            # Applying the pid height correction to the initial position and stance delta
             initial_pos = np.array([self.initial_ef_positions[i][0], self.initial_ef_positions[i][1] + dy_dic[i], self.initial_ef_positions[i][2]])
             stance_delta = delta_base + abs(dy_dic[i]) * 0.2
 

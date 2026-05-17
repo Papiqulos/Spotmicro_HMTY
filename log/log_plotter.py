@@ -5,5 +5,6 @@ df = pd.read_csv("log/pid_20260517_171059.csv")
 # Convert the data from radians to degrees
 df["imu_roll"] = df["imu_roll"] * 180 / np.pi
 df["pid_roll"] = df["pid_roll"] * 180 / np.pi
-df.plot(x="t", y=["imu_roll", "pid_roll"])
+df.plot(x="t", y=["imu_roll", "pid_roll"], ylim=[-10, 10], ylabel="Angle (deg)")
+plt.grid(True)
 plt.show()

@@ -7,11 +7,9 @@ import pybullet_data
 import time
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import core.gait_controller as gait
 import core.kinematics as kinematics
 from tools.utils import from_pybullet_orn, from_pybullet_pos
-from collections import deque
 
 
 
@@ -226,87 +224,6 @@ class PybulletSim:
                                     targetPositions=theta)
         p.stepSimulation()
         time.sleep(1./240.)
-    
-    # NOT USED
-    def execute_leg_trajectory(self, trajectory, leg="FL"):
-        """ 
-        Execute a trajectory for a single leg. Only for Testing.
-
-        :param trajectory: trajectory of angles for the leg
-        :param leg: leg to execute the trajectory for
-
-        """
-        if leg == "FL":
-            jointIndices = [3, 4, 6]
-            dirs = self.theta_dirs[:3]
-        elif leg == "FR":
-            jointIndices = [8, 9, 11]
-            dirs = self.theta_dirs[3:6]
-        elif leg == "RL":
-            jointIndices = [13, 14, 16]
-            dirs = self.theta_dirs[6:9]
-        elif leg == "RR":
-            jointIndices = [18, 19, 21]
-            dirs = self.theta_dirs[9:12]
-        
-        for target_angle in trajectory:
-            # Apply theta dirs
-            target_angle = [angle * dir for angle, dir in zip(target_angle, dirs)]
-            p.setJointMotorControlArray(self.robotId,
-                            jointIndices=jointIndices,  # shoulder, leg, foot
-                            controlMode=p.POSITION_CONTROL,
-                            targetPositions=target_angle)
-            for _ in range(3): 
-                p.stepSimulation()
-                time.sleep(1./240.)
-    
-    # NOT USED
-    def execute_robot_trajectory(self, trajectories):
-        """
-        For testing
-        
-        :param trajectories: FL, FR, RL, RR
-        """
-        fl_trajectory = trajectories[0]
-        fr_trajectory = trajectories[1]
-        rl_trajectory = trajectories[2]
-        rr_trajectory = trajectories[3]
-
-        # # Apply directions
-        # fl_trajectory = [angle * dir for angle, dir in zip(fl_trajectory, self.theta_dirs[:3])]
-        # fr_trajectory = [angle * dir for angle, dir in zip(fr_trajectory, self.theta_dirs[3:6])]
-        # rl_trajectory = [angle * dir for angle, dir in zip(rl_trajectory, self.theta_dirs[6:9])]
-        # rr_trajectory = [angle * dir for angle, dir in zip(rr_trajectory, self.theta_dirs[9:12])]
-
-
-        for fl_angle, fr_angle, rl_angle, rr_angle in zip(fl_trajectory, fr_trajectory, rl_trajectory, rr_trajectory):
-            # Apply theta dirs
-            fl_angle = [angle * dir for angle, dir in zip(fl_angle, self.theta_dirs[:3])]
-            p.setJointMotorControlArray(self.robotId,
-                            jointIndices=[3, 4, 6],  # shoulder, leg, foot
-                            controlMode=p.POSITION_CONTROL,
-                            targetPositions=fl_angle)
-            
-            fr_angle = [angle * dir for angle, dir in zip(fr_angle, self.theta_dirs[3:6])]
-            p.setJointMotorControlArray(self.robotId,
-                            jointIndices=[8, 9, 11],  # shoulder, leg, foot
-                            controlMode=p.POSITION_CONTROL,
-                            targetPositions=fr_angle)
-            
-            rl_angle = [angle * dir for angle, dir in zip(rl_angle, self.theta_dirs[6:9])]
-            p.setJointMotorControlArray(self.robotId,
-                            jointIndices=[13, 14, 16],  # shoulder, leg, foot
-                            controlMode=p.POSITION_CONTROL,
-                            targetPositions=rl_angle)
-            
-            rr_angle = [angle * dir for angle, dir in zip(rr_angle, self.theta_dirs[9:12])]
-            p.setJointMotorControlArray(self.robotId,
-                            jointIndices=[18, 19, 21],  # shoulder, leg, foot
-                            controlMode=p.POSITION_CONTROL,
-                            targetPositions=rr_angle)
-            
-            p.stepSimulation()
-            time.sleep(1./240.)
         
     def move_callback(self, leg, angles, unit="rad"):
         """Apply IK angles for one leg to pybullet joints.
