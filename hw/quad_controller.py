@@ -11,7 +11,7 @@ import math
 from tools.utils import to_homogenous, rescale_number
 from core.gait_controller import GaitController
 import yaml
-from tools.imu import IMU
+from hw.imu import IMU
 
 with open("config/servo_calib.yaml") as f:
     calib = yaml.safe_load(f)
