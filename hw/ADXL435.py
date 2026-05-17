@@ -31,16 +31,16 @@ class ADXL435:
 
         self.ymax = 10.3
         self.ymin = -10.4
-        
-        
+
+
         # self.xmax = 9.9600
         # self.xmin = -10.1552
         # self.ymax = 10.4583
         # self.ymin = -10.0486
         # self.zmax = 11.3405
         # self.zmin = -8.4245
-        
-        
+
+
 
         self.z_offset = (self.zmax + self.zmin) / 2
         self.x_offset = (self.xmax + self.xmin) / 2
@@ -91,11 +91,11 @@ class ADXL435:
         calibrated_y = (self.accelerometer.acceleration[1] - self.y_offset) / self.y_scale
         calibrated_z = (self.accelerometer.acceleration[2] - self.z_offset) / self.z_scale
 
-        readings = {"acceleration": np.array([calibrated_x, 
-                                              calibrated_y, 
+        readings = {"acceleration": np.array([calibrated_x,
+                                              calibrated_y,
                                               calibrated_z]),
-                    "tap": self.tap, 
-                    "freefall": self.freefall, 
+                    "tap": self.tap,
+                    "freefall": self.freefall,
                     "motion": self.motion}
 
         return readings

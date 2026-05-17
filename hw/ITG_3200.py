@@ -46,7 +46,7 @@ class ITG_3200:
 
     def read(self):
         """Returns angular velocity in 3-axis in degress/s. The axis are in the order of the sensor"""
-        
+
 
         # ITG3200 address, 0x68(104)
         # Read data back from 0x1D(29), 6 bytes

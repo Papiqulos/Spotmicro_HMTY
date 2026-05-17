@@ -19,10 +19,10 @@ class QMC5883L:
         # with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/raw_data.txt", "a") as f:
         #     while True:
         #         raw_data = self.sensor.get_magnet_raw()
-                
+
         #         f.write(f"{raw_data[0]:.1f} {raw_data[1]:.1f} {raw_data[2]:.1f}\n")
         #         # print(f"{raw_data[0]:.1f} {raw_data[1]:.1f} {raw_data[2]:.1f}")
-        
+
     def get_magnetometer(self):
         raw = self.sensor.get_magnet_raw()
         sub = np.subtract(raw, self.hard_iron_correction)

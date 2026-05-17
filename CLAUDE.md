@@ -34,15 +34,15 @@ core/
     gait_controller.py          # Robot Gait Controller
 hw/
     quad_controller.py          # General Robot Controller
-    
+    imu.py                      # IMU driver (Madgwick/EKF fusion)
+    ADXL435.py                  # Accelerometer driver
+    ITG_3200.py                 # Gyroscope driver
+    QMC5883L.py                 # Magnetometer driver
+
 sim/                            # Simulation files and old code
 tests/                          # Test files
 tools/
     utils.py                    # Utility functions
-    ADXL345.py                  # Accelerometer driver
-    ITG_3200.py                 # Gyroscope driver
-    QMC5883L.py                 # Magnetometer driver
-    imu.py                      # IMU driver
     pid_controller.py           # PID Controllers
     teleop.py                   # Teleoperation
 requirements.txt                # Python packages

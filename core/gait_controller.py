@@ -1,10 +1,15 @@
 import time
+import csv
+import atexit
+from pathlib import Path
 import numpy as np
 from tools.utils import to_homogenous
 from tools.pid_controller import PIDController, PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 from collections import deque
+
+_LOG_DIR = Path(__file__).parent.parent / "log"
 
 L1 = kinematics.L1
 L2 = kinematics.L2
@@ -53,13 +58,12 @@ class GaitController:
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
-        
-
-
-        with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "w") as f:
-            f.write("")
-        with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/imu.txt", "w") as f:
-            f.write("")
+        _LOG_DIR.mkdir(exist_ok=True)
+        _ts = time.strftime("%Y%m%d_%H%M%S")
+        self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
+        self._csv = csv.writer(self._log_file)
+        self._csv.writerow(["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
+        atexit.register(self._log_file.close)
 
     def _set_pid(self, kp, ki, kd):
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
@@ -181,10 +185,10 @@ class GaitController:
 
             correction = self.pid.run(filtered[0], filtered[1], pid_dt)
 
-            with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/pid.txt", "a") as f:
-                f.write(f"{correction[0]} {correction[1]}\n")
-            with open("/home/papiqulos/quadruped/Spotmicro_HMTY/tools/imu.txt", "a") as f:
-                f.write(f"{filtered[0]} {filtered[1]}\n")
+            self._csv.writerow([f"{time.time():.4f}",
+                                f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
+                                f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
+            self._log_file.flush()
 
             corrected_orientation = np.array([
                 correction[0],
