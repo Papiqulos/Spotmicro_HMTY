@@ -8,8 +8,9 @@ from tools.pid_controller import PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 from collections import deque
+from log.log_plotter import plot_log
 
-_LOG_DIR = Path(__file__).parent.parent / "log"
+_LOG_DIR = Path(__file__).parent.parent / "log" / "roll_pitch"
 
 L1 = kinematics.L1
 L2 = kinematics.L2
@@ -66,7 +67,7 @@ class GaitController:
 
         # CSV logging
         _LOG_DIR.mkdir(exist_ok=True)
-        _ts = time.strftime("%Y%m%d_%H%M%S")
+        _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
         self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
         self._csv = csv.writer(self._log_file)
         self._csv.writerow(["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
@@ -245,8 +246,9 @@ class GaitController:
 
             if move_callback is not None:
                 move_callback(leg, angles, unit="rad")
+            
 
-        return effective_velocity
+        return effective_velocity, self._log_file.name
 
     def turn(self):
         raise NotImplementedError

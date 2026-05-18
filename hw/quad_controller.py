@@ -12,6 +12,7 @@ from tools.utils import to_homogenous, rescale_number
 from core.gait_controller import GaitController
 import yaml
 from hw.imu import IMU
+from log.log_plotter import plot_log
 
 with open("config/servo_calib.yaml") as f:
     calib = yaml.safe_load(f)
@@ -135,7 +136,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.trot(
                 current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data,
                 move_callback=self.apply_angles_leg,
             )
@@ -158,7 +159,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel = self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.trot(
                 current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, deceleration_flag=True,
                 move_callback=self.apply_angles_leg,
             )
@@ -167,6 +168,7 @@ class RobotController:
                 self.apply_angles_robot(self.init_angles)
                 print("Deceleration complete!")
                 break
+        plot_log(log_file)
                 
             
 
@@ -234,5 +236,5 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FL", [31.93, 69.69, 107.00])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        # robot_controller.go_forwards(velocity=0.26, T_cycle=0.28, duty_factor=0.5, swing_height=0.035, steps=90)
+        robot_controller.go_forwards(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80)
         # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)

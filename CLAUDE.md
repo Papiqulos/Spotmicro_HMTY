@@ -40,15 +40,17 @@ hw/
     QMC5883L.py                 # Magnetometer driver (disabled, too noisy)
     teleop.py                   # Keyboard teleoperation
 log/
+    roll_pitch/                 # CSV and png logs for roll/pitch PID controller
     log_plotter.py              # Matplotlib plotter for PID CSV logs
     log_plotter.m               # MATLAB plotter for PID CSV logs
+    mag.txt                     # Magnetometer data for calibration
 sim/
     pybullet_sim.py             # PyBullet simulation
     matplotlib_sim.py           # Matplotlib kinematics visualizer
 tests/                          # Hardware-level tests (IMU, PCA9685, servos)
 tools/
     utils.py                    # Utility functions
-    pid_controller.py           # PIDController and PIDControllerRP
+    pid_controller.py           # PID controllers
 requirements.txt                # Python packages
 requirements_sim.txt            # Python packages for simulation
 ```
