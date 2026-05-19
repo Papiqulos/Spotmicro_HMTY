@@ -98,11 +98,11 @@ class GaitController:
             x0 = initial_pos[0] + 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([x0 - xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
-        elif dir == "+y":
+        elif dir == "+z":
             z0 = initial_pos[2] - 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 + xn * sl_mm]))
-        elif dir == "-y":
+        elif dir == "-z":
             z0 = initial_pos[2] + 5 * sl_mm / 6
             for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
                 pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 - xn * sl_mm]))
@@ -120,9 +120,9 @@ class GaitController:
             return np.array([initial_pos[0] + sl_mm / 6 - t * sl_mm, y, initial_pos[2]])
         elif dir == "-x":
             return np.array([initial_pos[0] - sl_mm / 6 + t * sl_mm, y, initial_pos[2]])
-        elif dir == "+y":
+        elif dir == "+z":
             return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 6 - t * sl_mm])
-        elif dir == "-y":
+        elif dir == "-z":
             return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 6 + t * sl_mm])
 
     def trot(self,

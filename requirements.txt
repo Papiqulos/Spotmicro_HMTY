@@ -8,5 +8,6 @@ PyYAML
 setuptools
 pandas
 matplotlib
+pydualsense
 
 

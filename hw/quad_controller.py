@@ -13,6 +13,8 @@ from core.gait_controller import GaitController
 import yaml
 from hw.imu import IMU
 from log.log_plotter import plot_log
+# import teleop
+from pydualsense import *
 
 with open("config/servo_calib.yaml") as f:
     calib = yaml.safe_load(f)
@@ -120,14 +122,15 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    def go_forwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
+    # Step based movement
+    def move(self, velocity=0.1, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x"):
         loop_period = 1.0 / 100
         start_time = time.time()
         self.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
+        
         for _ in range(steps):
             t0 = time.time()
             current_time = t0 - start_time
-            
             
             raw_gyro = self.imu.gyro.read()
             raw_acc  = self.imu.accelerometer.read()["acceleration"]
@@ -137,7 +140,7 @@ class RobotController:
             
             
             ef_vel, log_file = self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data,
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir,
                 move_callback=self.apply_angles_leg,
             )
             elapsed = time.time() - t0
@@ -145,7 +148,7 @@ class RobotController:
             if remaining > 0:
                 time.sleep(remaining)
                 
-        # After the given number steps, we decelerate into the default position
+        # After the given number steps or on button unpress, we decelerate into the default position
         print("\nDecelerating...")
         while True:
             
@@ -160,7 +163,7 @@ class RobotController:
             
             
             ef_vel, log_file = self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, deceleration_flag=True,
+                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir, deceleration_flag=True,
                 move_callback=self.apply_angles_leg,
             )
             
@@ -169,56 +172,31 @@ class RobotController:
                 print("Deceleration complete!")
                 break
         plot_log(log_file)
-                
+
+    def go_forwards(self):
+        self.move(velocity=0.21, T_cycle=0.4, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x")
+
+    def go_backwards(self):
+        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-x")
+        
+    def go_right(self):
+        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="+z")
+    
+    def go_left(self):
+        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-z")  
+          
+    # Button based movement
+    def button_go(self, state):
+        
+
+        if state:
+            # self.go_forwards()
+            print("Going")
             
-
-    def go_backwards(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
-        loop_period = 1.0 / 100
-        start_time = time.time()
-        for _ in range(steps):
-            t0 = time.time()
-            current_time = t0 - start_time
-            self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="-x",
-                move_callback=self.apply_angles_leg,
-            )
-            elapsed = time.time() - t0
-            remaining = loop_period - elapsed
-            if remaining > 0:
-                time.sleep(remaining)
-        
-
-    def go_right(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
-        loop_period = 1.0 / 100
-        start_time = time.time()
-        for _ in range(steps):
-            t0 = time.time()
-            current_time = t0 - start_time
-            self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="+y",
-                move_callback=self.apply_angles_leg,
-            )
-            elapsed = time.time() - t0
-            remaining = loop_period - elapsed
-            if remaining > 0:
-                time.sleep(remaining)
-        
-
-    def go_left(self, velocity, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150):
-        loop_period = 1.0 / 100
-        start_time = time.time()
-        for _ in range(steps):
-            t0 = time.time()
-            current_time = t0 - start_time
-            self.gait_controller.trot(
-                current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, dir="-y",
-                move_callback=self.apply_angles_leg,
-            )
-            elapsed = time.time() - t0
-            remaining = loop_period - elapsed
-            if remaining > 0:
-                time.sleep(remaining)
-
+        else:
+            print("Stopped")
+            
+            
 
 if __name__ == "__main__":
         orientation = [0, 0, 0] # static orientation
@@ -236,5 +214,11 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FL", [31.93, 69.69, 107.00])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        robot_controller.go_forwards(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80)
-        # robot_controller.go_backwards(velocity=0.1, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=500)
+        robot_controller.go_forwards()
+        # robot_controller.go_backwards()
+        # robot_controller.go_right()
+        # robot_controller.go_left()
+     
+        
+        
+        
