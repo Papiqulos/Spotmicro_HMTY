@@ -328,11 +328,11 @@ class PybulletSim:
                         
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                self.move(0.26, "-y")
+                self.move(0.26, "-z")
   
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                self.move(0.26, "+y")
+                self.move(0.26, "+z")
 
     def respawn_robot(self):
         # I am inevitable
@@ -372,7 +372,7 @@ class PybulletSim:
             T_cycle = 0.28
             duty_factor = 0.5
             swing_height = 0.035
-            ef_vel = self.gait_controller.trot(
+            ef_vel, _ = self.gait_controller.trot(
                             current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
                             self.get_imu_data(), dir=direction, deceleration_flag=deceleration_flag,
                             move_callback=self.move_callback)
