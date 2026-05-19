@@ -214,7 +214,7 @@ if __name__ == "__main__":
         # robot_controller.drive_leg_to_position("FL", [31.93, 69.69, 107.00])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        robot_controller.go_forwards()
+        # robot_controller.go_forwards()
         # robot_controller.go_backwards()
         # robot_controller.go_right()
         # robot_controller.go_left()
