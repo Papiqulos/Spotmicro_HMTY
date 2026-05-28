@@ -1,5 +1,6 @@
 import time
 import csv
+import os
 import atexit
 from pathlib import Path
 import numpy as np
@@ -67,11 +68,18 @@ class GaitController:
 
         # CSV logging
         _LOG_DIR.mkdir(exist_ok=True)
+        self._clear_log()
         _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
         self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
         self._csv = csv.writer(self._log_file)
         self._csv.writerow(["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
         atexit.register(self._log_file.close)
+    
+    def _clear_log(self):
+        # Delete any prexisting .csv and .png files
+        for f in os.listdir(_LOG_DIR):
+            if f.endswith(".csv") or f.endswith(".png"):
+                os.remove(os.path.join(_LOG_DIR, f))
 
     def _set_pid(self, kp, ki, kd):
         """Set PID controller gains."""

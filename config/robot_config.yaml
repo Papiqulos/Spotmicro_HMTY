@@ -5,6 +5,6 @@ body:
 
 leg_segments:
   L1: 52.000    # Horizontal offset shoulder to leg
-  L2: 0.000     # Vertical offset shoulder to leg
+  L2: 10.000     # Vertical offset shoulder to leg
   L3: 120.416   # Upper leg length
   L4: 115.000   # Lower leg length

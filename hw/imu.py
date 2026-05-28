@@ -133,16 +133,20 @@ class IMU:
 if __name__ == "__main__":
     imu = IMU(filter_type="EKF")
 
-    for _ in range(100):
-        raw_gyro = imu.gyro.read()
-        raw_acc = imu.accelerometer.read()["acceleration"]
-        # raw_mag = imu.magnetometer.read()
+    while True:
+        try:
+            raw_gyro = imu.gyro.read()
+            raw_acc = imu.accelerometer.read()["acceleration"]
+            # raw_mag = imu.magnetometer.read()
 
-        roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
+            roll, pitch, yaw = imu.update(raw_gyro, raw_acc)
 
-        print(f"Roll: {np.degrees(roll):.4f}° Pitch: {np.degrees(pitch):.4f}° Yaw: {np.degrees(yaw):.4f}°")
-        print(f"Roll: {roll:.6f} Pitch: {pitch:.6f} Yaw: {yaw:.6f}")
-        print("--------------------------------")
+            print(f"Roll: {np.degrees(roll):.4f}° Pitch: {np.degrees(pitch):.4f}° Yaw: {np.degrees(yaw):.4f}°", end='\r')
+            # print(f"Roll: {roll:.6f} Pitch: {pitch:.6f} Yaw: {yaw:.6f}", end='\r')
+            time.sleep(0.01)
+        except KeyboardInterrupt:
+            break
+        
 
 
 
