@@ -39,9 +39,8 @@ class IMU:
 
         self.filter_type = filter_type
 
-        self._base_gain = 0.045
         if filter_type == "Madgwick":
-            self.filter = Madgwick(gain=self._base_gain)
+            self.filter = Madgwick(gain=0.045)
         elif filter_type == "EKF":
             self.filter = EKF()
         else:
@@ -85,14 +84,6 @@ class IMU:
 
         if dt <= 0.0:
             dt = 0.001
-
-        # Adaptive accelerometer correction gain (MIT Cheetah 3, Sec. III.H).
-        # Scale down during dynamic phases so footfall impacts don't corrupt orientation.
-        if self.filter_type == "Madgwick":
-            acc_norm = np.linalg.norm(raw_acc)
-            g = 9.81
-            scale = max(0.0, min(1.0, 1.0 - abs(acc_norm / g - 1.0)))
-            self.filter.gain = self._base_gain * scale
 
         if raw_mag is None:
             if self.filter_type == "Madgwick":
