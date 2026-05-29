@@ -21,4 +21,4 @@ def plot_log(file_name):
 
     image_name = file_name.replace(".csv", ".png")
     plt.savefig(image_name)
-    plt.show()
+    # plt.show()
