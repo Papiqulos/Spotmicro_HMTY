@@ -13,6 +13,7 @@ from tools.utils import from_pybullet_orn, from_pybullet_pos
 
 
 
+
 # CONSTANTS
 PI = math.pi
 TIME_STEP = 1. / 240.
@@ -320,19 +321,19 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(0.26, "+x")
+                self.move(direction="+x")
                                
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                self.move(0.26, "-x")
+                self.move(direction="-x")
                         
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                self.move(0.26, "-z")
+                self.move(direction="-z")
   
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                self.move(0.26, "+z")
+                self.move(direction="+z")
 
     def respawn_robot(self):
         # I am inevitable
@@ -347,7 +348,7 @@ class PybulletSim:
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
         self.move_robot_to_pose(self.robotId, angles, unit="rad")
         
-    def move(self, velocity, direction):
+    def move(self, T_cycle=0.28, duty_factor=0.5, velocity=0.26, swing_height=0.035, direction="+x"):
         
         if direction == "+x":
             print("GOING FORWARDS")
@@ -369,9 +370,6 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, self.qKey):
                 deceleration_flag = True
                 print("DECELERATING")
-            T_cycle = 0.28
-            duty_factor = 0.5
-            swing_height = 0.035
             ef_vel, _ = self.gait_controller.trot(
                             current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
                             self.get_imu_data(), dir=direction, deceleration_flag=deceleration_flag,
@@ -385,6 +383,9 @@ class PybulletSim:
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
                 break
+            
+            # Plot log
+            plot_log(f"{_LOG_DIR}")
 
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
@@ -409,10 +410,10 @@ if __name__ == "__main__":
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     # Degrees
-    theta = [0, -30, 60, # FL
-             0, -30, 60, # FR
-             0, -30, 60, # RL
-             0, -30, 60 ] # RR
+    theta = [0, -40, 60, # FL
+             0, -40, 60, # FR
+             0, -40, 60, # RL
+             0, -40, 60 ] # RR
     
     # X forward Y up Z left in milimeters
     ef_positions = np.array([

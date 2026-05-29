@@ -2,8 +2,9 @@
 __pycache__/
 ros2_ws/ 
 tests/
-log/roll_pitch/
 /hw/reset_i2c.py
+/sim/urdf/stlv2/
 
 
 
+paper_improvements.txt
