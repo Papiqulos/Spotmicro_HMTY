@@ -47,7 +47,10 @@ class IMU:
             raise ValueError(f"Unknown filter: {filter_type}")
 
 
-
+        # Initializing smoothing parameters
+        self.s_roll = 0
+        self.s_pitch = 0
+        self.alpha = 0.3
         self.last_time = time.time()
         print("IMU Ready")
 
@@ -116,6 +119,13 @@ class IMU:
         else:
             pitch = pitch - self.initial_orientation_rad[0]
             roll = roll   - self.initial_orientation_rad[1]
+
+        # Smoothing the roll and pitch angles using low-pass filter
+        smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
+        self.s_roll = smoothed
+
+        smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
+        self.s_pitch = smoothed
         return np.array([roll, pitch, yaw])
 
 

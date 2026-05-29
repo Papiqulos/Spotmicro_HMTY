@@ -16,8 +16,8 @@ def plot_log(file_name):
     df2["imu_pitch"] = df2["imu_pitch"] * 180 / np.pi
     df2["pid_pitch"] = df2["pid_pitch"] * 180 / np.pi
 
-    df.plot(x="t", y=["imu_roll", "pid_roll"], ylim=[-10, 10], ylabel="Angle (deg)", ax=axes[0], grid=True)
-    df2.plot(x="t", y=["imu_pitch", "pid_pitch"], ylim=[-10, 10], ylabel="Angle (deg)", ax=axes[1], grid=True)
+    df.plot(x="t", y=["imu_roll", "pid_roll"], ylim=[-7, 7], ylabel="Angle (deg)", ax=axes[0], grid=True)
+    df2.plot(x="t", y=["imu_pitch", "pid_pitch"], ylim=[-7, 7], ylabel="Angle (deg)", ax=axes[1], grid=True)
 
     image_name = file_name.replace(".csv", ".png")
     plt.savefig(image_name)
