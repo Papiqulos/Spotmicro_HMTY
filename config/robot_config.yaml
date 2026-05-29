@@ -24,9 +24,6 @@
 #   L4: 131.957         # Lower leg length
 
 
-
-
-
 # Link lengths and widths (mm) corrected for SpotMicroHMTY (SpotMicro with rubber ball feet)
 body:
   length: 184.5

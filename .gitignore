@@ -4,6 +4,8 @@ ros2_ws/
 tests/
 /hw/reset_i2c.py
 /sim/urdf/stlv2/
+.vscode/
+/spotmicro.egg-info/
 
 
 
