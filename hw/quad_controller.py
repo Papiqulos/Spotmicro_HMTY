@@ -9,7 +9,7 @@ from core.kinematics import LENGTH, WIDTH, L1, L2, L3, L4
 import numpy as np
 import math
 from tools.utils import to_homogenous, rescale_number
-from core.gait_controller import GaitController
+from core.gait_controller import GaitController, _LOG_DIR
 import yaml
 from hw.imu import IMU
 from log.log_plotter import plot_log
@@ -76,6 +76,8 @@ class RobotController:
             x, y, z = self.init_ef_positions[i][:3]
             print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
         time.sleep(1)
+        
+    
 
     def _write_servo(self, i, angle):
         try:
@@ -124,6 +126,7 @@ class RobotController:
 
     # Step based movement
     def move(self, velocity=0.1, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x"):
+        
         loop_period = 1.0 / 100
         start_time = time.time()
         self.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
