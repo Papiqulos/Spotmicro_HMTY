@@ -10,7 +10,7 @@ import numpy as np
 import core.gait_controller as gait
 import core.kinematics as kinematics
 from tools.utils import from_pybullet_orn, from_pybullet_pos
-
+from log.log_plotter import plot_log
 
 
 
@@ -370,7 +370,7 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, self.qKey):
                 deceleration_flag = True
                 print("DECELERATING")
-            ef_vel, _ = self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.trot(
                             current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
                             self.get_imu_data(), dir=direction, deceleration_flag=deceleration_flag,
                             move_callback=self.move_callback)
@@ -383,9 +383,8 @@ class PybulletSim:
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
                 self.move_robot_to_pose(self.robotId, angles, unit="rad")
                 break
-            
-            # Plot log
-            plot_log(f"{_LOG_DIR}")
+        
+        plot_log(log_file)
 
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED
