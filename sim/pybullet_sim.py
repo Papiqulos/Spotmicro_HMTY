@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import pybullet as p
 import pybullet_data
 import time
@@ -31,7 +27,6 @@ class PybulletSim:
                  orientation, 
                  center_plane, 
                  initial_theta, 
-                 initial_ef_positions,
                  angle_unit='degrees'):
         """
         
@@ -94,7 +89,7 @@ class PybulletSim:
         self.initial_theta = initial_theta
         self.angle_unit = angle_unit
 
-        self.initial_ef_positions = initial_ef_positions
+        
         
 
         # Pybullet Setup
@@ -114,6 +109,8 @@ class PybulletSim:
                                                 self.l2, 
                                                 self.l3, 
                                                 self.l4)
+        
+        self.initial_ef_positions = self.kin_solver.robot_FK(self.center_kin, self.orientation_kin, self.initial_theta, unit=self.angle_unit)
 
         # Gait Controller
         self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions,
@@ -253,7 +250,6 @@ class PybulletSim:
             
             # Keyboard and Mouse Events
             keyboard_event = p.getKeyboardEvents()
-            # print(f"{keyboard_event})
 
             self.upArrowKey = 65297
             self.downArrowKey = 65298
@@ -269,17 +265,6 @@ class PybulletSim:
             self.qKey = ord('q')
             self.iKey = ord('i')
             self.tKey = ord('t')
-
-            # Not used at the moment
-            # mouse_event = p.getMouseEvents()
-            # try:
-            #     event_type = mouse_event[0][0]
-            #     button_state = mouse_event[0][-1]
-            #     button_index = mouse_event[0][3]
-            # except:
-            #     # keyboard_event = None
-            #     event_type = None
-            #     button_state = None
 
             # Print imu data
             if self.key_is_pressed(keyboard_event, self.iKey):
@@ -403,36 +388,17 @@ class PybulletSim:
 if __name__ == "__main__":
 
     # X forward Y up Z left in meters
-    center = [0, 0, 0.25]    
+    center = [0, 0, 0.27]    
     center_plane = [0, 0, 0] 
     # This is the default orientation of the pybullet frame which is equivalent to [0, 0, 0] in the kinematics frame
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     # Degrees
-    theta = [0, -40, 60, # FL
-             0, -40, 60, # FR
-             0, -40, 60, # RL
-             0, -40, 60 ] # RR
+    theta = [0, -30, 60, # FL
+             0, -30, 60, # FR
+             0, -30, 60, # RL
+             0, -30, 60 ] # RR
     
-    # X forward Y up Z left in milimeters
-    ef_positions = np.array([
-            [ 95, 48.13,  105, 1], # FL
-            [ 95, 48.13,  -105, 1], # FR
-            [-45, 48.13, 105, 1], # RL
-            [-45, 48.13, -105, 1] # RR
-            ])
-    
-    # X forward Y up Z left in milimeters
-    ef_positions2 = np.array([
-        [67.29, 46.12, 107, 1],
-        [67.29, 46.12, -107, 1],
-        [-72.21, 46.12, 107, 1],
-        [-72.21, 46.12, -107, 1]
-        ])
-
-
-    test = kinematics.Kinematics()
-    print(test.robot_FK([0, 250, 0], [0, 0, 0],theta, unit="degrees"))
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
                                width=kinematics.WIDTH,
@@ -444,5 +410,4 @@ if __name__ == "__main__":
                                orientation=orientation,
                                center_plane=center_plane,
                                initial_theta=theta,
-                               initial_ef_positions=ef_positions2,
                                angle_unit="degrees")

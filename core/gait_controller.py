@@ -34,7 +34,7 @@ _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.0
 # Extracted normalized values from spot_mini_mini
 # https://github.com/OpenQuadruped/spot_mini_mini/blob/spotmicroai/spotmicro/GaitGenerator/Bezier.py 
 # _SWING_X_NORM = [0.00, 1.4, 1.5, 1.5, 1.5, 0.00, 0.00, 0.00, 1.5, 1.5, 1.40, 0.00]
-_SWING_H_NORM = [0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 0.9, 1.10, 1.10, 1.1, 0.00, 0.00]
+_SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.10, 1.10, 0.00, 0.00, 0.00]
 
 
 class GaitController:

@@ -1,24 +1,36 @@
 # SpotMicro link lengths and widths (mm)
 # Measured with caliper on real robot
-body:
-  length: 140
-  width: 110
+# body:
+#   length: 185
+#   width: 133
 
-leg_segments:
-  L1: 52.000    # Horizontal offset shoulder to leg
-  L2: 10.000    # Vertical offset shoulder to leg
-  L3: 115.000   # Upper leg length
-  L4: 140.000   # Lower leg length
+# leg_segments:
+#   L1: 52.000    # Horizontal offset shoulder to leg
+#   L2: 10.000    # Vertical offset shoulder to leg
+#   L3: 115.000   # Upper leg length
+#   L4: 140.000   # Lower leg length
 
 
 
 # Extracted from F3D model
 # body:
-#   length: 140
-#   width: 110
+#   length: 184.5
+#   width: 133
 
 # leg_segments:
-#   L1: 27.558          # Horizontal offset shoulder to leg
+#   L1: 27.442          # Horizontal offset shoulder to leg
 #   L2: 10.618          # Vertical offset shoulder to leg
-#   L3: 109.114         # Upper leg length
+#   L3: 109.243         # Upper leg length
 #   L4: 131.957         # Lower leg length
+
+
+# Link lengths and widths (mm) corrected for SpotMicroHMTY (SpotMicro with rubber ball feet)
+body:
+  length: 184.5
+  width: 133
+
+leg_segments:
+  L1: 27.442          # Horizontal offset shoulder to leg
+  L2: 10.618          # Vertical offset shoulder to leg
+  L3: 109.243         # Upper leg length
+  L4: 140.000         # Lower leg length
