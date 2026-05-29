@@ -20,6 +20,10 @@ L4 = kinematics.L4
 LENGTH = kinematics.LENGTH
 WIDTH = kinematics.WIDTH
 
+# Shoulder height above ground (mm -> m), straight-leg approximation for Froude number.
+_SHOULDER_HEIGHT_M = (L2 + L3 + L4) / 1000.0
+_G = 9.81
+
 # 12-point Bezier swing parameters (normalized).
 # Values from open-source community implementations (spot_mini_mini et al.),
 # inspired by MIT Cheetah.
@@ -61,8 +65,9 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
-        # PID controller
-        self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
+        # PID controller — operates on DeltaH (mm) per Mori 2022.
+        # Gains from paper starting point: P=0.50, I=0.10, D=0.15.
+        self.pid = PIDControllerRP(kp=0.50, ki=0.10, kd=0.15)
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
@@ -72,7 +77,7 @@ class GaitController:
         _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
         self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
         self._csv = csv.writer(self._log_file)
-        self._csv.writerow(["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
+        self._csv.writerow(["t", "imu_roll", "imu_pitch", "dh_roll", "dh_pitch", "pid_dh_roll", "pid_dh_pitch", "froude"])
         atexit.register(self._log_file.close)
     
     def _clear_log(self):
@@ -82,7 +87,7 @@ class GaitController:
                 os.remove(os.path.join(_LOG_DIR, f))
 
     def _set_pid(self, kp, ki, kd):
-        """Set PID controller gains."""
+        """Set PID gains. Units: mm (DeltaH space per Mori 2022)."""
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self._imu_window.clear()
         self._pid_last_time = None
@@ -190,38 +195,48 @@ class GaitController:
         legs = ["FL", "FR", "RL", "RR"]
         leg_offsets = [0.0, 0.5, 0.5, 0.0]
 
-        corrected_orientation = self.initial_orientation
+        dy_dic = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}
 
         if imu_data is not None:
+            # Fall detection: total tilt rho from roll/pitch via cos(rho)=cos(r)*cos(p)
+            # Halts gait before PID runs to avoid driving a falling robot.
+            rho = np.arccos(np.clip(np.cos(imu_data[0]) * np.cos(imu_data[1]), -1.0, 1.0))
+            if rho > np.radians(45):
+                return effective_velocity, self._log_file.name
+
             raw = np.array([imu_data[0], imu_data[1]])
-            
-            # Moving average filter for noisy IMU data
+
+            # Moving average filter removes ~2 Hz trot oscillation from IMU (Mori 2022)
             self._imu_window.append(raw)
             filtered = np.mean(self._imu_window, axis=0)
+
+            # Per-axis DeltaH (mm): geometry-aware height deviation at roll/pitch sensor
+            # (Mori 2022 Step 2). PID runs on these directly rather than on raw angles.
+            dh_roll  = (WIDTH  / 2) * np.tan(filtered[0])
+            dh_pitch = (LENGTH / 4) * np.tan(filtered[1])
 
             now = time.time()
             pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
             self._pid_last_time = now
 
-            correction = self.pid.run(filtered[0], filtered[1], pid_dt)
+            # PID output in mm — applied directly as per-leg Y offset
+            pid_out = self.pid.run(dh_roll, dh_pitch, pid_dt)
 
+            froude = (effective_velocity ** 2) / (_G * _SHOULDER_HEIGHT_M)
             self._csv.writerow([f"{time.time():.4f}",
                                 f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
-                                f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
+                                f"{dh_roll:.4f}", f"{dh_pitch:.4f}",
+                                f"{pid_out[0]:.4f}", f"{pid_out[1]:.4f}",
+                                f"{froude:.4f}"])
             self._log_file.flush()
 
-            corrected_orientation = np.array([
-                correction[0],
-                correction[1],
-                self.initial_orientation[2],
-            ])
-            
-        # Foot position correction based on corrected roll, pitch
-        dy_fl = + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_fr = - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_rl = + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_rr = - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+            # Per-leg sign convention (Mori 2022 Table I, robot frame X-fwd Y-up Z-left)
+            dy_dic = {
+                0: +pid_out[0] + pid_out[1],  # FL
+                1: -pid_out[0] + pid_out[1],  # FR
+                2: +pid_out[0] - pid_out[1],  # RL
+                3: -pid_out[0] - pid_out[1],  # RR
+            }
         
         # Direct correction through IK
         # (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)

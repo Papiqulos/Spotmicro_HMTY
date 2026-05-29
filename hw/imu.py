@@ -39,8 +39,9 @@ class IMU:
 
         self.filter_type = filter_type
 
+        self._base_gain = 0.045
         if filter_type == "Madgwick":
-            self.filter = Madgwick(gain=0.045)
+            self.filter = Madgwick(gain=self._base_gain)
         elif filter_type == "EKF":
             self.filter = EKF()
         else:
@@ -85,6 +86,14 @@ class IMU:
         if dt <= 0.0:
             dt = 0.001
 
+        # Adaptive accelerometer correction gain (MIT Cheetah 3, Sec. III.H).
+        # Scale down during dynamic phases so footfall impacts don't corrupt orientation.
+        if self.filter_type == "Madgwick":
+            acc_norm = np.linalg.norm(raw_acc)
+            g = 9.81
+            scale = max(0.0, min(1.0, 1.0 - abs(acc_norm / g - 1.0)))
+            self.filter.gain = self._base_gain * scale
+
         if raw_mag is None:
             if self.filter_type == "Madgwick":
                 self.q0 = self.filter.updateIMU(q=self.q0,
@@ -120,12 +129,12 @@ class IMU:
             pitch = pitch - self.initial_orientation_rad[0]
             roll = roll   - self.initial_orientation_rad[1]
 
-        # Smoothing the roll and pitch angles using low-pass filter
-        smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
-        self.s_roll = smoothed
+        # # Extra Smoothing the roll and pitch angles using low-pass filter
+        # smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
+        # self.s_roll = smoothed
 
-        smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
-        self.s_pitch = smoothed
+        # smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
+        # self.s_pitch = smoothed
         return np.array([roll, pitch, yaw])
 
 

@@ -41,7 +41,7 @@ class RobotController:
         self.kit_front = ServoKit(channels=16)
         self.kit_rear  = ServoKit(channels=16, address=0x41)
 
-        self.imu = IMU()
+        self.imu = IMU(filter_type="EKF")
         
         self.apply_angles_robot(self.init_angles)
         
@@ -202,10 +202,10 @@ if __name__ == "__main__":
         center = [0, 270, 0]
 
         theta_default = [
-                0, -40, 60,  # FL
-                0, -40, 60,  # FR
-                0, -40, 60,  # RL
-                0, -40, 60,  # RR
+                0, -30, 60,  # FL
+                0, -30, 60,  # FR
+                0, -30, 60,  # RL
+                0, -30, 60,  # RR
         ]
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
