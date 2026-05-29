@@ -4,6 +4,7 @@ ros2_ws/
 tests/
 /hw/reset_i2c.py
 /sim/urdf/stlv2/
+/log/roll_pitch/
 
 
 
