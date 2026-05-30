@@ -5,7 +5,7 @@ import atexit
 from pathlib import Path
 import numpy as np
 from tools.utils import to_homogenous
-from tools.pid_controller import PIDControllerRP
+from tools.pid_controller import PIDControllerRP, PIDController
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 from collections import deque
@@ -61,8 +61,9 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
-        # PID controller
+        # PID controllers
         self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
+        self.pid_h = PIDController(kp=0.2, ki=0.025, kd=0.025)
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
@@ -203,7 +204,8 @@ class GaitController:
             pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
             self._pid_last_time = now
 
-            correction = self.pid.run(filtered[0], filtered[1], pid_dt)
+            # correction = self.pid.run(filtered[0], filtered[1], pid_dt)
+            correction = imu_data
 
             self._csv.writerow([f"{time.time():.4f}",
                                 f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
@@ -221,7 +223,14 @@ class GaitController:
         dy_fr = - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
         dy_rl = + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
         dy_rr = - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+        # dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+        # PID control on dH
+        dy_dic = {0: dy_fl + self.pid_h.update(dy_fl, pid_dt), 
+                  1: dy_fr - self.pid_h.update(dy_fr, pid_dt),
+                  2: dy_rl + self.pid_h.update(dy_rl, pid_dt),
+                  3: dy_rr - self.pid_h.update(dy_rr, pid_dt)}
+
+        
         
         # Direct correction through IK
         # (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
