@@ -27,6 +27,16 @@ def rescale_number(value, original_min, original_max, new_min, new_max):
     return ((value - original_min) / (original_max - original_min)) * (new_max - new_min) + new_min
 
 
+def trans_inv(T):
+    """Inverts a 4x4 SE(3) homogeneous transform using R^T instead of np.linalg.inv."""
+    R = T[:3, :3]
+    p = T[:3, 3]
+    Rt = R.T
+    T_inv = np.eye(4)
+    T_inv[:3, :3] = Rt
+    T_inv[:3, 3] = -Rt @ p
+    return T_inv
+
 def to_homogenous(vec):
     """ Converts a 3D vector to homogeneous coordinates """
     return np.array([vec[0], vec[1], vec[2], 1.0])

@@ -20,7 +20,8 @@ Lo = np.array([0, 0, 0, 1])
 
 #--- Robot Dimensions ---
 LENGTH = robot_cfg["body"]["length"]
-WIDTH = robot_cfg["body"]["width"] 
+WIDTH = robot_cfg["body"]["width"]
+COM_OFFSET = robot_cfg["body"]["com_offset"]
 
 # Lengths of leg segments
 L1 = robot_cfg["leg_segments"]["L1"]    # Horizontal offset from shoulder to leg in mm
@@ -37,14 +38,15 @@ L4 = robot_cfg["leg_segments"]["L4"]    # Lower Leg Length in mm
 # AXIS X forward Y up Z left 
 class Kinematics:
 
-    def __init__(self, length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4):
-        
+    def __init__(self, length=LENGTH, width=WIDTH, l1=L1, l2=L2, l3=L3, l4=L4, com_offset=COM_OFFSET):
+
         self.length = length  # Length of Robot's base in mm
         self.width = width   # Width of Robot's base in mm
         self.l1 = l1  # Horizontal offset from shoulder to leg in mm
         self.l2 = l2  # Vertical offset from shoulder to leg in mm
         self.l3 = l3  # Upper Leg Length in mm
         self.l4 = l4  # Lower Leg Length in mm
+        self.com_offset = com_offset  # X offset from geometric centre to COM (mm)
 
         self.theta_dirs = [-1, 1, 1,
                         1, 1, 1,
@@ -74,7 +76,6 @@ class Kinematics:
         T4 = T3 + np.array([-self.l4 * sin(theta1) * cos(theta23), -self.l4 * cos(theta1) * cos(theta23), self.l4 * sin(theta23), 0])
         return np.array([T0, T1, T2, T3, T4])
     
-    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def bodyIK(self, omega, psi, phi, xm, ym, zm):
         """
         Return the transformation matrices for each leg shoulder relative to body given body center and orientation.
@@ -86,6 +87,7 @@ class Kinematics:
         :param ym: Y-coordinate of body center
         :param zm: Z-coordinate of body center
         """
+        xm += self.com_offset
         Rx = np.array([[1,0,0,0],
                     [0,np.cos(omega),-np.sin(omega),0],
                     [0,np.sin(omega),np.cos(omega),0],[0,0,0,1]])
@@ -149,22 +151,22 @@ class Kinematics:
         angles = []
 
         # Front Left Leg
-        fl_angles = self.legIK(np.linalg.inv(T_shoulder_base[0]) @ to_homogenous(fl)) # Passing foot position relative to left shoulder
+        fl_angles = self.legIK(trans_inv(T_shoulder_base[0]) @ to_homogenous(fl))
         for angle in fl_angles:
             angles.append(angle)
 
         # Front Right Leg
-        fr_angles = self.legIK(self.Ix @ np.linalg.inv(T_shoulder_base[1]) @ to_homogenous(fr)) # Passing foot position relative to right shoulder
+        fr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[1]) @ to_homogenous(fr))
         for angle in fr_angles:
             angles.append(angle)
-            
+
         # Rear Left Leg
-        rl_angles = self.legIK(np.linalg.inv(T_shoulder_base[2]) @ to_homogenous(rl)) # Passing foot position relative to left shoulder
+        rl_angles = self.legIK(trans_inv(T_shoulder_base[2]) @ to_homogenous(rl))
         for angle in rl_angles:
             angles.append(angle)
 
         # Rear Right Leg
-        rr_angles = self.legIK(self.Ix @ np.linalg.inv(T_shoulder_base[3]) @ to_homogenous(rr)) # Passing foot position relative to right shoulder
+        rr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[3]) @ to_homogenous(rr))
         for angle in rr_angles:
             angles.append(angle)
 

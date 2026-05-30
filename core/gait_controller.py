@@ -4,7 +4,7 @@ import os
 import atexit
 from pathlib import Path
 import numpy as np
-from tools.utils import to_homogenous
+from tools.utils import to_homogenous, trans_inv
 from tools.pid_controller import PIDControllerRP, PIDController
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
@@ -35,6 +35,15 @@ _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.0
 # https://github.com/OpenQuadruped/spot_mini_mini/blob/spotmicroai/spotmicro/GaitGenerator/Bezier.py 
 # _SWING_X_NORM = [0.00, 1.4, 1.5, 1.5, 1.5, 0.00, 0.00, 0.00, 1.5, 1.5, 1.40, 0.00]
 _SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.10, 1.10, 0.00, 0.00, 0.00]
+
+# Phase offsets per leg [FL, FR, RL, RR] as fraction of cycle (0–1).
+_GAIT_PHASES = {
+    "trot":  [0.0, 0.5, 0.5, 0.0],   # diagonals: FL+RR, FR+RL
+    "walk":  [0.0, 0.5, 0.25, 0.75], # one leg at a time, quarter-cycle apart
+    "bound": [0.0, 0.0, 0.5, 0.5],   # front pair then rear pair
+    "pace":  [0.0, 0.5, 0.0, 0.5],   # left pair then right pair
+    "pronk": [0.0, 0.0, 0.0, 0.0],   # all legs together
+}
 
 
 class GaitController:
@@ -144,7 +153,9 @@ class GaitController:
              imu_data=None,
              dir="+x",
              deceleration_flag=False,
-             move_callback=None):
+             move_callback=None,
+             gait_type="trot",
+             ):
         """
         Diagonal trot using 12-point Bezier swing and sinusoidal stance.
 
@@ -189,7 +200,7 @@ class GaitController:
         global_phase = (current_time % T_cycle) / T_cycle
 
         legs = ["FL", "FR", "RL", "RR"]
-        leg_offsets = [0.0, 0.5, 0.5, 0.0]
+        leg_offset = _GAIT_PHASES[gait_type]
 
         corrected_orientation = self.initial_orientation
 
@@ -236,7 +247,7 @@ class GaitController:
         delta_base = sh_mm * 0.05
 
         for i, leg in enumerate(legs):
-            leg_phase = (global_phase + leg_offsets[i]) % 1.0
+            leg_phase = (global_phase + leg_offset[i]) % 1.0
             # Applying the pid height correction to the initial position and stance delta
             initial_pos = np.array([self.initial_ef_positions[i][0], self.initial_ef_positions[i][1] + dy_dic[i], self.initial_ef_positions[i][2]])
             stance_delta = delta_base + abs(dy_dic[i]) * 0.2
@@ -252,7 +263,7 @@ class GaitController:
 
             target_pos = to_homogenous(current_pos)
             Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
-            target_pos_shoulder = Ix @ np.linalg.inv(transforms[i]) @ target_pos
+            target_pos_shoulder = Ix @ trans_inv(transforms[i]) @ target_pos
             angles = self.kin_solver.legIK(target_pos_shoulder)
 
             if move_callback is not None:
