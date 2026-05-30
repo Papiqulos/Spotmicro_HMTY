@@ -5,10 +5,10 @@ from core.kinematics import LENGTH, WIDTH, L1, L2, L3, L4
 import numpy as np
 import math
 from tools.utils import to_homogenous, rescale_number
-from core.gait_controller import GaitController, _LOG_DIR
+from core.gait_controller import GaitController, _LOG_DIR, _DH_LOG_DIR
 import yaml
 from hw.imu import IMU
-from log.log_plotter import plot_log
+from log.log_plotter import plot_log, plot_log_dh
 # import teleop
 from pydualsense import *
 
@@ -129,7 +129,7 @@ class RobotController:
         
         loop_period = 1.0 / 100
         start_time = time.time()
-        self.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
+        self.gait_controller._set_pid(kp=0.5, ki=0.1, kd=0.15)
         
         for _ in range(steps):
             t0 = time.time()
@@ -142,7 +142,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.trot(
+            ef_vel, log_file, dh_log_file = self.gait_controller.trot(
                 current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir,
                 move_callback=self.apply_angles_leg,
             )
@@ -165,7 +165,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.trot(
+            ef_vel, log_file, dh_log_file = self.gait_controller.trot(
                 current_time, loop_period, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir, deceleration_flag=True,
                 move_callback=self.apply_angles_leg,
             )
@@ -175,6 +175,7 @@ class RobotController:
                 print("Deceleration complete!")
                 break
         plot_log(log_file)
+        plot_log_dh(dh_log_file)
 
     def go_forwards(self):
         self.move(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03, steps=100, dir="+x")

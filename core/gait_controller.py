@@ -5,13 +5,14 @@ import atexit
 from pathlib import Path
 import numpy as np
 from tools.utils import to_homogenous
-from tools.pid_controller import PIDControllerRP, PIDController
+from tools.pid_controller import PIDControllerRP
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 from collections import deque
 from log.log_plotter import plot_log
 
-_LOG_DIR = Path(__file__).parent.parent / "log" / "roll_pitch"
+_LOG_DIR    = Path(__file__).parent.parent / "log" / "roll_pitch"
+_DH_LOG_DIR = Path(__file__).parent.parent / "log" / "dh_pid"
 
 L1 = kinematics.L1
 L2 = kinematics.L2
@@ -61,30 +62,40 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
-        # PID controllers
-        self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_h = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        # PID on DeltaH components (mm). Mori [8] gains.
+        self.pid = PIDControllerRP(kp=0.5, ki=0.1, kd=0.15, max_I=30.0)
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
         # CSV logging
+        _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
+
         _LOG_DIR.mkdir(exist_ok=True)
         self._clear_log()
-        _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
-        self._log_file = open(_LOG_DIR / f"pid_{_ts}.csv", "w", newline="")
+        self._log_file = open(_LOG_DIR / f"rp_{_ts}.csv", "w", newline="")
         self._csv = csv.writer(self._log_file)
-        self._csv.writerow(["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
+        self._csv.writerow(["t", "imu_roll", "imu_pitch"])
         atexit.register(self._log_file.close)
+
+        _DH_LOG_DIR.mkdir(exist_ok=True)
+        self._clear_log_dh()
+        self._dh_log_file = open(_DH_LOG_DIR / f"dh_{_ts}.csv", "w", newline="")
+        self._dh_csv = csv.writer(self._dh_log_file)
+        self._dh_csv.writerow(["t", "dh_roll", "dh_pitch", "corr_roll", "corr_pitch"])
+        atexit.register(self._dh_log_file.close)
     
     def _clear_log(self):
-        # Delete any prexisting .csv and .png files
         for f in os.listdir(_LOG_DIR):
             if f.endswith(".csv") or f.endswith(".png"):
                 os.remove(os.path.join(_LOG_DIR, f))
 
-    def _set_pid(self, kp, ki, kd):
-        """Set PID controller gains."""
-        self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
+    def _clear_log_dh(self):
+        for f in os.listdir(_DH_LOG_DIR):
+            if f.endswith(".csv") or f.endswith(".png"):
+                os.remove(os.path.join(_DH_LOG_DIR, f))
+
+    def _set_pid(self, kp, ki, kd, max_I=30.0):
+        self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd, max_I=max_I)
         self._imu_window.clear()
         self._pid_last_time = None
         self.gait_init = None
@@ -191,12 +202,11 @@ class GaitController:
         legs = ["FL", "FR", "RL", "RR"]
         leg_offsets = [0.0, 0.5, 0.5, 0.0]
 
-        corrected_orientation = self.initial_orientation
+        dy_fl = dy_fr = dy_rl = dy_rr = 0.0
+        pid_dt = time_step
 
         if imu_data is not None:
             raw = np.array([imu_data[0], imu_data[1]])
-            
-            # Moving average filter for noisy IMU data
             self._imu_window.append(raw)
             filtered = np.mean(self._imu_window, axis=0)
 
@@ -204,36 +214,26 @@ class GaitController:
             pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
             self._pid_last_time = now
 
-            # correction = self.pid.run(filtered[0], filtered[1], pid_dt)
-            correction = imu_data
+            dh_roll  = (WIDTH / 2)  * np.tan(filtered[0])
+            dh_pitch = (LENGTH / 4) * np.tan(filtered[1])
+            corr = self.pid.run(dh_roll, dh_pitch, pid_dt)
 
             self._csv.writerow([f"{time.time():.4f}",
-                                f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
-                                f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
+                                f"{filtered[0]:.6f}", f"{filtered[1]:.6f}"])
             self._log_file.flush()
 
-            corrected_orientation = np.array([
-                correction[0],
-                correction[1],
-                self.initial_orientation[2],
-            ])
-            
-        # Foot position correction based on corrected roll, pitch
-        dy_fl = + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_fr = - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_rl = + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
-        dy_rr = - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
-        # dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
-        # PID control on dH
-        dy_dic = {0: dy_fl + self.pid_h.update(dy_fl, pid_dt), 
-                  1: dy_fr - self.pid_h.update(dy_fr, pid_dt),
-                  2: dy_rl + self.pid_h.update(dy_rl, pid_dt),
-                  3: dy_rr - self.pid_h.update(dy_rr, pid_dt)}
+            self._dh_csv.writerow([f"{time.time():.4f}",
+                                   f"{dh_roll:.4f}", f"{dh_pitch:.4f}",
+                                   f"{corr[0]:.4f}", f"{corr[1]:.4f}"])
+            self._dh_log_file.flush()
 
-        
-        
-        # Direct correction through IK
-        # (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*corrected_orientation, *self.initial_center)
+            dy_fl = + corr[0] + corr[1]
+            dy_fr = - corr[0] + corr[1]
+            dy_rl = + corr[0] - corr[1]
+            dy_rr = - corr[0] - corr[1]
+
+        dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+
         (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center)
         transforms = [T_fl, T_fr, T_rl, T_rr]
 
@@ -243,7 +243,6 @@ class GaitController:
 
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offsets[i]) % 1.0
-            # Applying the pid height correction to the initial position and stance delta
             initial_pos = np.array([self.initial_ef_positions[i][0], self.initial_ef_positions[i][1] + dy_dic[i], self.initial_ef_positions[i][2]])
             stance_delta = delta_base + abs(dy_dic[i]) * 0.2
 
@@ -265,7 +264,7 @@ class GaitController:
                 move_callback(leg, angles, unit="rad")
             
 
-        return effective_velocity, self._log_file.name
+        return effective_velocity, self._log_file.name, self._dh_log_file.name
 
     def turn(self):
         raise NotImplementedError
