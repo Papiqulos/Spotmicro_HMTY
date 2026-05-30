@@ -40,7 +40,7 @@ class PIDController:
 # From https://www.youtube.com/watch?v=O_2swSMecB4&t=24s
 class PIDControllerRP:
 
-    def __init__(self, kp, ki, kd, max_I=0.2):
+    def __init__(self, kp, ki, kd):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -48,7 +48,7 @@ class PIDControllerRP:
         self.desired_roll_pitch = np.array([0.0, 0.0])
         self.I_term = np.array([0.0, 0.0])
         self.D_term = np.array([0.0, 0.0])
-        self.max_I = max_I
+        self.max_I = 0.2
         self.last_error = np.array([0.0, 0.0])
         self.first_run = True
 
