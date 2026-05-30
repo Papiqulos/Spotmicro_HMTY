@@ -45,14 +45,16 @@ class RobotController:
         
         self.apply_angles_robot(self.init_angles)
         
-        self.init_orientation_rad = np.array([0, 0, 0])
-        self.init_orientation_deg = self.imu.initial_orientation_deg
+        self.init_orientation_rad = self.init_orientation_deg = np.array([0, 0, 0])
+         
+        # self.apply_angles_rad = self.imu.initial_orientation_rad
+        # self.init_orientation_deg = self.imu.initial_orientation_deg
         
         self.rad_offset = self.imu.initial_orientation_rad
         self.deg_offset = self.imu.initial_orientation_deg
         
         self.init_ef_positions = self.kin_solver.robot_FK(
-            self.init_center, self.init_orientation_rad, self.init_angles, unit="degrees"
+            self.init_center, self.init_orientation_deg, self.init_angles, unit="degrees"
         )
         self.gait_controller = GaitController(
             initial_ef_positions=self.init_ef_positions,
@@ -112,7 +114,9 @@ class RobotController:
         Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
         target_pos_shoulder = Ix @ np.linalg.inv(transforms[leg]) @ to_homogenous(position)
         angles = self.kin_solver.legIK(target_pos_shoulder)
-        self.apply_angles_leg(leg, angles, "rad")
+        angles = np.array([math.degrees(a) for a in angles])
+        # print(angles)
+        self.apply_angles_leg(leg, angles, "deg")
 
     def change_orientation(self, new_orientation, unit="deg"):
         if unit == "deg":
@@ -173,7 +177,7 @@ class RobotController:
         plot_log(log_file)
 
     def go_forwards(self):
-        self.move(velocity=0.21, T_cycle=0.4, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x")
+        self.move(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03, steps=100, dir="+x")
 
     def go_backwards(self):
         self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-x")
@@ -199,21 +203,39 @@ class RobotController:
 
 if __name__ == "__main__":
         orientation = [0, 0, 0] # static orientation
-        center = [0, 270, 0]
+        center = [0, 0, 0]
 
         theta_default = [
-                0, -30, 60,  # FL
-                0, -30, 60,  # FR
-                0, -30, 60,  # RL
-                0, -30, 60,  # RR
+                0, -35.16, 61.86,  # FL
+                0, -35.16, 61.86,  # FR
+                0, -35.16, 61.86,  # RL
+                0, -35.16, 61.86,  # RR
         ]
+        
+        ef_positions_default = np.array([
+                [92.25,  -225, 93.94, 1],
+                [92.25,  -225, -93.94, 1],
+                [-92.25, -225, 93.94, 1],
+                [-92.25, -225, -93.94, 1]
+                ])
+        
+        
 
         kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
+        
+        # theta_test = kin_solver.robot_IK(center, orientation, ef_positions_default)
+        # theta_test = np.array([math.degrees(a) for a in theta_test])
+        # print(f"FL: {theta_test[0]:.2f} {theta_test[1]:.2f} {theta_test[2]:.2f}")
+        # print(f"FR: {theta_test[3]:.2f} {theta_test[4]:.2f} {theta_test[5]:.2f}")
+        # print(f"RL: {theta_test[6]:.2f} {theta_test[7]:.2f} {theta_test[8]:.2f}")
+        # print(f"RR: {theta_test[9]:.2f} {theta_test[10]:.2f} {theta_test[11]:.2f}")
+        
+        
         robot_controller = RobotController(kin_solver, theta_default, center)
-        # robot_controller.drive_leg_to_position("FL", [31.93, 69.69, 107.00])
+        # robot_controller.drive_leg_to_position("FL", [102.25, -229.86, 93.94])
         # robot_controller.apply_angles_leg("RR", [0, 0, 0])
         # robot_controller.change_orientation([0, -10, 0])
-        robot_controller.go_forwards()
+        # robot_controller.go_forwards()
         # robot_controller.go_backwards()
         # robot_controller.go_right()
         # robot_controller.go_left()
