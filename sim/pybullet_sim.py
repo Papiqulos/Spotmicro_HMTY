@@ -394,10 +394,12 @@ if __name__ == "__main__":
     orientation = [0, 0, PI]  # Roll, Pitch, Yaw in radians
 
     # Degrees
-    theta = [0, -30, 60, # FL
-             0, -30, 60, # FR
-             0, -30, 60, # RL
-             0, -30, 60 ] # RR
+    theta_default = [
+                0, -35.16, 61.86,  # FL
+                0, -35.16, 61.86,  # FR
+                0, -35.16, 61.86,  # RL
+                0, -35.16, 61.86,  # RR
+        ]
     
 
     pybullet_sim = PybulletSim(length=kinematics.LENGTH, 
@@ -409,5 +411,5 @@ if __name__ == "__main__":
                                center=center,
                                orientation=orientation,
                                center_plane=center_plane,
-                               initial_theta=theta,
+                               initial_theta=theta_default,
                                angle_unit="degrees")
