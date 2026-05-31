@@ -309,28 +309,28 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(dir="+x", velocity=0.4, yaw_rate=0)
-                               
+                self.move(dir="+x", desired_lin_vel=0.4, desired_ang_vel=0.0)
+
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                self.move(dir="-x", velocity=0.4, yaw_rate=-0)
-                        
+                self.move(dir="-x", desired_lin_vel=0.4, desired_ang_vel=0.0)
+
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
                 self.move(dir="+z")
-  
+
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
                 self.move(dir="-z")
-            
+
             # Go 45 degrees front left
             if self.key_is_pressed(keyboard_event, self.fKey):
-                self.move(dir=np.pi/4, yaw_rate=0.3)
-            
+                self.move(dir=np.pi/4, desired_ang_vel=0.3)
+
             # Go 45 degrees front right
             if self.key_is_pressed(keyboard_event, self.gKey):
                 self.move(dir=-np.pi/4)
-            
+
             # Go 45 degrees back left
             if self.key_is_pressed(keyboard_event, self.hKey):
                 self.move(dir=3*np.pi/4)
@@ -348,7 +348,7 @@ class PybulletSim:
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
         self.move_robot_to_pose(self.robotId, angles, unit="rad")
         
-    def move(self, velocity=0.3, swing_height=0.04, stance_length=0.03, Tswing=0.25, dir="+x", yaw_rate=0.0):
+    def move(self, desired_lin_vel=0.3, swing_height=0.04, stance_length=0.03, Tswing=0.25, dir="+x", desired_ang_vel=0.0):
         
         if dir == "+x":
             print("GOING FORWARDS")
@@ -372,11 +372,11 @@ class PybulletSim:
                 deceleration_flag = True
                 print("DECELERATING")
             ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
-                            current_time, TIME_STEP, velocity, swing_height,
-                            stance_length=stance_length, Tswing=Tswing,
-                            imu_data=self.get_imu_data(), dir=dir,
-                            deceleration_flag=deceleration_flag, desired_ang_vel=yaw_rate,
-                            move_callback=self.move_callback)
+                            current_time, TIME_STEP,
+                            imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag,
+                            move_callback=self.move_callback, dir=dir,
+                            desired_lin_vel=desired_lin_vel, desired_ang_vel=desired_ang_vel,
+                            swing_height=swing_height, stance_length=stance_length, Tswing=Tswing)
             p.stepSimulation()
             time.sleep(TIME_STEP)
             

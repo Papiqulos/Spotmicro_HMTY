@@ -20,10 +20,10 @@ JOINTS = ["shoulder", "leg", "foot"]
 _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": slice(9, 12)}
 
 _GAIT_PARAMS = {
-    "+x": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03),
-    "-x": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
-    "+z": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
-    "-z": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
+    "+x": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
+    "-x": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
+    "+z": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
+    "-z": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
 }
 
 
@@ -128,7 +128,19 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    def move(self, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x", lin_vel=0.3, ang_vel=0):
+    def go_forwards(self):
+        self.move(desired_lin_vel=0.25, steps=200, dir="+x")
+
+    def go_backwards(self):
+        self.move(desired_lin_vel=0.15, steps=80, dir="-x")
+
+    def go_right(self):
+        self.move(desired_lin_vel=0.15, steps=80, dir="+z")
+
+    def go_left(self):
+        self.move(desired_lin_vel=0.15, steps=80, dir="-z")
+
+    def move(self, desired_lin_vel, dir="+x", desired_ang_vel=0.0, steps=150):
         """Execute a certain number of steps in a given direction with given linear and angular velocity and log the results.
         
         :param T_cycle:           gait cycle duration in seconds (tuned manually)
@@ -148,18 +160,8 @@ class RobotController:
         for _ in range(steps):
             t0 = time.time()
             current_time = t0 - start_time
-            
-            raw_gyro = self.imu.gyro.read()
-            raw_acc  = self.imu.accelerometer.read()["acceleration"]
-            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
-            imu_data = self.imu.update(raw_gyro, raw_acc)
-            # print(f"IMU: {imu_data}")
-            
-            
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
-                current_time, time_step, T_cycle, duty_factor, lin_vel, swing_height, imu_data=imu_data, dir=dir,
-                move_callback=self.apply_angles_leg,
-            )
+
+            ef_vel, log_file = self.trot_step(current_time, time_step, dir=dir, deceleration_flag=False)
             elapsed = time.time() - start_time
             print(f"Elapsed: {elapsed:.2f}s", end="\r")
             
@@ -171,17 +173,7 @@ class RobotController:
             t0 = time.time()
             current_time = t0 - start_time
             
-            raw_gyro = self.imu.gyro.read()
-            raw_acc  = self.imu.accelerometer.read()["acceleration"]
-            # raw_mag  = self.imu.magnetometer.get_magnetometer()["magnet"] # too noisy
-            imu_data = self.imu.update(raw_gyro, raw_acc)
-            # print(f"IMU: {imu_data}")
-            
-            
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
-                current_time, time_step, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir, deceleration_flag=True,
-                move_callback=self.apply_angles_leg,
-            )
+            ef_vel, log_file = self.trot_step(current_time, time_step, dir=dir, deceleration_flag=True)
             elapsed = time.time() - start_time
             print(f"Elapsed: {elapsed:.2f}s", end="\r")
             if ef_vel == 0.0:
@@ -191,18 +183,6 @@ class RobotController:
         
         plot_log(log_file)
 
-    def go_forwards(self):
-        self.move(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03, steps=200, dir="+x")
-
-    def go_backwards(self):
-        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-x")
-        
-    def go_right(self):
-        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="+z")
-    
-    def go_left(self):
-        self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-z")
-
     # DualSense based movement
     def trot_step(self, current_time, time_step, dir="+x", deceleration_flag=False):
         raw_gyro = self.imu.gyro.read()
@@ -211,13 +191,13 @@ class RobotController:
         try:
             p = _GAIT_PARAMS[dir]
         except KeyError:
-            p = dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03)
-        return self.gait_controller.execute_gait_fixed(
-            current_time, time_step, p["T_cycle"], p["duty_factor"],
-            p["velocity"], p["swing_height"],
-            imu_data=imu_data, dir=dir,
-            deceleration_flag=deceleration_flag,
-            move_callback=self.apply_angles_leg,
+            p = dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot")
+        return self.gait_controller.execute_gait_fixed_stance(
+            current_time, time_step,
+            imu_data=imu_data, deceleration_flag=deceleration_flag, dir=dir,
+            desired_lin_vel=p["desired_lin_vel"], desired_ang_vel=p["desired_ang_vel"],
+            swing_height=p["swing_height"], stance_length=p["stance_length"],
+            Tswing=p["Tswing"], gait_type=p["gait_type"],
         )
             
             
