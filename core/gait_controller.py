@@ -273,7 +273,13 @@ class GaitController:
 
     def execute_gait_fixed_swing_td(self,
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
-            desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.035, stance_length=0.06, Tswing=0.25, dir="+x",  gait_type="trot"):
+            desired_lin_vel=0.3, 
+            desired_ang_vel=0.0, 
+            swing_height=0.035, 
+            stance_length=0.06, 
+            Tswing=0.25, 
+            dir="+x",  
+            gait_type="trot"):
         """Fixed Tswing, physics-derived Tstance, TD-based phase clock.
 
         Tstance = stance_length / v.  Phase resets on FL touchdown detection.
@@ -319,8 +325,14 @@ class GaitController:
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_swing(self,
-            current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None,
-            desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.035, stance_length=0.06, Tswing=0.25, dir="+x", gait_type="trot"):
+            current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            desired_lin_vel=0.3, 
+            desired_ang_vel=0.0, 
+            swing_height=0.035, 
+            stance_length=0.06, 
+            Tswing=0.25, 
+            dir="+x",  
+            gait_type="trot"):
         """Fixed Tswing, physics-derived Tstance, modulo phase clock.
 
         Tstance = stance_length / v.  Phase is (t % T_cycle) / T_cycle.
@@ -349,8 +361,14 @@ class GaitController:
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_stance(self,
-            current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None,
-            desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.035, stance_length=0.06, Tswing=0.25, dir="+x", gait_type="trot"):
+            current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            desired_lin_vel=0.3, 
+            desired_ang_vel=0.0, 
+            swing_height=0.035, 
+            stance_length=0.06, 
+            Tswing=0.25, 
+            dir="+x",  
+            gait_type="trot"):
         """Fixed T_cycle and duty_factor derived from nominal (unramped) velocity.
 
         T_cycle = Tswing + stance_length / desired_lin_vel (constant).

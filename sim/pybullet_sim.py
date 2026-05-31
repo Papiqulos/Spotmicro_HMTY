@@ -358,6 +358,8 @@ class PybulletSim:
             print("GOING RIGHT")
         elif dir == "-z":
             print("GOING LEFT")
+        else:
+            print(f"GOING TOWARDS {np.degrees(dir):.2f}°")
         deceleration_flag = False
 
         current_time = 0
