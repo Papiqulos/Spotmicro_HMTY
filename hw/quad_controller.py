@@ -193,11 +193,14 @@ class RobotController:
         except KeyError:
             p = dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot")
         return self.gait_controller.execute_gait_fixed_stance(
-            current_time, time_step,
-            imu_data=imu_data, deceleration_flag=deceleration_flag, dir=dir,
-            desired_lin_vel=p["desired_lin_vel"], desired_ang_vel=p["desired_ang_vel"],
-            swing_height=p["swing_height"], stance_length=p["stance_length"],
-            Tswing=p["Tswing"], gait_type=p["gait_type"],
+            current_time, time_step, imu_data=imu_data, deceleration_flag=deceleration_flag, move_callback=self.apply_angles_leg,
+            desired_lin_vel=p["desired_lin_vel"], 
+            desired_ang_vel=p["desired_ang_vel"],
+            swing_height=p["swing_height"], 
+            stance_length=p["stance_length"],
+            Tswing=p["Tswing"], 
+            dir=dir, 
+            gait_type=p["gait_type"],
         )
             
             
