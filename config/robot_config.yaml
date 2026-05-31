@@ -28,7 +28,7 @@
 body:
   length: 184.5
   width: 133
-  com_offset: -20.0   # X offset (mm) geometric centre to COM; negative = COM is behind centre (back-heavy)
+  com_offset: -20.0   # X offset (mm) geometric centre to COM (back heavy)
 
 leg_segments:
   L1: 27.442          # Horizontal offset shoulder to leg

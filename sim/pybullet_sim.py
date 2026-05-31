@@ -309,11 +309,11 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(dir="+x", velocity=0.4, yaw_rate=0.5)
+                self.move(dir="+x", velocity=0.4, yaw_rate=0)
                                
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                self.move(dir="-x", velocity=0.4, yaw_rate=-0.5)
+                self.move(dir="-x", velocity=0.4, yaw_rate=-0)
                         
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
