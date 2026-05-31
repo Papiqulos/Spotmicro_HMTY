@@ -208,8 +208,11 @@ class RobotController:
         raw_gyro = self.imu.gyro.read()
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
         imu_data = self.imu.update(raw_gyro, raw_acc)
-        p = _GAIT_PARAMS[dir]
-        return self.gait_controller.execute_gait_fixed_stance(
+        try:
+            p = _GAIT_PARAMS[dir]
+        except KeyError:
+            p = dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03)
+        return self.gait_controller.execute_gait_fixed(
             current_time, time_step, p["T_cycle"], p["duty_factor"],
             p["velocity"], p["swing_height"],
             imu_data=imu_data, dir=dir,
@@ -241,18 +244,20 @@ if __name__ == "__main__":
     log_file = None
 
     try:
-        while True:
+        print()
+        print("\033[A", end="", flush=True)
+        while not teleop.dualsense.state.circle:
             t0 = time.time()
             current_time = t0 - start_time
 
+            left_joystick_changed = teleop.dualsense.left_joystick_changed
+            left_joystick_angle = teleop._get_joystick_angle()
             dpad_up    = teleop.dualsense.state.DpadUp
             dpad_down  = teleop.dualsense.state.DpadDown
             dpad_right = teleop.dualsense.state.DpadRight
             dpad_left  = teleop.dualsense.state.DpadLeft
             circle     = teleop.dualsense.state.circle
-
-            if circle:
-                break
+            
 
             if dpad_up:
                 current_dir, state = "+x", "moving"
@@ -264,6 +269,8 @@ if __name__ == "__main__":
                 current_dir, state = "-z", "moving"
             elif state == "moving":
                 state = "decelerating"
+            # elif left_joystick_changed:
+            #     current_dir, state = left_joystick_angle, "moving"
 
             if state == "moving":
                 ef_vel, log_file = robot.trot_step(current_time, time_step, current_dir)
@@ -282,8 +289,8 @@ if __name__ == "__main__":
             if rem > 0:
                 time.sleep(rem)
     
-    except:
-        print("Plug in your DualSense controller")
+    # except:
+    #     print("Plug in your DualSense controller")
     finally:
         if log_file:
             plot_log(log_file)

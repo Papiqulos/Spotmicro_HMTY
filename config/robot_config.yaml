@@ -36,8 +36,9 @@ leg_segments:
   L3: 109.243         # Upper leg length
   L4: 140.000         # Lower leg length
 
-# Per-joint angle limits in radians
+# Per-joint angle limits in radians(Arbitrary values)
+# TODO: Find safer values
 joint_limits:
-  shoulder: [-0.548,  0.548]   # theta1 — approx ±31 deg
+  shoulder: [-0.548,  0.548]   # theta1 
   elbow:    [-2.17,   0.97]    # theta2
-  knee:     [-0.10,   2.59]    # theta3 — positive convention (acos-based)
+  knee:     [-0.10,   2.59]    # theta3 
