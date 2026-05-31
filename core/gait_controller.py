@@ -272,7 +272,9 @@ class GaitController:
     # ------------------------------------------------------------------
 
     def execute_gait_fixed_swing_td(self,
+            # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            # TUNABLE PARAMETERS
             desired_lin_vel=0.3, 
             desired_ang_vel=0.0, 
             swing_height=0.035, 
@@ -325,7 +327,9 @@ class GaitController:
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_swing(self,
+            # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            # TUNABLE PARAMETERS
             desired_lin_vel=0.3, 
             desired_ang_vel=0.0, 
             swing_height=0.035, 
@@ -361,7 +365,9 @@ class GaitController:
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_stance(self,
+            # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            # TUNABLE PARAMETERS
             desired_lin_vel=0.3, 
             desired_ang_vel=0.0, 
             swing_height=0.035, 

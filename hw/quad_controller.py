@@ -19,14 +19,6 @@ JOINTS = ["shoulder", "leg", "foot"]
 
 _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": slice(9, 12)}
 
-_GAIT_PARAMS = {
-    "+x": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
-    "-x": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
-    "+z": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
-    "-z": dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot"),
-}
-
-
 class RobotController:
 
     def __init__(self, kin_solver, init_angles, init_center):
@@ -128,40 +120,41 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    def go_forwards(self):
-        self.move(desired_lin_vel=0.25, steps=200, dir="+x")
-
-    def go_backwards(self):
-        self.move(desired_lin_vel=0.15, steps=80, dir="-x")
-
-    def go_right(self):
-        self.move(desired_lin_vel=0.15, steps=80, dir="+z")
-
-    def go_left(self):
-        self.move(desired_lin_vel=0.15, steps=80, dir="-z")
-
-    def move(self, desired_lin_vel, dir="+x", desired_ang_vel=0.0, steps=150):
-        """Execute a certain number of steps in a given direction with given linear and angular velocity and log the results.
+    def move(self, 
+            params=None,
+            steps=150):
+        """Execute a certain number of steps in a given direction with given linear and angular velocity and log the results. Mainly used to tune gait parameters.
         
-        :param T_cycle:           gait cycle duration in seconds (tuned manually)
-        :param duty_factor:       stance fraction of cycle (0-1, tuned manually)
-        :param swing_height:      peak foot clearance above nominal in meters
-        :param steps:             number of steps to execute
-        :param dir:               "+x" / "-x" / "+z" / "-z" or a lateral_fraction float (rad)
-        :param lin_vel:           target body speed in m/s
-        :param ang_vel:           target body angular velocity in rad/s
+        
+        :param desired_lin_vel: desired linear velocity in m/s
+        :param desired_ang_vel: desired angular velocity in rad/s
+        :param swing_height: peak foot clearance above nominal in meters
+        :param stance_length: full step length in meters; Tstance = stance_length / velocity
+        :param Tswing: fixed swing duration in seconds (servo-limited, ~0.2–0.25 s)
+        :param dir: direction of motion "+x" / "-x" / "+z" / "-z" or a lateral_fraction float (rad)
+        :param gait_type: trot / walk / bound / pace / pronk
+        :param steps: number of steps to execute
 
         
         """
         time_step = 1.0 / 100
         start_time = time.time()
         self.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
+        if not params:
+            # Default parameters
+            params = dict(desired_lin_vel=0.3, 
+                          desired_ang_vel=0.0, 
+                          swing_height=0.035, 
+                          stance_length=0.06, 
+                          Tswing=0.25, 
+                          dir="+x",  
+                          gait_type="trot")
         
         for _ in range(steps):
             t0 = time.time()
             current_time = t0 - start_time
 
-            ef_vel, log_file = self.trot_step(current_time, time_step, dir=dir, deceleration_flag=False)
+            ef_vel, log_file = self.trot_step(current_time, time_step, params=params, deceleration_flag=False)
             elapsed = time.time() - start_time
             print(f"Elapsed: {elapsed:.2f}s", end="\r")
             
@@ -173,7 +166,7 @@ class RobotController:
             t0 = time.time()
             current_time = t0 - start_time
             
-            ef_vel, log_file = self.trot_step(current_time, time_step, dir=dir, deceleration_flag=True)
+            ef_vel, log_file = self.trot_step(current_time, time_step, params=params, deceleration_flag=True)
             elapsed = time.time() - start_time
             print(f"Elapsed: {elapsed:.2f}s", end="\r")
             if ef_vel == 0.0:
@@ -184,27 +177,30 @@ class RobotController:
         plot_log(log_file)
 
     # DualSense based movement
-    def trot_step(self, current_time, time_step, dir="+x", deceleration_flag=False):
+    def trot_step(self, current_time, time_step, params=None, deceleration_flag=False):
         raw_gyro = self.imu.gyro.read()
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
         imu_data = self.imu.update(raw_gyro, raw_acc)
-        try:
-            p = _GAIT_PARAMS[dir]
-        except KeyError:
-            p = dict(desired_lin_vel=0.3, desired_ang_vel=0.0, swing_height=0.03, stance_length=0.06, Tswing=0.25, gait_type="trot")
+        if not params:
+            # Default parameters
+            params = dict(desired_lin_vel=0.3, 
+                          desired_ang_vel=0.0, 
+                          swing_height=0.035, 
+                          stance_length=0.06, 
+                          Tswing=0.25, 
+                          dir="+x",  
+                          gait_type="trot")
         return self.gait_controller.execute_gait_fixed_stance(
             current_time, time_step, imu_data=imu_data, deceleration_flag=deceleration_flag, move_callback=self.apply_angles_leg,
-            desired_lin_vel=p["desired_lin_vel"], 
-            desired_ang_vel=p["desired_ang_vel"],
-            swing_height=p["swing_height"], 
-            stance_length=p["stance_length"],
-            Tswing=p["Tswing"], 
-            dir=dir, 
-            gait_type=p["gait_type"],
+            desired_lin_vel=params["desired_lin_vel"], 
+            desired_ang_vel=params["desired_ang_vel"],
+            swing_height=params["swing_height"], 
+            stance_length=params["stance_length"],
+            Tswing=params["Tswing"], 
+            dir=params["dir"], 
+            gait_type=params["gait_type"],
         )
-            
-            
-
+    
 if __name__ == "__main__":
     center = [0, 0, 0]
     theta_default = [
@@ -218,6 +214,18 @@ if __name__ == "__main__":
     robot = RobotController(kin_solver, theta_default, center)
     robot.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
 
+
+    # Test a gait
+    # p = dict(desired_lin_vel=0.3, 
+    #         desired_ang_vel=0.0, 
+    #         swing_height=0.035, 
+    #         stance_length=0.05, 
+    #         Tswing=0.2, 
+    #         dir="+x",  
+    #         gait_type="trot")
+    
+    # robot.move(params=p, steps=100)
+
     teleop = DualSenseController()
 
     state = "idle"
@@ -225,6 +233,14 @@ if __name__ == "__main__":
     start_time = time.time()
     time_step = 1.0 / 100
     log_file = None
+
+    params = dict(desired_lin_vel=0.3, 
+            desired_ang_vel=0.0, 
+            swing_height=0.035, 
+            stance_length=0.05, 
+            Tswing=0.2, 
+            dir="+x",  
+            gait_type="trot")
 
     try:
         print()
@@ -243,23 +259,23 @@ if __name__ == "__main__":
             
 
             if dpad_up:
-                current_dir, state = "+x", "moving"
+                params["dir"], state = "+x", "moving"
             elif dpad_down:
-                current_dir, state = "-x", "moving"
+                params["dir"], state = "-x", "moving"
             elif dpad_right:
-                current_dir, state = "+z", "moving"
+                params["dir"], state = "+z", "moving"
             elif dpad_left:
-                current_dir, state = "-z", "moving"
+                params["dir"], state = "-z", "moving"
             elif state == "moving":
                 state = "decelerating"
             # elif left_joystick_changed:
             #     current_dir, state = left_joystick_angle, "moving"
 
             if state == "moving":
-                ef_vel, log_file = robot.trot_step(current_time, time_step, current_dir)
+                ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False)
                 print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f}", end="\r", flush=True)
             elif state == "decelerating":
-                ef_vel, log_file = robot.trot_step(current_time, time_step, current_dir, deceleration_flag=True)
+                ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True)
                 print(f"\033[2KDecelerating...  vel={ef_vel:.3f}", end="\r", flush=True)
                 if ef_vel == 0.0:
                     robot.apply_angles_robot(robot.init_angles)
