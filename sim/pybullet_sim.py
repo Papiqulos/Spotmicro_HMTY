@@ -325,7 +325,7 @@ class PybulletSim:
             
             # Go 45 degrees front left
             if self.key_is_pressed(keyboard_event, self.fKey):
-                self.move(dir=np.pi/4)
+                self.move(dir=np.pi/4, yaw_rate=0.3)
             
             # Go 45 degrees front right
             if self.key_is_pressed(keyboard_event, self.gKey):
@@ -348,7 +348,7 @@ class PybulletSim:
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
         self.move_robot_to_pose(self.robotId, angles, unit="rad")
         
-    def move(self, T_cycle=0.28, duty_factor=0.5, velocity=0.3, swing_height=0.04, dir="+x", yaw_rate=0.0):
+    def move(self, velocity=0.3, swing_height=0.04, stance_length=0.03, Tswing=0.25, dir="+x", yaw_rate=0.0):
         
         if dir == "+x":
             print("GOING FORWARDS")
@@ -371,9 +371,11 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, self.qKey):
                 deceleration_flag = True
                 print("DECELERATING")
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
-                            current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
-                            self.get_imu_data(), dir=dir, deceleration_flag=deceleration_flag, desired_ang_vel=yaw_rate,
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
+                            current_time, TIME_STEP, velocity, swing_height,
+                            stance_length=stance_length, Tswing=Tswing,
+                            imu_data=self.get_imu_data(), dir=dir,
+                            deceleration_flag=deceleration_flag, desired_ang_vel=yaw_rate,
                             move_callback=self.move_callback)
             p.stepSimulation()
             time.sleep(TIME_STEP)

@@ -128,9 +128,19 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.apply_angles_robot(angles, unit="rad")
 
-    # Step based movement
-    def move(self, velocity=0.1, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x"):
+    def move(self, T_cycle=0.2, duty_factor=0.5, swing_height=0.03, steps=150, dir="+x", lin_vel=0.3, ang_vel=0):
+        """Execute a certain number of steps in a given direction with given linear and angular velocity and log the results.
         
+        :param T_cycle:           gait cycle duration in seconds (tuned manually)
+        :param duty_factor:       stance fraction of cycle (0-1, tuned manually)
+        :param swing_height:      peak foot clearance above nominal in meters
+        :param steps:             number of steps to execute
+        :param dir:               "+x" / "-x" / "+z" / "-z" or a lateral_fraction float (rad)
+        :param lin_vel:           target body speed in m/s
+        :param ang_vel:           target body angular velocity in rad/s
+
+        
+        """
         time_step = 1.0 / 100
         start_time = time.time()
         self.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
@@ -146,8 +156,8 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
-                current_time, time_step, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir,
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
+                current_time, time_step, T_cycle, duty_factor, lin_vel, swing_height, imu_data=imu_data, dir=dir,
                 move_callback=self.apply_angles_leg,
             )
             elapsed = time.time() - start_time
@@ -168,7 +178,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
                 current_time, time_step, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir, deceleration_flag=True,
                 move_callback=self.apply_angles_leg,
             )
@@ -199,7 +209,7 @@ class RobotController:
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
         imu_data = self.imu.update(raw_gyro, raw_acc)
         p = _GAIT_PARAMS[dir]
-        return self.gait_controller.execute_gait_fixed(
+        return self.gait_controller.execute_gait_fixed_stance(
             current_time, time_step, p["T_cycle"], p["duty_factor"],
             p["velocity"], p["swing_height"],
             imu_data=imu_data, dir=dir,
