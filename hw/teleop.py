@@ -1,4 +1,5 @@
 from pydualsense import *
+import numpy as np
 import time
 import os
 
@@ -11,82 +12,44 @@ class DualSenseController:
     def __init__(self):
         self.dualsense = pydualsense()
         self.dualsense.init()
-
-        self.cross_pressed = False
-        self.circle_pressed = False
-        self.dpad_down_pressed = False
-        self.left_joystick_changed = False
-        self.gyro_changed = False
-        self.triangle_pressed = False
-        
-        # self.dualsense.cross_pressed += self.cross_down
-        # self.dualsense.circle_pressed += self.circle_down
-        # self.dualsense.dpad_down += self.dpad_down
-        # self.dualsense.left_joystick_changed += self.joystick
-        # self.dualsense.gyro_changed += self.gyro_changed
-        
-    def cross_down(self, state):
-        self.cross_pressed = state
-
-    def circle_down(self, state):
-        self.circle_pressed = state
-
-    def dpad_down(self, state):
-        self.dpad_down_pressed = state
-
-    def joystick(self, stateX, stateY):
-        self.left_joystick_changed = True
-
-    def gyro_changed(self, pitch, yaw, roll):
-        self.gyro_changed = True
-
-    def triangle_pressed(self):
-        self.triangle_pressed = True
     
+
+    def _get_joystick_angle(self):
+        return np.arctan2(self.dualsense.state.LY, self.dualsense.state.LX) + np.pi/2
+    
+        # Test method
     def move(self, callback):
-        i = 0
-        time_step = 1.0 / 100
         start_time = time.time()
         prev_state = self.dualsense.state
-        while True:
+
+        print()
+        print("\033[A", end="", flush=True)
+
+        while not self.dualsense.state.R1:
             dpad_up = self.dualsense.state.DpadUp
             dpad_down = self.dualsense.state.DpadDown
             dpad_left = self.dualsense.state.DpadLeft
             dpad_right = self.dualsense.state.DpadRight
 
-            square_pressed = self.dualsense.state.square
-            triangle_pressed = self.dualsense.state.triangle
-            circle_pressed = self.dualsense.state.circle
-            cross_pressed = self.dualsense.state.cross
+            self.ljX = self.dualsense.state.LX
+            self.ljY = self.dualsense.state.LY
+            self.ljAngle = np.arctan2(self.ljY, self.ljX) + np.pi/2
+            self.ljAngle_deg = np.degrees(self.ljAngle)
             
-            triangle_pressed = self.dualsense.state.triangle
+
+            print(f"\033[2KLeft Joystick Angle: {self.ljAngle_deg:.2f}°", flush=True)
+
             if dpad_up:
-                t0 = time.time()
-                current_time = t0 - start_time
-                elapsed = time.time() - start_time
                 callback(0)
-                # time.sleep(time_step)
                 prev_state = "up"
             elif dpad_down:
-                t0 = time.time()
-                current_time = t0 - start_time
-                elapsed = time.time() - start_time
                 callback(1)
-                # time.sleep(time_step)
                 prev_state = "down"
             elif dpad_right:
-                t0 = time.time()
-                current_time = t0 - start_time
-                elapsed = time.time() - start_time
                 callback(2)
-                # time.sleep(time_step)
                 prev_state = "right"
             elif dpad_left:
-                t0 = time.time()
-                current_time = t0 - start_time
-                elapsed = time.time() - start_time
                 callback(3)
-                # time.sleep(time_step)
                 prev_state = "left"
             else:
                 if prev_state in ("up", "down", "right", "left"):
@@ -94,7 +57,8 @@ class DualSenseController:
                     prev_state = None
                 print("\033[2KWaiting for command...", end="\r", flush=True)
                 start_time = time.time()
-                # time.sleep(time_step)
+
+            print("\033[A", end="", flush=True)
 
 
 if __name__ == "__main__":
@@ -115,9 +79,6 @@ if __name__ == "__main__":
                 time.sleep(0.05)
 
     controller.move(execute)
-    while not controller.dualsense.state.R1:
-        ...
-
     # close device
     controller.dualsense.close()
 
