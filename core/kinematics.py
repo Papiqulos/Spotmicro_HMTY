@@ -55,6 +55,11 @@ class Kinematics:
         
         # Inversion matrix for right legs
         self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+
+        lim = robot_cfg.get("joint_limits", {})
+        self.shoulder_lim = lim.get("shoulder", [-pi, pi])
+        self.elbow_lim    = lim.get("elbow",    [-pi, pi])
+        self.knee_lim     = lim.get("knee",     [-0.10, pi])
         
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legFK(self, angles):
@@ -127,16 +132,21 @@ class Kinematics:
         theta1 = -atan2(y, x) - atan2(F, - self.l1)
 
         D = (H**2 - self.l3**2 - self.l4**2) / (2 * self.l3 * self.l4)
-        
-        # Domain check for acos
-        if D > 1: D = 1
-        if D < -1: D = -1
-            
-        theta3 = acos(D)
+
+        # arctan2 form: numerically stable at D = ±1 (fully extended / folded leg).
+        # Positive sqrt keeps the same sign convention as acos (elbow-down = positive theta3).
+        theta3 = atan2(sqrt(max(0.0, 1.0 - D**2)), D)
 
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
 
-        return [theta1, theta2, theta3]
+        thetas = [theta1, theta2, theta3]
+        limits = [self.shoulder_lim, self.elbow_lim, self.knee_lim]
+        for i in range(3):
+            lo, hi = limits[i]
+            if thetas[i] < lo or thetas[i] > hi:
+                print(f"legIK: theta{i+1}={thetas[i]:.3f} rad clamped to [{lo:.3f}, {hi:.3f}]")
+                thetas[i] = np.clip(thetas[i], lo, hi)
+        return thetas
     
     def robot_IK(self, center, orientation, ef_positions):
         """Returns radians"""

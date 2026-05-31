@@ -45,6 +45,14 @@ _GAIT_PHASES = {
     "pronk": [0.0, 0.0, 0.0, 0.0],   # all legs together
 }
 
+# Maps direction strings to LateralFraction angles (radians).
+_DIR_TO_LATERAL = {
+    "+x":  0.0,
+    "-x":  np.pi,
+    "+z":  np.pi / 2.0,
+    "-z": -np.pi / 2.0,
+}
+
 
 class GaitController:
 
@@ -70,6 +78,11 @@ class GaitController:
         self.gait_init = None
         self.deceleration_init = 0
 
+        # TD-based phase clock state (spot_mini_mini style)
+        self._td_time = None   # wall-clock time of last reference-leg TD reset
+        self._sw_ref  = 0.0    # swing phase of reference leg (FL) at last iteration
+        self._td_flag = False  # True once SwRef ≥ 0.999, waiting for 0.9 confirmation
+
         # PID controllers
         self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
         self.pid_h = PIDController(kp=0.2, ki=0.025, kd=0.025)
@@ -91,65 +104,58 @@ class GaitController:
             if f.endswith(".csv") or f.endswith(".png"):
                 os.remove(os.path.join(_LOG_DIR, f))
 
-    def _set_pid(self, kp, ki, kd):
-        """Set PID controller gains."""
+    def reset(self, kp=0.2, ki=0.025, kd=0.025):
+        """Reset GaitController and set new PID gains."""
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self._imu_window.clear()
         self._pid_last_time = None
         self.gait_init = None
         self.deceleration_init = 0
+        self._td_time = None
+        self._sw_ref  = 0.0
+        self._td_flag = False
 
-    def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, dir="+x"):
+    def swing_trajectory_control_points(self, initial_pos, sl_mm, sh_mm, lateral_fraction):
         """12-point Bezier swing control points.
         Frame: kinematics (X-forward, Y-up, Z-left), units mm.
 
-        3-point clusters at liftoff/touchdown force zero endpoint tangent velocity.
+        _SWING_X_NORM runs 0→1 over the full stride from liftoff (-5S/6) to
+        touchdown (+S/6), so offset from nominal = (xn - 5/6) * sl_mm.
+        Both X and Z offsets are rotated by lateral_fraction.
         """
-        # Touchdown at S/6 ahead of nominal (He 2020), liftoff at -5S/6.
-        # Swing starts at liftoff (-5S/6) and ends at touchdown (+S/6).
+        X_POLAR = np.cos(lateral_fraction)
+        Z_POLAR = np.sin(lateral_fraction)
         pts = []
-        if dir == "+x":
-            x0 = initial_pos[0] - 5 * sl_mm / 6
-            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
-                pts.append(np.array([x0 + xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
-        elif dir == "-x":
-            x0 = initial_pos[0] + 5 * sl_mm / 6
-            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
-                pts.append(np.array([x0 - xn * sl_mm, initial_pos[1] + hn * sh_mm, initial_pos[2]]))
-        elif dir == "+z":
-            z0 = initial_pos[2] - 5 * sl_mm / 6
-            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
-                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 + xn * sl_mm]))
-        elif dir == "-z":
-            z0 = initial_pos[2] + 5 * sl_mm / 6
-            for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
-                pts.append(np.array([initial_pos[0], initial_pos[1] + hn * sh_mm, z0 - xn * sl_mm]))
+        for xn, hn in zip(_SWING_X_NORM, _SWING_H_NORM):
+            d = (xn - 5.0 / 6.0) * sl_mm
+            pts.append(np.array([
+                initial_pos[0] + d * X_POLAR,
+                initial_pos[1] + hn * sh_mm,
+                initial_pos[2] + d * Z_POLAR,
+            ]))
         return pts
 
-    def stance_sine_trajectory(self, initial_pos, sl_mm, stance_progress, delta, dir="+x"):
-        """Stance foot position with complementary sine dip.
+    def stance_sine_trajectory(self, initial_pos, sl_mm, stance_progress, delta, lateral_fraction):
+        """Stance foot position with sinusoidal dip.
 
-        Horizontal: touchdown at +S/6 ahead of nominal, sweeps back by S to liftoff at -5S/6.
-        Vertical (Y-up): y0 - delta * sin(pi * t)
+        Foot starts at +S/6 ahead of nominal (touchdown) and sweeps to -5S/6
+        (liftoff). Both X and Z offsets are rotated by lateral_fraction.
+        Vertical: y0 - delta * sin(pi * t), zero at endpoints and max dip at midstance.
         """
-        t = stance_progress
-        y = initial_pos[1] - delta * np.sin(np.pi * t)
-        if dir == "+x":
-            return np.array([initial_pos[0] + sl_mm / 6 - t * sl_mm, y, initial_pos[2]])
-        elif dir == "-x":
-            return np.array([initial_pos[0] - sl_mm / 6 + t * sl_mm, y, initial_pos[2]])
-        elif dir == "+z":
-            return np.array([initial_pos[0], y, initial_pos[2] + sl_mm / 6 - t * sl_mm])
-        elif dir == "-z":
-            return np.array([initial_pos[0], y, initial_pos[2] - sl_mm / 6 + t * sl_mm])
+        X_POLAR = np.cos(lateral_fraction)
+        Z_POLAR = np.sin(lateral_fraction)
+        t   = stance_progress
+        d   = (sl_mm / 6.0 - t * sl_mm)
+        y   = initial_pos[1] - delta * np.sin(np.pi * t)
+        return np.array([initial_pos[0] + d * X_POLAR, y, initial_pos[2] + d * Z_POLAR])
 
-    def trot(self,
+    def execute_gait(self,
              current_time,
              time_step,
-             T_cycle,
-             duty_factor,
              desired_velocity,
              swing_height,
+             stance_length=0.06,
+             Tswing=0.25,
              imu_data=None,
              dir="+x",
              deceleration_flag=False,
@@ -157,20 +163,22 @@ class GaitController:
              gait_type="trot",
              ):
         """
-        Diagonal trot using 12-point Bezier swing and sinusoidal stance.
+        Trot gait with physics-derived Tstance and TD-based phase clock.
 
         :param current_time:      elapsed time in seconds
         :param time_step:         control loop period in seconds (used for PID dt)
-        :param T_cycle:           gait cycle duration in seconds
-        :param duty_factor:       stance fraction of cycle (0-1)
         :param desired_velocity:  target body speed in m/s
         :param swing_height:      peak foot clearance above nominal in meters
-        :param imu_data:          orientation tuple in pybullet frame, or None
-        :param dir:               motion direction: +x / -x / +y / -y
+        :param stance_length:     full step length in meters; Tstance = stance_length / velocity
+        :param Tswing:            fixed swing duration in seconds (servo-limited, ~0.2–0.25 s)
+        :param imu_data:          (roll, pitch) tuple in robot frame, or None
+        :param dir:               "+x" / "-x" / "+z" / "-z" or a lateral_fraction float (rad)
         :param deceleration_flag: when True, ramp velocity to zero over 0.5 s
         :param move_callback:     callable(leg, angles, unit="rad")
-                                  handles hardware servo writes or pybullet joints
+        :param gait_type:         "trot" / "walk" / "bound" / "pace" / "pronk"
         """
+        lateral_fraction = _DIR_TO_LATERAL[dir] if isinstance(dir, str) else float(dir)
+
         if self.gait_init is None:
             self.gait_init = current_time
 
@@ -180,7 +188,7 @@ class GaitController:
         ramp_factor = 1.0
 
         if time_since_start < ramp_duration:
-            ramp_factor = ramp_factor = 0.5 * (1.0 - np.cos(np.pi * time_since_start / ramp_duration))
+            ramp_factor = 0.5 * (1.0 - np.cos(np.pi * time_since_start / ramp_duration))
         elif not deceleration_flag:
             ramp_factor = 1.0
 
@@ -189,15 +197,46 @@ class GaitController:
 
         time_since_dec = current_time - self.deceleration_init
         if time_since_dec < ramp_duration and deceleration_flag:
-            ramp_factor = ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_start / ramp_duration))
+            ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_start / ramp_duration))
         elif time_since_dec >= ramp_duration and deceleration_flag:
             self.gait_init = None
             self.deceleration_init = 0
             ramp_factor = 0.0
 
         effective_velocity = desired_velocity * ramp_factor
-        stance_length = effective_velocity * T_cycle * duty_factor
-        global_phase = (current_time % T_cycle) / T_cycle
+
+        if effective_velocity != 0.0:
+            Tstance = abs(stance_length) / abs(effective_velocity)
+            if Tstance > 1.3 * Tswing:
+                Tstance = 1.3 * Tswing
+        else:
+            Tstance = 0.0
+            stance_length = 0.0
+            self._td_time = current_time
+            self._td_flag = False
+            self._sw_ref  = 0.0
+
+        T_cycle     = Tswing + Tstance
+        duty_factor = Tstance / T_cycle
+
+        if self._td_time is None:
+            self._td_time = current_time
+        if self._sw_ref >= 0.9 and self._td_flag:
+            self._td_time = current_time
+            self._td_flag = False
+            self._sw_ref  = 0.0
+
+        time_since_td = min(current_time - self._td_time, T_cycle)
+        global_phase  = time_since_td / T_cycle
+
+        fl_phase = global_phase
+        if fl_phase >= duty_factor:
+            self._sw_ref = (fl_phase - duty_factor) / (1.0 - duty_factor)
+            if self._sw_ref >= 0.999:
+                self._td_flag = True
+        else:
+            self._sw_ref = 0.0
+
 
         legs = ["FL", "FR", "RL", "RR"]
         leg_offset = _GAIT_PHASES[gait_type]
@@ -254,10 +293,10 @@ class GaitController:
 
             if leg_phase < duty_factor:
                 t = leg_phase / duty_factor
-                current_pos = self.stance_sine_trajectory(initial_pos, sl_mm, t, stance_delta, dir)
+                current_pos = self.stance_sine_trajectory(initial_pos, sl_mm, t, stance_delta, lateral_fraction)
             else:
                 t = (leg_phase - duty_factor) / (1.0 - duty_factor)
-                cps = self.swing_trajectory_control_points(initial_pos, sl_mm, sh_mm, dir)
+                cps = self.swing_trajectory_control_points(initial_pos, sl_mm, sh_mm, lateral_fraction)
                 bezier_gen = bezier.BezierCurveGen(cps)
                 current_pos = bezier_gen.n_point_curve(cps, t)
 
@@ -268,7 +307,128 @@ class GaitController:
 
             if move_callback is not None:
                 move_callback(leg, angles, unit="rad")
-            
+
+        return effective_velocity, self._log_file.name
+
+    def execute_gait_fixed(self,
+             current_time,
+             time_step,
+             T_cycle,
+             duty_factor,
+             desired_velocity,
+             swing_height,
+             imu_data=None,
+             dir="+x",
+             deceleration_flag=False,
+             move_callback=None,
+             gait_type="trot",
+             ):
+        """
+        Trot gait with fixed T_cycle and duty_factor (caller-tuned).
+        Phase clock is a simple modulo timer: no Tstance physics, no TD reset.
+
+        :param T_cycle:           gait cycle duration in seconds (tuned manually)
+        :param duty_factor:       stance fraction of cycle (0-1, tuned manually)
+        :param desired_velocity:  target body speed in m/s
+        :param swing_height:      peak foot clearance above nominal in meters
+        :param imu_data:          (roll, pitch) tuple in robot frame, or None
+        :param dir:               "+x" / "-x" / "+z" / "-z" or a lateral_fraction float (rad)
+        :param deceleration_flag: when True, ramp velocity to zero over 0.5 s
+        :param move_callback:     callable(leg, angles, unit="rad")
+        :param gait_type:         "trot" / "walk" / "bound" / "pace" / "pronk"
+        """
+        lateral_fraction = _DIR_TO_LATERAL[dir] if isinstance(dir, str) else float(dir)
+
+        if self.gait_init is None:
+            self.gait_init = current_time
+
+        ramp_duration = 0.5
+        time_since_start = current_time - self.gait_init
+        ramp_factor = 1.0
+
+        if time_since_start < ramp_duration:
+            ramp_factor = 0.5 * (1.0 - np.cos(np.pi * time_since_start / ramp_duration))
+        elif not deceleration_flag:
+            ramp_factor = 1.0
+
+        if deceleration_flag and self.deceleration_init == 0:
+            self.deceleration_init = current_time
+
+        time_since_dec = current_time - self.deceleration_init
+        if time_since_dec < ramp_duration and deceleration_flag:
+            ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_start / ramp_duration))
+        elif time_since_dec >= ramp_duration and deceleration_flag:
+            self.gait_init = None
+            self.deceleration_init = 0
+            ramp_factor = 0.0
+
+        effective_velocity = desired_velocity * ramp_factor
+        stance_length = effective_velocity * T_cycle * duty_factor
+        global_phase = (current_time % T_cycle) / T_cycle
+
+        legs = ["FL", "FR", "RL", "RR"]
+        leg_offset = _GAIT_PHASES[gait_type]
+
+        corrected_orientation = self.initial_orientation
+
+        if imu_data is not None:
+            raw = np.array([imu_data[0], imu_data[1]])
+            self._imu_window.append(raw)
+            filtered = np.mean(self._imu_window, axis=0)
+
+            now = time.time()
+            pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
+            self._pid_last_time = now
+
+            correction = self.pid.run(filtered[0], filtered[1], pid_dt)
+
+            self._csv.writerow([f"{time.time():.4f}",
+                                f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
+                                f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
+            self._log_file.flush()
+
+            corrected_orientation = np.array([
+                correction[0],
+                correction[1],
+                self.initial_orientation[2],
+            ])
+
+        dy_fl = + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_fr = - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_rl = + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_rr = - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1])
+        dy_dic = {0: dy_fl, 1: dy_fr, 2: dy_rl, 3: dy_rr}
+
+        (T_fl, T_fr, T_rl, T_rr) = self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center)
+        transforms = [T_fl, T_fr, T_rl, T_rr]
+
+        sl_mm = stance_length * 1000.0
+        sh_mm = swing_height * 1000.0
+        delta_base = sh_mm * 0.05
+
+        for i, leg in enumerate(legs):
+            leg_phase = (global_phase + leg_offset[i]) % 1.0
+            initial_pos = np.array([self.initial_ef_positions[i][0],
+                                    self.initial_ef_positions[i][1] + dy_dic[i],
+                                    self.initial_ef_positions[i][2]])
+            stance_delta = delta_base + abs(dy_dic[i]) * 0.2
+
+            if leg_phase < duty_factor:
+                t = leg_phase / duty_factor
+                current_pos = self.stance_sine_trajectory(initial_pos, sl_mm, t, stance_delta, lateral_fraction)
+            else:
+                t = (leg_phase - duty_factor) / (1.0 - duty_factor)
+                cps = self.swing_trajectory_control_points(initial_pos, sl_mm, sh_mm, lateral_fraction)
+                bezier_gen = bezier.BezierCurveGen(cps)
+                current_pos = bezier_gen.n_point_curve(cps, t)
+
+            target_pos = to_homogenous(current_pos)
+            Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
+            target_pos_shoulder = Ix @ trans_inv(transforms[i]) @ target_pos
+            angles = self.kin_solver.legIK(target_pos_shoulder)
+
+            if move_callback is not None:
+                move_callback(leg, angles, unit="rad")
 
         return effective_velocity, self._log_file.name
 

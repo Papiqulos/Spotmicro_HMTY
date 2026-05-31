@@ -185,6 +185,6 @@ if __name__ == "__main__":
     current_angles = [0, 0, 0]
     current_center = [0, 250, 0]
 
-    viz.draw_robot_pose(orientation=current_angles, center=current_center, ef_positions=ef_positions3, mode='IK')
-    # viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
+    # viz.draw_robot_pose(orientation=current_angles, center=current_center, ef_positions=ef_positions3, mode='IK')
+    viz.draw_robot_pose(orientation=current_angles, center=current_center, theta=theta, mode='FK')
     plt.show()

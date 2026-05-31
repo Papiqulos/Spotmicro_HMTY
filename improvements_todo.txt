@@ -1,11 +1,11 @@
 Remaining Improvements from spot_mini_mini
 ===========================================
-Already done: (1) TransInv, (7) COM offset, (9) Multiple gait types
+Already done: (1) TransInv, (7) COM offset, (9) Multiple gait types, (A) arctan2 knee, (G) Joint limits
 
 
 ---------------------------------------------------------------------------
-IMPROVEMENT A: arctan2 for knee angle
-File: core/kinematics.py  —  legIK(), line ~133
+IMPROVEMENT A: arctan2 for knee angle  [DONE — 2026-05-31]
+File: core/kinematics.py  —  legIK(), line ~135
 Difficulty: trivial (1 line)
 ---------------------------------------------------------------------------
 
@@ -295,8 +295,8 @@ Do C before F.
 
 
 ---------------------------------------------------------------------------
-IMPROVEMENT G: Joint limits per leg
-File: core/kinematics.py
+IMPROVEMENT G: Joint limits per leg  [DONE — 2026-05-31]
+File: core/kinematics.py, config/robot_config.yaml
 Difficulty: low (30 min)
 ---------------------------------------------------------------------------
 
@@ -386,14 +386,16 @@ there — if the base gait is shaky, the network has to work harder.
 SUGGESTED ORDER
 ---------------------------------------------------------------------------
 
-Tomorrow:
-  1. A (arctan2 knee)     — trivial, do it first to warm up
-  2. G (joint limits)     — easy, makes the robot safer
-  3. E (Tstance from vel) — standalone, improves gait consistency at all speeds
-  4. C (LateralFraction)  — medium, unlocks diagonal walking
-  5. F (Bezier X points)  — do after C, they share the same control point code
-  6. D (YawRate/turning)  — do after C, adds turning on top of unified motion
-  7. B (separate L/R IK)  — architectural cleanup, do when confident in above
-  8. H (RL)               — long-term research project
+Done:
+  [x] A (arctan2 knee)     — 2026-05-31
+  [x] G (joint limits)     — 2026-05-31; tune limits on real hardware before gait runs
+
+Next:
+  [ ] E (Tstance from vel) — standalone, improves gait consistency at all speeds
+  [ ] C (LateralFraction)  — medium, unlocks diagonal walking; prerequisite for F and D
+  [ ] F (Bezier X points)  — do after C, shares the same control point code
+  [ ] D (YawRate/turning)  — do after C, adds turning on top of unified motion
+  [ ] B (separate L/R IK)  — architectural cleanup, do when confident in above
+  [ ] H (RL)               — long-term research project
 
 ---------------------------------------------------------------------------

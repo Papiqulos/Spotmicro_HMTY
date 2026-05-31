@@ -133,7 +133,7 @@ class RobotController:
         
         time_step = 1.0 / 100
         start_time = time.time()
-        self.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
+        self.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
         
         for _ in range(steps):
             t0 = time.time()
@@ -146,7 +146,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
                 current_time, time_step, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir,
                 move_callback=self.apply_angles_leg,
             )
@@ -168,7 +168,7 @@ class RobotController:
             # print(f"IMU: {imu_data}")
             
             
-            ef_vel, log_file = self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
                 current_time, time_step, T_cycle, duty_factor, velocity, swing_height, imu_data=imu_data, dir=dir, deceleration_flag=True,
                 move_callback=self.apply_angles_leg,
             )
@@ -199,7 +199,7 @@ class RobotController:
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
         imu_data = self.imu.update(raw_gyro, raw_acc)
         p = _GAIT_PARAMS[dir]
-        return self.gait_controller.trot(
+        return self.gait_controller.execute_gait_fixed(
             current_time, time_step, p["T_cycle"], p["duty_factor"],
             p["velocity"], p["swing_height"],
             imu_data=imu_data, dir=dir,
@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
     robot = RobotController(kin_solver, theta_default, center)
-    robot.gait_controller._set_pid(kp=0.4, ki=0.01, kd=0.005)
+    robot.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
 
     teleop = DualSenseController()
 

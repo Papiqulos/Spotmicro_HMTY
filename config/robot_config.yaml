@@ -28,10 +28,16 @@
 body:
   length: 184.5
   width: 133
-  com_offset: -15.0    # X offset (mm) geometric centre to COM; negative = COM is behind centre (back-heavy)
+  com_offset: -20.0   # X offset (mm) geometric centre to COM; negative = COM is behind centre (back-heavy)
 
 leg_segments:
   L1: 27.442          # Horizontal offset shoulder to leg
   L2: 10.618          # Vertical offset shoulder to leg
   L3: 109.243         # Upper leg length
   L4: 140.000         # Lower leg length
+
+# Per-joint angle limits in radians
+joint_limits:
+  shoulder: [-0.548,  0.548]   # theta1 — approx ±31 deg
+  elbow:    [-2.17,   0.97]    # theta2
+  knee:     [-0.10,   2.59]    # theta3 — positive convention (acos-based)

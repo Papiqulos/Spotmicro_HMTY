@@ -265,6 +265,9 @@ class PybulletSim:
             self.qKey = ord('q')
             self.iKey = ord('i')
             self.tKey = ord('t')
+            self.fKey = ord('f')
+            self.gKey = ord('g')
+            self.hKey = ord('h')
 
             # Print imu data
             if self.key_is_pressed(keyboard_event, self.iKey):
@@ -306,19 +309,31 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(direction="+x")
+                self.move(dir="+x")
                                
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                self.move(direction="-x")
+                self.move(dir="-x")
                         
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                self.move(direction="-z")
+                self.move(dir="+z")
   
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                self.move(direction="+z")
+                self.move(dir="-z")
+            
+            # Go 45 degrees front left
+            if self.key_is_pressed(keyboard_event, self.fKey):
+                self.move(dir=np.pi/4)
+            
+            # Go 45 degrees front right
+            if self.key_is_pressed(keyboard_event, self.gKey):
+                self.move(dir=-np.pi/4)
+            
+            # Go 45 degrees back left
+            if self.key_is_pressed(keyboard_event, self.hKey):
+                self.move(dir=3*np.pi/4)
 
     def respawn_robot(self):
         # I am inevitable
@@ -333,19 +348,20 @@ class PybulletSim:
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
         self.move_robot_to_pose(self.robotId, angles, unit="rad")
         
-    def move(self, T_cycle=0.28, duty_factor=0.5, velocity=0.26, swing_height=0.035, direction="+x"):
+    def move(self, T_cycle=0.28, duty_factor=0.5, velocity=0.3, swing_height=0.04, dir="+x"):
         
-        if direction == "+x":
+        if dir == "+x":
             print("GOING FORWARDS")
-        elif direction == "-x":
+        elif dir == "-x":
             print("GOING BACKWARDS")
-        elif direction == "+y":
+        elif dir == "+z":
             print("GOING RIGHT")
-        elif direction == "-y":
+        elif dir == "-z":
             print("GOING LEFT")
         deceleration_flag = False
 
         current_time = 0
+        # self.gait_controller.reset(kp=0.37, ki=0.0, kd=0.025)
 
         while True:
             current_time += 1./240.
@@ -355,9 +371,9 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, self.qKey):
                 deceleration_flag = True
                 print("DECELERATING")
-            ef_vel, log_file = self.gait_controller.trot(
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed(
                             current_time, TIME_STEP, T_cycle, duty_factor, velocity, swing_height,
-                            self.get_imu_data(), dir=direction, deceleration_flag=deceleration_flag,
+                            self.get_imu_data(), dir=dir, deceleration_flag=deceleration_flag,
                             move_callback=self.move_callback)
             p.stepSimulation()
             time.sleep(TIME_STEP)
@@ -395,10 +411,10 @@ if __name__ == "__main__":
 
     # Degrees
     theta_default = [
-                0, -35.16, 61.86,  # FL
-                0, -35.16, 61.86,  # FR
-                0, -35.16, 61.86,  # RL
-                0, -35.16, 61.86,  # RR
+                0, -30, 60,  # FL
+                0, -30, 60,  # FR
+                0, -30, 60,  # RL
+                0, -30, 60,  # RR
         ]
     
 
