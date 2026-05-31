@@ -38,7 +38,7 @@ hw/
     ADXL435.py                  # Accelerometer driver (ADXL345 via adafruit)
     ITG_3200.py                 # Gyroscope driver (I2C)
     QMC5883L.py                 # Magnetometer driver (disabled, too noisy)
-    teleop.py                   # Keyboard teleoperation
+    teleop.py                   # Dualsense teleoperation
 log/
     roll_pitch/                 # CSV and png logs for roll/pitch PID controller
     log_plotter.py              # Matplotlib plotter for PID CSV logs (headless)

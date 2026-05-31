@@ -1,0 +1,399 @@
+Remaining Improvements from spot_mini_mini
+===========================================
+Already done: (1) TransInv, (7) COM offset, (9) Multiple gait types
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT A: arctan2 for knee angle
+File: core/kinematics.py  —  legIK(), line ~133
+Difficulty: trivial (1 line)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+The knee angle (theta3) is currently computed with:
+    theta3 = acos(D)
+
+spot_mini_mini uses:
+    theta3 = arctan2(-sqrt(1 - D**2), D)
+
+Both give the same physical angle for normal inputs. The difference is
+numerical stability near the boundaries D = 1 and D = -1 (fully extended
+or fully folded leg). acos() can return NaN or jump discontinuously right
+at those edges. arctan2() handles them smoothly because it uses two
+separate arguments and never divides by a near-zero number.
+
+The minus sign on the sqrt selects the "elbow-down" knee solution (the
+knee bends inward, which is the SpotMicro topology).
+
+HOW TO IMPLEMENT
+In legIK(), replace:
+    theta3 = acos(D)
+with:
+    theta3 = np.arctan2(-np.sqrt(max(0.0, 1.0 - D**2)), D)
+
+The max(0.0, ...) guards against floating point giving a tiny negative
+number inside the sqrt after the domain clamp. Remove the manual domain
+clamp above it (if D > 1: D = 1 etc.) since arctan2 makes it unnecessary.
+
+VERIFY: run python3 core/kinematics.py and confirm angles are unchanged
+for the existing test cases.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT B: Separate LeftIK / RightIK — remove the Ix matrix
+File: core/kinematics.py
+Difficulty: low (30 min)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+Right now there is one legIK() function. For right-side legs (FR, RR) we
+apply an inversion matrix Ix before passing the foot position in, which
+mirrors the X coordinate. This makes the right leg "look like" a left leg
+to the solver.
+
+spot_mini_mini has two separate functions: LeftIK and RightIK. They are
+identical except for one sign in the shoulder angle formula:
+
+    LeftIK:  shoulder = -atan2(z, y) - atan2(F, +self.l1)
+    RightIK: shoulder = -atan2(z, y) - atan2(F, -self.l1)
+
+That sign on l1 is exactly what the Ix mirror was doing implicitly, but
+now it is explicit. You can read the code and immediately understand what
+is different between left and right.
+
+HOW TO IMPLEMENT
+1. Rename legIK to legIK_left. Inside it, the theta1 formula already has
+   -l1 (the current left version).
+
+2. Add legIK_right with the same code but change:
+       theta1 = -atan2(y, x) - atan2(F, -self.l1)
+   to:
+       theta1 = -atan2(y, x) - atan2(F, +self.l1)
+   (just remove the minus sign in front of l1 in the second atan2)
+
+3. In robot_IK and in gait_controller.trot(), call legIK_right for FR/RR
+   and legIK_left for FL/RL. Remove the Ix multiplication from those call
+   sites.
+
+4. In robot_FK the Ix multiplication is used the other way (FK not IK).
+   For FK it stays, or you can compute a symmetric forward kinematics. This
+   is the trickiest part: FK for right legs currently mirrors the result
+   back. Either keep Ix in FK only, or derive a RightFK as well.
+
+WATCH OUT: After removing Ix from IK call sites, verify that the servo
+angles produced for FR and RR are still correct on the real robot. Run the
+FK->IK round trip test in kinematics.py.__main__ to confirm.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT C: LateralFraction — one parameter for all directions
+Files: core/gait_controller.py, hw/quad_controller.py
+Difficulty: medium (half day)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+Currently the robot has four separate direction modes: +x, -x, +z, -z.
+They are handled by if/elif blocks in swing_trajectory_control_points()
+and stance_sine_trajectory(). You cannot walk diagonally and switching
+directions requires choosing a new string.
+
+spot_mini_mini replaces all of this with a single angle called
+LateralFraction. Think of it as the heading angle of the step:
+
+    LateralFraction = 0         -> pure forward (+X)
+    LateralFraction = pi        -> pure backward (-X)
+    LateralFraction = pi/2      -> pure strafe right (+Z)
+    LateralFraction = -pi/2     -> pure strafe left (-Z)
+    LateralFraction = pi/4      -> diagonal (forward + right)
+
+The foot moves:
+    step_x = step_length * cos(LateralFraction)
+    step_z = step_length * sin(LateralFraction)
+
+You get diagonal movement for free, and the direction can change smoothly
+by just changing one number.
+
+HOW TO IMPLEMENT
+1. Rewrite swing_trajectory_control_points() to accept lateral_fraction
+   instead of dir. The X and Z offsets become:
+       dx = xn * sl_mm * cos(lateral_fraction)
+       dz = xn * sl_mm * sin(lateral_fraction)
+
+2. Rewrite stance_sine_trajectory() the same way:
+       dx = (sl_mm/6 - t*sl_mm) * cos(lateral_fraction)
+       dz = (sl_mm/6 - t*sl_mm) * sin(lateral_fraction)
+
+3. Replace the dir parameter in trot() with lateral_fraction.
+
+4. In quad_controller.py update _GAIT_PARAMS and trot_step() to pass
+   lateral_fraction. The directional buttons map to:
+       dpad_up    -> lateral_fraction = 0
+       dpad_down  -> lateral_fraction = pi
+       dpad_right -> lateral_fraction = pi/2
+       dpad_left  -> lateral_fraction = -pi/2
+
+BENEFIT: Once this is done, improvement D (turning) can be layered on top
+with a second parameter (yaw_rate) without touching trajectory generation.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT D: YawRate + YawCircle — geometrically correct turning
+Files: core/gait_controller.py, hw/quad_controller.py
+Difficulty: medium (requires C first, ~half day)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+When the robot turns, each leg needs to trace a different arc because each
+foot is a different distance from the centre of rotation. The front-right
+foot is far from the turn centre and needs to sweep a big arc. The rear-
+left foot is close and sweeps a small arc. If you just rotate the body
+without this, the feet slip along the ground instead of rolling cleanly.
+
+spot_mini_mini computes a "phi_arc" angle for each leg based on:
+    - How far that foot is from the body centre (magnitude)
+    - Which direction that foot is pointing (direction angle)
+    - The current foot position relative to its default position
+
+The step for turning is generated with the same BezierSwing function but
+using (yaw_rate, phi_arc) instead of (step_length, lateral_fraction).
+The two contributions (linear motion + rotation) are added together:
+
+    step = linear_step(lateral_fraction) + rotation_step(yaw_rate, phi_arc)
+
+HOW TO IMPLEMENT
+1. Add yaw_rate parameter to trot() (radians/s, default 0.0).
+
+2. For each leg, compute phi_arc:
+       leg_x, leg_z = initial_ef_positions[i][0], initial_ef_positions[i][2]
+       magnitude = sqrt(leg_x**2 + leg_z**2)
+       direction = arctan2(leg_z, leg_x)
+       # previous foot position delta from nominal
+       g_xy = prev_foot_pos[i][:2] - [leg_x, leg_z]
+       g_mag = sqrt(g_xy[0]**2 + g_xy[1]**2)
+       th_mod = arctan2(g_mag, magnitude)
+       # sign depends on which side the leg is on
+       if leg in ("FR", "RL"):
+           phi_arc = pi/2 + direction + th_mod
+       else:
+           phi_arc = pi/2 - direction + th_mod
+
+3. In SwingStep and StanceStep, add the rotation contribution:
+       rot_x = yaw_rate * cos(phi_arc)
+       rot_z = yaw_rate * sin(phi_arc)
+   and add it to the linear step output.
+
+4. Store prev_foot_pos per leg (a dict, updated each cycle) so phi_arc
+   can be computed.
+
+MAPPING TO CONTROLLER: right stick horizontal or L2/R2 triggers -> yaw_rate.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT E: Tstance derived from velocity
+File: core/gait_controller.py
+Difficulty: low (1-2 hours)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+Currently T_cycle (full cycle time) and duty_factor are fixed constants
+that you tune manually for each speed. If you change velocity, the gait
+becomes inconsistent: the stance phase is either too short (foot slips
+because it moves faster than the body) or too long (the robot shuffles).
+
+The physically correct relationship is:
+    stance_length = velocity * Tstance
+    Tstance = stance_length / velocity = 2 * (step_length/2) / velocity
+
+spot_mini_mini derives Tstance from the step length and velocity, then
+keeps Tswing fixed (constant swing time regardless of speed):
+    Tstride = Tstance + Tswing
+    if Tstance > 1.3 * Tswing: cap it (prevents very slow shuffle)
+    duty_factor = Tstance / Tstride  (computed, not fixed)
+
+This means at high speed, stance is short and swing is proportionally
+longer. At low speed, stance is long. The gait self-adjusts.
+
+HOW TO IMPLEMENT
+1. Replace T_cycle and duty_factor inputs with step_length and Tswing.
+   Tswing is a robot constant (~0.2 s is a good default).
+
+2. At the top of trot():
+       sl_mm = effective_velocity * 1000.0 * Tswing  # step length in mm
+       if effective_velocity != 0:
+           Tstance = 2.0 * (sl_mm/1000.0) / effective_velocity
+       else:
+           Tstance = 0.0
+           sl_mm = 0.0
+       Tstance = min(Tstance, 1.3 * Tswing)
+       Tstride = Tstance + Tswing
+       duty_factor = Tstance / Tstride if Tstride > 0 else 0.5
+
+3. Update phase computation to use Tstride instead of T_cycle.
+
+4. Update quad_controller._GAIT_PARAMS to remove T_cycle and duty_factor,
+   add Tswing per direction (or use a single constant).
+
+WATCH OUT: The velocity ramp still applies on top. effective_velocity =
+desired_velocity * ramp_factor before plugging into Tstance.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT F: Bezier X control points with velocity shaping
+File: core/gait_controller.py  —  _SWING_X_NORM, swing_trajectory_control_points()
+Difficulty: low (1 hour, but requires tuning on real hardware)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+Currently _SWING_X_NORM = [0,0,0, 0.15, 0.30, ..., 1,1,1].
+The three zeros at the start and three ones at the end create zero foot
+VELOCITY at liftoff and touchdown (the foot lifts straight up and lands
+straight down). That is correct.
+
+spot_mini_mini's X control points also encode foot VELOCITY at liftoff
+and touchdown through the spacing between adjacent points:
+
+    X = [-L, -1.4L, -1.5L, -1.5L, -1.5L,
+          0,   0,    0,
+          1.5L, 1.5L, 1.4L, L]
+
+In absolute mm (not normalized). Reading left to right:
+- Pts 0-1: spacing is 0.4L -> the foot is still moving backward at 0.4L/step
+  when it lifts off. This is the "liftoff velocity". The foot doesn't just
+  lift straight up, it trails backward as it rises, which is natural.
+- Pts 2-3-4: triple overlap at -1.5L -> zero acceleration here, smooth
+  direction change from follow-through to forward protraction.
+- Pts 5-6-7: zero, zero, zero -> foot passes through X=0 (nominal position)
+  at peak height.
+- Pts 8-9: double overlap at 1.5L -> another smooth direction change, from
+  forward to retraction.
+- Pts 10-11: spacing 0.4L backwards from L -> foot is moving forward at 0.4L
+  speed as it touches down, matching body speed. Clean landing.
+
+The result is a foot trajectory that matches the body's horizontal speed at
+both liftoff and touchdown, eliminating the velocity discontinuity that
+causes the brief "kick" you may see in the current gait.
+
+HOW TO IMPLEMENT
+1. Remove _SWING_X_NORM (the normalized version).
+
+2. In swing_trajectory_control_points(), compute absolute X offsets:
+       L = sl_mm / 2.0  # half stride length
+       x_pts = np.array([-L, -1.4*L, -1.5*L, -1.5*L, -1.5*L,
+                          0,   0,     0,
+                          1.5*L, 1.5*L, 1.4*L, L])
+   Then apply lateral_fraction (or dir) to decompose into X and Z:
+       x_control = initial_pos[0] + x_pts * cos(lateral_fraction)
+       z_control = initial_pos[2] + x_pts * sin(lateral_fraction)
+
+3. Heights stay the same (_SWING_H_NORM applied to sh_mm).
+
+4. Build control point array from x_control, height, z_control.
+
+NOTE: This improvement makes the most physical sense after improvement C
+(LateralFraction) since the control points need to be decomposed into X/Z.
+Do C before F.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT G: Joint limits per leg
+File: core/kinematics.py
+Difficulty: low (30 min)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+Currently if legIK produces an angle that the servo cannot reach, the PCA9685
+silently clamps it at the hardware level. The leg behaves wrong and you only
+notice from watching the robot.
+
+spot_mini_mini stores min/max angle limits for each joint (shoulder, elbow,
+wrist/knee) inside the IK solver. After solving, any angle outside its limit
+gets clamped with a warning. You can also detect when the foot target is
+fundamentally unreachable.
+
+HOW TO IMPLEMENT
+1. Add limits to robot_config.yaml:
+       joint_limits:
+         shoulder: [-0.548, 0.548]   # approx ±31 deg
+         elbow:    [-2.17, 0.97]
+         knee:     [-0.10, 2.59]
+
+2. Load them in Kinematics.__init__.
+
+3. At the end of legIK(), add:
+       limits = [self.shoulder_lim, self.elbow_lim, self.knee_lim]
+       for i in range(3):
+           if theta[i] < limits[i][0] or theta[i] > limits[i][1]:
+               theta[i] = np.clip(theta[i], *limits[i])
+   Return the clamped angles.
+
+4. Optionally print a warning when clamping occurs so you know the target
+   was unreachable.
+
+BENEFIT: Safer servo operation, earlier detection of bad IK targets.
+
+
+---------------------------------------------------------------------------
+IMPROVEMENT H: RL residual policy (research level, long-term)
+Files: sim/pybullet_sim.py + new training scripts
+Difficulty: high (weeks, requires PyBullet training infrastructure)
+---------------------------------------------------------------------------
+
+WHAT IT IS
+This is the most powerful feature in spot_mini_mini. The idea:
+
+1. The Bezier gait generates a "base" foot trajectory for each leg, just
+   like our current code.
+
+2. A small neural network runs on top of this. At each timestep it looks
+   at the current IMU data (roll, pitch, angular rates) and outputs tiny
+   corrections ("residuals") to add to each joint angle.
+
+3. The network is trained in PyBullet simulation using reinforcement
+   learning (SAC or ARS algorithms). The reward function penalises falling
+   over, rewards moving forward, penalises energy use.
+
+4. After training, the network weights are saved and loaded on the real
+   robot. The gait runs as normal, and the network adds its corrections
+   each cycle.
+
+The result is a robot that automatically learns to compensate for uneven
+terrain, perturbations, and hardware imperfections — things that pure PID
+stabilisation struggles with.
+
+HOW TO IMPLEMENT (high level overview)
+1. First, make the PyBullet simulation accurate: correct URDF, correct
+   link lengths, correct contact geometry.
+
+2. Build a Gym environment (OpenAI gym API) around pybullet_sim.py. The
+   observation space is [roll, pitch, yaw, roll_rate, pitch_rate, yaw_rate,
+   foot_contact[4], joint_angles[12]]. The action space is joint angle
+   residuals[12].
+
+3. Train using SAC (Soft Actor-Critic) from spot_bullet/src/sac_lib/.
+   SAC works well for continuous action spaces. Training takes hours on a
+   GPU. spot_mini_mini provides working training scripts to adapt.
+
+4. Evaluate in simulation on random terrain (use their heightfield.py).
+
+5. Transfer to real robot: load weights, run inference alongside trot().
+
+PREREQUISITE: All the earlier improvements (C, D, E) should be done first
+so the gait is robust before adding RL on top. RL amplifies what is already
+there — if the base gait is shaky, the network has to work harder.
+
+
+---------------------------------------------------------------------------
+SUGGESTED ORDER
+---------------------------------------------------------------------------
+
+Tomorrow:
+  1. A (arctan2 knee)     — trivial, do it first to warm up
+  2. G (joint limits)     — easy, makes the robot safer
+  3. E (Tstance from vel) — standalone, improves gait consistency at all speeds
+  4. C (LateralFraction)  — medium, unlocks diagonal walking
+  5. F (Bezier X points)  — do after C, they share the same control point code
+  6. D (YawRate/turning)  — do after C, adds turning on top of unified motion
+  7. B (separate L/R IK)  — architectural cleanup, do when confident in above
+  8. H (RL)               — long-term research project
+
+---------------------------------------------------------------------------

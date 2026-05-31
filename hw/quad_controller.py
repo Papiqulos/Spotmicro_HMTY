@@ -21,9 +21,9 @@ _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": sli
 
 _GAIT_PARAMS = {
     "+x": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.03),
-    "-x": dict(velocity=0.15, T_cycle=0.40, duty_factor=0.5, swing_height=0.035),
-    "+z": dict(velocity=0.15, T_cycle=0.40, duty_factor=0.5, swing_height=0.035),
-    "-z": dict(velocity=0.15, T_cycle=0.40, duty_factor=0.5, swing_height=0.035),
+    "-x": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
+    "+z": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
+    "-z": dict(velocity=0.25, T_cycle=0.38, duty_factor=0.5, swing_height=0.035),
 }
 
 
@@ -193,6 +193,7 @@ class RobotController:
     def go_left(self):
         self.move(velocity=0.15, T_cycle=0.4, duty_factor=0.5, swing_height=0.035, steps=80, dir="-z")
 
+    # DualSense based movement
     def trot_step(self, current_time, time_step, dir="+x", deceleration_flag=False):
         raw_gyro = self.imu.gyro.read()
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
@@ -264,13 +265,15 @@ if __name__ == "__main__":
                     robot.apply_angles_robot(robot.init_angles)
                     state = "idle"
             else:
-                print("\033[2KWaiting for command...", end="\r", flush=True)
+                print("\033[2KWaiting for command. Press circle to exit...", end="\r", flush=True)
 
             elapsed = time.time() - t0
             rem = time_step - elapsed
             if rem > 0:
                 time.sleep(rem)
-
+    
+    except:
+        print("Plug in your DualSense controller")
     finally:
         if log_file:
             plot_log(log_file)
