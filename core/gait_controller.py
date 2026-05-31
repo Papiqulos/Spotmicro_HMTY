@@ -133,7 +133,6 @@ class GaitController:
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
-
     def _yaw_circle(self, i, leg):
         """Return (phi_arc, r) for leg i.
 
