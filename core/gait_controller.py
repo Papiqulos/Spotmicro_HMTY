@@ -81,8 +81,9 @@ class GaitController:
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
-        self.pid = PIDControllerRP(kp=0.2, ki=0.025, kd=0.025)
-        self.pid_h = PIDController(kp=0.2, ki=0.025, kd=0.025)
+        self.pid = PIDControllerRP(kp=0.4, ki=0.025, kd=0.05)
+        self.pid_r = PIDController(kp=0.4, ki=0.025, kd=0.05)
+        self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self._pid_last_time = None
         self._imu_window = deque(maxlen=30)
 
@@ -99,9 +100,13 @@ class GaitController:
             if f.endswith(".csv") or f.endswith(".png"):
                 os.remove(os.path.join(_LOG_DIR, f))
 
-    def reset(self, kp=0.2, ki=0.025, kd=0.025):
+    def reset(self, kp=0.4, ki=0.025, kd=0.05,
+              kp_r=0.4, ki_r=0.025, kd_r=0.05,
+              kp_p=0.4, ki_p=0.025, kd_p=0.05,):
         """Reset GaitController and set new PID gains."""
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
+        self.pid_r = PIDController(kp=kp_r, ki=ki_r, kd=kd_r)
+        self.pid_p = PIDController(kp=kp_p, ki=ki_p, kd=kd_p)
         self._imu_window.clear()
         self._pid_last_time = None
         self.gait_init = None
@@ -159,7 +164,8 @@ class GaitController:
         pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
         self._pid_last_time = now
 
-        correction = self.pid.run(filtered[0], filtered[1], pid_dt)
+        correction = np.array([self.pid_r.update(filtered[0], pid_dt),
+                               self.pid_p.update(filtered[1], pid_dt)])
 
         self._csv.writerow([f"{now:.4f}",
                             f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",

@@ -14,73 +14,79 @@ from hw.teleop import DualSenseController
 with open("config/servo_calib.yaml") as f:
     calib = yaml.safe_load(f)
 
-LEGS   = ["fl", "fr", "rl", "rr"]
+LEGS   = ["FL", "FR", "RL", "RR"]
 JOINTS = ["shoulder", "leg", "foot"]
-
 _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": slice(9, 12)}
 
 class RobotController:
 
-    def __init__(self, kin_solver, init_angles, init_center):
+    def __init__(self, kin_solver, init_angles=None, init_ef_positions=None, init_center=[0, 0, 0]):
+        """
+        :param kin_solver: kinematics solver
+        :param init_angles: initial joint angles in degrees
+        :param init_ef_positions: initial foot positions in kinematics frame (mm, Y-up)
+        :param init_center: body center in kinematics frame (mm)
+
+        Given init_angles OR init_ef_positions NOT BOTH, the robot will be initialized with the given angles.
+        If both are given, the ef_positions will be ignored.
+        """
         self.kin_solver = kin_solver
         self.init_center = init_center
-        self.init_angles = init_angles
-        
-
-        leg_names = ["FL", "FR", "RL", "RR"]
-        
-
         self.zeros      = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS]
         self.indexes    = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]
         self.theta_dirs = [calib[leg][joint]["direction"] for leg in LEGS for joint in JOINTS]
-        self.kits       = [calib[leg][joint]["kit"]       for leg in LEGS for joint in JOINTS]
-      
-
-        self.kit_front = ServoKit(channels=16)
-        self.kit_rear  = ServoKit(channels=16, address=0x41)
+        self.kit_index       = [calib[leg][joint]["kit"]       for leg in LEGS for joint in JOINTS]
+        self.kit_front_obj = ServoKit(channels=16)
+        self.kit_rear_obj  = ServoKit(channels=16, address=0x41)
 
         self.imu = IMU(filter_type="EKF")
-        
-        self.apply_angles_robot(self.init_angles)
-        
         self.init_orientation_rad = self.init_orientation_deg = np.array([0, 0, 0])
-         
-        # self.apply_angles_rad = self.imu.initial_orientation_rad
-        # self.init_orientation_deg = self.imu.initial_orientation_deg
-        
-        self.rad_offset = self.imu.initial_orientation_rad
-        self.deg_offset = self.imu.initial_orientation_deg
-        
-        self.init_ef_positions = self.kin_solver.robot_FK(
-            self.init_center, self.init_orientation_deg, self.init_angles, unit="degrees"
-        )
+
+        if init_angles is None:
+            self.init_ef_positions = init_ef_positions
+            self.init_angles = self.kin_solver.robot_IK(self.init_center, 
+                                                        self.init_orientation_deg, 
+                                                        self.init_ef_positions, 
+                                                        unit="degrees")
+            
+        else:
+            self.init_angles = init_angles
+            self.init_ef_positions = self.kin_solver.robot_FK(self.init_center, 
+                                                              self.init_orientation_deg, 
+                                                              self.init_angles, 
+                                                              unit="degrees"
+            )
+            
+        if init_angles is not None and init_ef_positions is not None:
+            print("WARNING: Both init_angles and init_ef_positions were given. init_ef_positions will be ignored.")
+
         self.gait_controller = GaitController(
             initial_ef_positions=self.init_ef_positions,
-            initial_theta=init_angles,
-            initial_center=init_center,
+            initial_theta=self.init_angles,
+            initial_center=self.init_center,
             initial_orientation=self.init_orientation_rad,
         )
         
-        
+        self.apply_angles_robot(self.init_angles)
         print("--- Robot Initial Angles ---")
-        for i, leg in enumerate(leg_names):
+        for i, leg in enumerate(LEGS):
             shoulder, leg_joint, foot = self.init_angles[i*3 : i*3+3]
             print(f"{leg}: shoulder={shoulder:.2f}, leg={leg_joint:.2f}, foot={foot:.2f}")
 
         print("\n--- Robot Initial Positions ---")
-        for i, leg in enumerate(leg_names):
+        for i, leg in enumerate(LEGS):
             x, y, z = self.init_ef_positions[i][:3]
             print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
         time.sleep(1)
         
     def _write_servo(self, i, angle):
         try:
-            if self.kits[i] == 1:
+            if self.kit_index[i] == 1:
                 
-                self.kit_front.servo[self.indexes[i]].angle = angle
-            elif self.kits[i] == 2:
+                self.kit_front_obj.servo[self.indexes[i]].angle = angle
+            elif self.kit_index[i] == 2:
                 
-                self.kit_rear.servo[self.indexes[i]].angle = angle
+                self.kit_rear_obj.servo[self.indexes[i]].angle = angle
         except ValueError as e:
             print(f"Servo {self.indexes[i]} out of range: {angle:.1f}° — {e}")
 
@@ -139,15 +145,15 @@ class RobotController:
         """
         time_step = 1.0 / 100
         start_time = time.time()
-        self.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
+        self.gait_controller.reset(kp=0.4, ki=0.025, kd=0.05)
         if not params:
             # Default parameters
-            params = dict(desired_lin_vel=0.3, 
-                          desired_ang_vel=0.0, 
-                          swing_height=0.035, 
-                          stance_length=0.06, 
-                          Tswing=0.25, 
-                          dir="+x",  
+            params = dict(desired_lin_vel=0.2,
+                          desired_ang_vel=0.0,
+                          swing_height=0.040,
+                          stance_length=0.05,
+                          Tswing=0.25,
+                          dir="+x",
                           gait_type="trot")
         
         for _ in range(steps):
@@ -174,7 +180,7 @@ class RobotController:
                 print("Deceleration complete!")
                 break
         
-        plot_log(log_file)
+        # plot_log(log_file)
 
     # DualSense based movement
     def trot_step(self, current_time, time_step, params=None, deceleration_flag=False):
@@ -183,12 +189,12 @@ class RobotController:
         imu_data = self.imu.update(raw_gyro, raw_acc)
         if not params:
             # Default parameters
-            params = dict(desired_lin_vel=0.3, 
-                          desired_ang_vel=0.0, 
-                          swing_height=0.035, 
-                          stance_length=0.06, 
-                          Tswing=0.25, 
-                          dir="+x",  
+            params = dict(desired_lin_vel=0.2,
+                          desired_ang_vel=0.0,
+                          swing_height=0.040,
+                          stance_length=0.05,
+                          Tswing=0.25,
+                          dir="+x",
                           gait_type="trot")
         return self.gait_controller.execute_gait_fixed_stance(
             current_time, time_step, imu_data=imu_data, deceleration_flag=deceleration_flag, move_callback=self.apply_angles_leg,
@@ -204,19 +210,25 @@ class RobotController:
 if __name__ == "__main__":
     center = [0, 0, 0]
     theta_default = [
-        0, -40, 61.86,  # FL
-        0, -40, 61.86,  # FR
-        0, -40, 61.86,  # RL
-        0, -40, 61.86,  # RR
+        0, -45, 60,  # FL
+        0, -45, 60,  # FR
+        0, -45, 60,  # RL
+        0, -45, 60,  # RR
     ]
 
+    ef_dafault = np.array([[92.25, -223.09,  93.94, 1],
+                           [92.25, -223.09, -93.94, 1],
+                           [-92.25, -223.09,  93.94, 1],
+                           [-92.25, -223.09, -93.94, 1]])
+    
+
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
-    robot = RobotController(kin_solver, theta_default, center)
-    robot.gait_controller.reset(kp=0.4, ki=0.01, kd=0.005)
+    robot = RobotController(kin_solver, init_angles=theta_default)
+    
 
 
     # Test a gait
-    # p = dict(desired_lin_vel=0.3, 
+    # p = dict(desired_lin_vel=0.12, 
     #         desired_ang_vel=0.0, 
     #         swing_height=0.035, 
     #         stance_length=0.05, 
@@ -224,7 +236,7 @@ if __name__ == "__main__":
     #         dir="+x",  
     #         gait_type="trot")
     
-    # robot.move(params=p, steps=100)
+    # robot.move(params=p, steps=80)
 
     teleop = DualSenseController()
 
@@ -234,13 +246,17 @@ if __name__ == "__main__":
     time_step = 1.0 / 100
     log_file = None
 
-    params = dict(desired_lin_vel=0.3, 
+    params = dict(desired_lin_vel=0.12, 
             desired_ang_vel=0.0, 
             swing_height=0.035, 
-            stance_length=0.05, 
+            stance_length=0.06, 
             Tswing=0.2, 
             dir="+x",  
             gait_type="trot")
+    
+    robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
+                                kp_p=0.4, ki_p=0.05,  kd_p=0.03)
+
 
     try:
         print()
@@ -249,34 +265,116 @@ if __name__ == "__main__":
             t0 = time.time()
             current_time = t0 - start_time
 
-            left_joystick_changed = teleop.dualsense.left_joystick_changed
-            left_joystick_angle = teleop._get_joystick_angle()
+            # Left joystick
+            left_joystick_motion = teleop._joystick_in_motion(joystick="l")
+            left_joystick_angle = teleop._get_joystick_angle(joystick="l")
+
+            # Right joystick
+            right_joystick_motion = teleop._joystick_in_motion(joystick="r")
+            right_joystick_angle = teleop._get_joystick_angle(joystick="r")
+
+            # D-pad
             dpad_up    = teleop.dualsense.state.DpadUp
             dpad_down  = teleop.dualsense.state.DpadDown
             dpad_right = teleop.dualsense.state.DpadRight
             dpad_left  = teleop.dualsense.state.DpadLeft
+
+            # Right buttons
+            square     = teleop.dualsense.state.square
+            triangle   = teleop.dualsense.state.triangle
             circle     = teleop.dualsense.state.circle
+            cross      = teleop.dualsense.state.cross
+
+            # Bumpers
+            r_bumper   = teleop.dualsense.state.R1
+            l_bumper   = teleop.dualsense.state.L1
+
+            # Triggers
+            r_trigger  = teleop.dualsense.state.R2
+            l_trigger  = teleop.dualsense.state.L2
             
 
             if dpad_up:
-                params["dir"], state = "+x", "moving"
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state ="moving"
             elif dpad_down:
-                params["dir"], state = "-x", "moving"
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="-x",  
+                            gait_type="trot")
+                state ="moving"
             elif dpad_right:
-                params["dir"], state = "+z", "moving"
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+z",  
+                            gait_type="trot")
+                state ="moving"
             elif dpad_left:
-                params["dir"], state = "-z", "moving"
+                params = dict(desired_lin_vel=0.12, 
+                        desired_ang_vel=0.0, 
+                        swing_height=0.035, 
+                        stance_length=0.06, 
+                        Tswing=0.2, 
+                        dir="-z",  
+                        gait_type="trot")
+                state ="moving"
+            elif left_joystick_motion:
+                params = dict(desired_lin_vel=0.12, 
+                        desired_ang_vel=0.0, 
+                        swing_height=0.035, 
+                        stance_length=0.06, 
+                        Tswing=0.2, 
+                        dir=left_joystick_angle,  
+                        gait_type="trot")
+                state = "moving"
+            elif r_bumper:
+                params = dict(desired_lin_vel=0, 
+                            desired_ang_vel=0.1, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "moving"
+            elif l_bumper:
+                params = dict(desired_lin_vel=0, 
+                            desired_ang_vel=-0.1, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "moving"
             elif state == "moving":
                 state = "decelerating"
-            # elif left_joystick_changed:
-            #     current_dir, state = left_joystick_angle, "moving"
+            
 
             if state == "moving":
                 ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False)
-                print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f}", end="\r", flush=True)
+
+                if isinstance(params['dir'], float):
+                    params['dir'] = np.degrees(params['dir'])
+                print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f} towards {params['dir']}", end="\r", flush=True)
+
             elif state == "decelerating":
                 ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True)
-                print(f"\033[2KDecelerating...  vel={ef_vel:.3f}", end="\r", flush=True)
+
+                if isinstance(params['dir'], float):
+                    params['dir'] = np.degrees(params['dir'])
+                print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f} towards {params['dir']}", end="\r", flush=True)
+
                 if ef_vel == 0.0:
                     robot.apply_angles_robot(robot.init_angles)
                     state = "idle"
@@ -288,8 +386,8 @@ if __name__ == "__main__":
             if rem > 0:
                 time.sleep(rem)
     
-    # except:
-    #     print("Plug in your DualSense controller")
+    except Exception("No device detected"):
+        print("Plug in your DualSense controller")
     finally:
         if log_file:
             plot_log(log_file)

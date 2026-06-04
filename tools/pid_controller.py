@@ -3,7 +3,7 @@ import time
 
 class PIDController:
 
-    def __init__(self, kp, ki, kd, max_integral=None):
+    def __init__(self, kp, ki, kd, max_integral=0.7):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -48,7 +48,7 @@ class PIDControllerRP:
         self.desired_roll_pitch = np.array([0.0, 0.0])
         self.I_term = np.array([0.0, 0.0])
         self.D_term = np.array([0.0, 0.0])
-        self.max_I = 0.2
+        self.max_I = 0.4
         self.last_error = np.array([0.0, 0.0])
         self.first_run = True
 

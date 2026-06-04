@@ -15,20 +15,20 @@ kit1.servo[12].angle = 76 # THIS NEEDS DEGREES
 kit1.servo[13].angle = 83 # THIS NEEDS DEGREES
 kit1.servo[14].angle = 137 # THIS NEEDS DEGREES
 
-# rl
+# # rl
 kit2.servo[14].angle = 120 # THIS NEEDS DEGREES
 kit2.servo[15].angle = 76 # THIS NEEDS DEGREES
 kit2.servo[13].angle = 126 # THIS NEEDS DEGREES
 
 
 # Right legs
-# fr
-kit1.servo[9].angle =  70 # THIS NEEDS DEGREES
-kit1.servo[10].angle = 126 # THIS NEEDS DEGREES
-kit1.servo[11].angle = 64 # THIS NEEDS DEGREES
+# # fr
+kit1.servo[9].angle =  81 # THIS NEEDS DEGREES
+kit1.servo[10].angle = 132 # THIS NEEDS DEGREES
+kit1.servo[11].angle = 62 # THIS NEEDS DEGREES
 
-# rr
-kit2.servo[6].angle =  85 # THIS NEEDS DEGREES
+# # rr
+kit2.servo[6].angle =  87 # THIS NEEDS DEGREES
 kit2.servo[8].angle =  94 # THIS NEEDS DEGREES
 kit2.servo[12].angle = 50 # THIS NEEDS DEGREES
 

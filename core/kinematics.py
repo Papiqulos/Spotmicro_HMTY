@@ -21,7 +21,7 @@ Lo = np.array([0, 0, 0, 1])
 #--- Robot Dimensions ---
 LENGTH = robot_cfg["body"]["length"]
 WIDTH = robot_cfg["body"]["width"]
-COM_OFFSET = robot_cfg["body"]["com_offset"]
+COM_OFFSET = np.array([robot_cfg["body"]["com_offset_x"], 0, robot_cfg["body"]["com_offset_z"]])
 
 # Lengths of leg segments
 L1 = robot_cfg["leg_segments"]["L1"]    # Horizontal offset from shoulder to leg in mm
@@ -92,7 +92,8 @@ class Kinematics:
         :param ym: Y-coordinate of body center
         :param zm: Z-coordinate of body center
         """
-        xm += self.com_offset
+        xm += self.com_offset[0]
+        zm += self.com_offset[2]
         Rx = np.array([[1,0,0,0],
                     [0,np.cos(omega),-np.sin(omega),0],
                     [0,np.sin(omega),np.cos(omega),0],[0,0,0,1]])
@@ -148,8 +149,8 @@ class Kinematics:
                 thetas[i] = np.clip(thetas[i], lo, hi)
         return thetas
     
-    def robot_IK(self, center, orientation, ef_positions):
-        """Returns radians"""
+    def robot_IK(self, center, orientation, ef_positions, unit='radians'):
+        """Returns [FL angles, FR angles, RL angles, RR angles]"""
         # T_shoulder_base for each leg
         T_shoulder_base = self.bodyIK(*orientation, *center)
 
@@ -179,6 +180,9 @@ class Kinematics:
         rr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[3]) @ to_homogenous(rr))
         for angle in rr_angles:
             angles.append(angle)
+
+        if unit == 'degrees':
+            angles = [math.degrees(a) for a in angles]
 
         return angles # [FL angles, FR angles, RL angles, RR angles]
     

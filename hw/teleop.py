@@ -3,8 +3,7 @@ import numpy as np
 import time
 import os
 
-
-
+DEADZONE = 15
 
 
 class DualSenseController:
@@ -12,32 +11,45 @@ class DualSenseController:
     def __init__(self):
         self.dualsense = pydualsense()
         self.dualsense.init()
+        print(f"Dualsense Battery: {self.dualsense.battery.State}%")
     
 
-    def _get_joystick_angle(self):
-        return np.arctan2(self.dualsense.state.LY, self.dualsense.state.LX) + np.pi/2
+    def _get_joystick_angle(self, in_deg=False, joystick="l"):
+        if joystick == "r":
+            return np.degrees(np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY)) + 90 if in_deg else np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY) + np.pi/2
+        elif joystick == "l":
+            return np.degrees(np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)) + 90 if in_deg else np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY) + np.pi/2
+        else:
+            return np.degrees(np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)) + 90 if in_deg else np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY) + np.pi/2
+
+
+    def _joystick_in_motion(self, joystick="l"):
+        if joystick == "r":
+            return self.dualsense.state.RX * self.dualsense.state.RX + self.dualsense.state.RY * self.dualsense.state.RY > DEADZONE * DEADZONE
+        elif joystick == "l":
+            return self.dualsense.state.LX * self.dualsense.state.LX + self.dualsense.state.LY * self.dualsense.state.LY > DEADZONE * DEADZONE
     
+    def _get_rpy(self):
+        return np.array([self.dualsense.state.gyro.Roll, self.dualsense.state.gyro.Pitch, self.dualsense.state.gyro.Yaw])
+
+
         # Test method
     def move(self, callback):
-        start_time = time.time()
+
         prev_state = self.dualsense.state
 
-        print()
-        print("\033[A", end="", flush=True)
+        # print()
+        # print("\033[A", end="", flush=True)
 
         while not self.dualsense.state.R1:
             dpad_up = self.dualsense.state.DpadUp
             dpad_down = self.dualsense.state.DpadDown
             dpad_left = self.dualsense.state.DpadLeft
             dpad_right = self.dualsense.state.DpadRight
-
+            
             self.ljX = self.dualsense.state.LX
             self.ljY = self.dualsense.state.LY
-            self.ljAngle = np.arctan2(self.ljY, self.ljX) + np.pi/2
-            self.ljAngle_deg = np.degrees(self.ljAngle)
-            
-
-            print(f"\033[2KLeft Joystick Angle: {self.ljAngle_deg:.2f}°", flush=True)
+            print(f"\033[2KMotion={self._joystick_in_motion()} x={self.ljX:.2f} y={self.ljY:.2f} angle={self._get_joystick_angle():.2f}", end="\r", flush=True)
 
             if dpad_up:
                 callback(0)
@@ -55,10 +67,10 @@ class DualSenseController:
                 if prev_state in ("up", "down", "right", "left"):
                     callback(4)
                     prev_state = None
-                print("\033[2KWaiting for command...", end="\r", flush=True)
-                start_time = time.time()
+                # print("\033[2KWaiting for command...", end="\r", flush=True)
+              
 
-            print("\033[A", end="", flush=True)
+            # print("\033[A", end="", flush=True)
 
 
 if __name__ == "__main__":
