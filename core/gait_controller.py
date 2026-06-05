@@ -53,20 +53,26 @@ _DIR_TO_LATERAL = {
 class GaitController:
 
     def __init__(self, initial_ef_positions=None, initial_theta=None,
-                 initial_center=None, initial_orientation=None):
+                 initial_center=None, initial_orientation=None, imu=None):
         """
         :param initial_ef_positions: foot positions in kinematics frame (mm, Y-up)
         :param initial_theta:        initial joint angles
         :param initial_center:       body center in kinematics frame (mm)
         :param initial_orientation:  body RPY in kinematics frame (rad)
+        :param imu:                  IMU object
         """
         self.initial_ef_positions = initial_ef_positions
         self.initial_theta = initial_theta
         self.initial_center = initial_center
         self.initial_orientation = initial_orientation
+        self.imu = imu
+        
 
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH,
                                                 l1=L1, l2=L2, l3=L3, l4=L4)
+        
+        # Cache body transforms
+        self.transforms = list(self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center))
 
         self.gait_init = None
         self.deceleration_init = 0
@@ -85,7 +91,6 @@ class GaitController:
         self.pid_r = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self._pid_last_time = None
-        self._imu_window = deque(maxlen=30)
 
         _LOG_DIR.mkdir(exist_ok=True)
         self._clear_log()
@@ -107,7 +112,7 @@ class GaitController:
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self.pid_r = PIDController(kp=kp_r, ki=ki_r, kd=kd_r)
         self.pid_p = PIDController(kp=kp_p, ki=ki_p, kd=kd_p)
-        self._imu_window.clear()
+        self.imu._imu_window.clear()
         self._pid_last_time = None
         self.gait_init = None
         self.deceleration_init = 0
@@ -142,7 +147,7 @@ class GaitController:
 
         time_since_dec = current_time - self.deceleration_init
         if time_since_dec < ramp_duration and deceleration_flag:
-            ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_start / ramp_duration))
+            ramp_factor = 0.5 * (1.0 + np.cos(np.pi * time_since_dec / ramp_duration))
         elif time_since_dec >= ramp_duration and deceleration_flag:
             self.gait_init = None
             self.deceleration_init = 0
@@ -154,11 +159,9 @@ class GaitController:
         """30-tap moving average + PID.  Returns corrected_orientation [roll, pitch, yaw]."""
         if imu_data is None:
             return np.array(self.initial_orientation, dtype=float)
-
-        raw = np.array([imu_data[0], imu_data[1]])
-        self._imu_window.append(raw)
-        filtered = np.mean(self._imu_window, axis=0)
-        filtered = np.array([filtered[0] + banked_roll, filtered[1]])
+        
+        # Filtered roll and pitch(Low pass + 30-tap moving average)
+        filtered = np.array([imu_data[0] + banked_roll,  imu_data[1]])
 
         now = time.time()
         pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
@@ -184,7 +187,6 @@ class GaitController:
             - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
         ]
 
-        transforms = list(self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center))
         delta_base = sh_mm * 0.05
         leg_offset = _GAIT_PHASES[gait_type]
         legs = ["FL", "FR", "RL", "RR"]
@@ -220,7 +222,7 @@ class GaitController:
 
             target_pos = to_homogenous(current_pos)
             Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
-            target_pos_shoulder = Ix @ trans_inv(transforms[i]) @ target_pos
+            target_pos_shoulder = Ix @ trans_inv(self.transforms[i]) @ target_pos
             angles = self.kin_solver.legIK(target_pos_shoulder)
 
             if move_callback is not None:
@@ -324,7 +326,7 @@ class GaitController:
         else:
             self._sw_ref = 0.0
 
-        R_yaw = eff_lin / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
+        R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
         banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
         corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
         self._step_legs(global_phase, duty_factor, T_cycle,
@@ -362,7 +364,7 @@ class GaitController:
         duty_factor = Tstance / T_cycle
         global_phase = (current_time % T_cycle) / T_cycle
 
-        R_yaw = eff_lin / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
+        R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
         banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
         corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
         self._step_legs(global_phase, duty_factor, T_cycle,
@@ -400,7 +402,7 @@ class GaitController:
         duty_factor = Tstance_nom / T_cycle
         global_phase = (current_time % T_cycle) / T_cycle
 
-        R_yaw = eff_lin / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
+        R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
         banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
         corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
         sl_mm = eff_lin * T_cycle * duty_factor * 1000.0  # proportional to ramped velocity

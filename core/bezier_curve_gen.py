@@ -13,16 +13,20 @@ class BezierCurveGen:
     def __init__(self, control_points):
         self.control_points = np.array(control_points)
 
-    def linear_interpolate(self, p0, p1, t):
+    @staticmethod
+    def linear_interpolate(p0, p1, t):
         return (1 - t) * p0 + t * p1
     
-    def quadratic_interpolate(self, p0, p1, p2, t):
+    @staticmethod
+    def quadratic_interpolate(p0, p1, p2, t):
         return (1 - t)**2 * p0 + 2 * (1 - t) * t * p1 + t**2 * p2
     
-    def cubic_interpolate(self, p0, p1, p2, p3, t):
+    @staticmethod
+    def cubic_interpolate(p0, p1, p2, p3, t):
         return (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
     
-    def n_point_curve(self, points, t):
+    @staticmethod
+    def n_point_curve(points, t):
         n = len(points)
         interpolation = 0
         for i, point in enumerate(points):
@@ -30,7 +34,6 @@ class BezierCurveGen:
         return interpolation
     
     def generate_curve(self, num_points=100):
-        # n = len(self.control_points)
         curve = []
         for i in range(num_points + 1):
             t = i / num_points

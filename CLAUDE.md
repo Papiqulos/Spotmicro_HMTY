@@ -105,22 +105,58 @@ Items reference `paper_improvements.txt`. Already implemented:
 
 Partially implemented:
 
-- **[34]** `_SWING_H_NORM` has double (not triple) endpoint stacking — foot acceleration at touchdown is not zeroed.
 - **[8]** PID operates on raw angles then converts to DeltaH; Mori paper recommends PID directly on DeltaH.
 
-Not yet implemented (see `paper_improvements.txt` for full detail):
+Already done (CLAUDE.md was stale):
 
+- **[34]** `_SWING_H_NORM` is `[0,0,0, 0.9,0.9,0.9,0.9, 1.0,1.1, 0,0,0]` — first and last three are zero. Triple stacking complete.
+
+Not yet implemented (see `improvements.txt` for full detail):
+
+- [F]  Bezier X velocity shaping — replace `_SWING_X_NORM` with spot_mini_mini absolute control points (`L = sl_mm/2`)
+- [D]  YawRate + yaw_circle turning — geometric per-leg arc correction; stubs exist but not wired
 - [22] Froude number in CSV log
 - [24] Static IMU bias calibration at startup (store in servo_calib.yaml)
 - [25] Gyro zero-rate bias update during stationary periods
 - [26] Asymmetric swing/stance duration (constant swing, variable stance)
 - [36] Adaptive Madgwick correction gain during high-acceleration phases
 - [37] Raibert heuristic footstep placement
-- [40] Exponential smoothing post Madgwick output
+- [40] Exponential smoothing post Madgwick output (code exists but commented out in `imu.py:123`)
 - [43] Total tilt fall-detection gate (rho > 45 deg -> halt)
 - [19/20] Stuck servo detection via IMU anomaly + safe fallback gait
-- [45-49] Turning control (stubs exist: `turn()`, `turn_in_place()`)
+- [45-49] Turning geometry (Ackermann, stride scaling, slip compensation, banked roll)
 - [10/11] Oscillator gait + CMA-ES offline optimization
+
+
+# Known Bugs
+
+| Bug | Location | Description |
+|-----|----------|-------------|
+| Deceleration ramp | `gait_controller.py:145` | Uses `time_since_start` instead of `time_since_dec`; velocity never ramps down correctly |
+| Dead PID instance | `gait_controller.py:84` | `self.pid` (PIDControllerRP) created but never used; `pid_r`/`pid_p` used instead |
+| `banked_roll` not wired | `gait_controller.py:153` | Parameter accepted by `_imu_correction` but never passed from any `execute_gait_*` call site |
+
+
+# Performance Improvement Opportunities
+
+| Item | Location | Change |
+|------|----------|--------|
+| Running IMU mean | `gait_controller.py:160` | Replace full deque `np.mean` (O(30)) with O(1) running sum |
+| bodyIK caching | `gait_controller.py:187` | `initial_orientation`/`initial_center` never change mid-run; compute once in `reset()` |
+| Bezier vectorization | `gait_controller.py:256` | Replace per-point Python loop with numpy broadcasting on `d_arr` |
+| Servo rescaling | `quad_controller.py` | Vectorize `rescale_number` loop (12 calls/cycle) using precomputed numpy arrays |
+| CSV flush | `gait_controller.py:173` | `flush()` is called 100×/s; buffer to every 10 cycles |
+| BezierCurveGen object | `gait_controller.py:217` | Object instantiated per swing step; convert `n_point_curve` to staticmethod |
+| I2C parallelism | `quad_controller.py` | Front (0x40) and rear (0x41) PCA9685 boards can be written concurrently via threads |
+
+
+# Code Quality Debt
+
+- `from math import *` in `kinematics.py` — replace with explicit imports
+- Unused methods in `bezier_curve_gen.py`: `quadratic_interpolate`, `cubic_interpolate`, `linear_interpolate`
+- Magic numbers in `gait_controller.py`: ramp duration 0.5, IMU window 30, stance delta coefficients 0.05/0.2 — extract to named module constants
+- `PIDControllerRP.desired_RP_angles()` setter never called anywhere; either wire it or remove
+- IMU axis comment in `imu.py:17` disagrees with `kinematics.py` frame (`Y=left,Z=up` vs `Y=up,Z=left`); one is wrong
 
 
 # Style

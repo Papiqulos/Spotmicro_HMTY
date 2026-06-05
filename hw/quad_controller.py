@@ -65,6 +65,7 @@ class RobotController:
             initial_theta=self.init_angles,
             initial_center=self.init_center,
             initial_orientation=self.init_orientation_rad,
+            imu=self.imu,
         )
         
         self.apply_angles_robot(self.init_angles)
@@ -79,16 +80,18 @@ class RobotController:
             print(f"{leg}: x={x:.2f}, y={y:.2f}, z={z:.2f}")
         time.sleep(1)
         
-    def _write_servo(self, i, angle):
+    def _write_servo(self, servo_index, angle):
         try:
-            if self.kit_index[i] == 1:
+            if self.kit_index[servo_index] == 1:
                 
-                self.kit_front_obj.servo[self.indexes[i]].angle = angle
-            elif self.kit_index[i] == 2:
+                self.kit_front_obj.servo[self.indexes[servo_index]].angle = angle
+            elif self.kit_index[servo_index] == 2:
                 
-                self.kit_rear_obj.servo[self.indexes[i]].angle = angle
+                self.kit_rear_obj.servo[self.indexes[servo_index]].angle = angle
+
+           
         except ValueError as e:
-            print(f"Servo {self.indexes[i]} out of range: {angle:.1f}° — {e}")
+            print(f"Servo {self.indexes[servo_index]} out of range: {angle:.1f}° — {e}")
 
     def apply_angles_robot(self, angles, unit="deg"):
         if unit == "rad":
@@ -96,6 +99,7 @@ class RobotController:
         for i, angle in enumerate(angles):
             angle = angle * self.theta_dirs[i]
             angle = rescale_number(angle, 0, 180, self.zeros[i], self.zeros[i] + 180)
+            # TODO: Add threaded version
             self._write_servo(i, angle)
 
     def apply_angles_leg(self, leg, angles, unit="deg"):
@@ -120,6 +124,7 @@ class RobotController:
         # print(angles)
         self.apply_angles_leg(leg, angles, "deg")
 
+    # TODO: Smoothly change orientation
     def change_orientation(self, new_orientation, unit="deg"):
         if unit == "deg":
             new_orientation = [math.radians(a) for a in new_orientation]
@@ -160,24 +165,26 @@ class RobotController:
             t0 = time.time()
             current_time = t0 - start_time
 
-            ef_vel, log_file = self.trot_step(current_time, time_step, params=params, deceleration_flag=False)
+            ef_vel, log_file, imu_data = self.trot_step(current_time, time_step, params=params, deceleration_flag=False)
+            imu_deg = np.degrees(imu_data)
             elapsed = time.time() - start_time
-            print(f"Elapsed: {elapsed:.2f}s", end="\r")
+            print(f"Elapsed: {elapsed:.2f}s  vel={ef_vel:.3f}  roll={imu_deg[0]:.1f}° pitch={imu_deg[1]:.1f}° yaw={imu_deg[2]:.1f}°", end="\r", flush=True)
             
                 
         # After the given number steps or on button unpress, we decelerate into the default position
-        print("\nDecelerating...")
+        print("\nDecelerating...", flush=True)
         while True:
             
             t0 = time.time()
             current_time = t0 - start_time
             
-            ef_vel, log_file = self.trot_step(current_time, time_step, params=params, deceleration_flag=True)
+            ef_vel, log_file, imu_data = self.trot_step(current_time, time_step, params=params, deceleration_flag=True)
+            imu_deg = np.degrees(imu_data)
             elapsed = time.time() - start_time
-            print(f"Elapsed: {elapsed:.2f}s", end="\r")
+            print(f"Elapsed: {elapsed:.2f}s  vel={ef_vel:.3f}  roll={imu_deg[0]:.1f}° pitch={imu_deg[1]:.1f}° yaw={imu_deg[2]:.1f}°", end="\r", flush=True)
             if ef_vel == 0.0:
                 self.apply_angles_robot(self.init_angles)
-                print("Deceleration complete!")
+                print("\nDeceleration complete!", flush=True)
                 break
         
         # plot_log(log_file)
@@ -187,6 +194,10 @@ class RobotController:
         raw_gyro = self.imu.gyro.read()
         raw_acc  = self.imu.accelerometer.read()["acceleration"]
         imu_data = self.imu.update(raw_gyro, raw_acc)
+        imu_data_in_deg = np.degrees(imu_data)
+        if abs(imu_data_in_deg[1]) > 45:
+            print("Pitch > 45° — halting", flush=True)
+            return None, None, imu_data
         if not params:
             # Default parameters
             params = dict(desired_lin_vel=0.2,
@@ -196,16 +207,17 @@ class RobotController:
                           Tswing=0.25,
                           dir="+x",
                           gait_type="trot")
-        return self.gait_controller.execute_gait_fixed_stance(
+        ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
             current_time, time_step, imu_data=imu_data, deceleration_flag=deceleration_flag, move_callback=self.apply_angles_leg,
-            desired_lin_vel=params["desired_lin_vel"], 
+            desired_lin_vel=params["desired_lin_vel"],
             desired_ang_vel=params["desired_ang_vel"],
-            swing_height=params["swing_height"], 
+            swing_height=params["swing_height"],
             stance_length=params["stance_length"],
-            Tswing=params["Tswing"], 
-            dir=params["dir"], 
+            Tswing=params["Tswing"],
+            dir=params["dir"],
             gait_type=params["gait_type"],
         )
+        return ef_vel, log_file, imu_data
     
 if __name__ == "__main__":
     center = [0, 0, 0]
@@ -236,29 +248,31 @@ if __name__ == "__main__":
     #         dir="+x",  
     #         gait_type="trot")
     
-    # robot.move(params=p, steps=80)
+    # robot.move(params=p, steps=200)
 
-    teleop = DualSenseController()
-
-    state = "idle"
-    current_dir = "+x"
-    start_time = time.time()
-    time_step = 1.0 / 100
-    log_file = None
-
-    params = dict(desired_lin_vel=0.12, 
-            desired_ang_vel=0.0, 
-            swing_height=0.035, 
-            stance_length=0.06, 
-            Tswing=0.2, 
-            dir="+x",  
-            gait_type="trot")
     
-    robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
-                                kp_p=0.4, ki_p=0.05,  kd_p=0.03)
 
 
     try:
+        log_file = None
+        teleop = DualSenseController()
+
+        state = "idle"
+        current_dir = "+x"
+        start_time = time.time()
+        time_step = 1.0 / 100
+        
+
+        params = dict(desired_lin_vel=0.12, 
+                desired_ang_vel=0.0, 
+                swing_height=0.035, 
+                stance_length=0.06, 
+                Tswing=0.2, 
+                dir="+x",  
+                gait_type="trot")
+        
+        robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
+                                    kp_p=0.4, ki_p=0.05,  kd_p=0.03)
         print()
         print("\033[A", end="", flush=True)
         while not teleop.dualsense.state.circle:
@@ -330,15 +344,15 @@ if __name__ == "__main__":
                         dir="-z",  
                         gait_type="trot")
                 state ="moving"
-            elif left_joystick_motion:
-                params = dict(desired_lin_vel=0.12, 
-                        desired_ang_vel=0.0, 
-                        swing_height=0.035, 
-                        stance_length=0.06, 
-                        Tswing=0.2, 
-                        dir=left_joystick_angle,  
-                        gait_type="trot")
-                state = "moving"
+            # elif left_joystick_motion:
+            #     params = dict(desired_lin_vel=0.12, 
+            #             desired_ang_vel=0.0, 
+            #             swing_height=0.035, 
+            #             stance_length=0.06, 
+            #             Tswing=0.2, 
+            #             dir=left_joystick_angle,  
+            #             gait_type="trot")
+            #     state = "moving"
             elif r_bumper:
                 params = dict(desired_lin_vel=0, 
                             desired_ang_vel=0.1, 
@@ -362,18 +376,18 @@ if __name__ == "__main__":
             
 
             if state == "moving":
-                ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False)
-
+                ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False)
+                imu_deg = np.degrees(imu_data)
                 if isinstance(params['dir'], float):
                     params['dir'] = np.degrees(params['dir'])
-                print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f} towards {params['dir']}", end="\r", flush=True)
+                print(f"\033[2KMoving towards {params['dir']}  vel={ef_vel:.3f}  roll={imu_deg[0]:.1f}° pitch={imu_deg[1]:.1f}° yaw={imu_deg[2]:.1f}°", end="\r", flush=True)
 
             elif state == "decelerating":
-                ef_vel, log_file = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True)
-
+                ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True)
+                imu_deg = np.degrees(imu_data)
                 if isinstance(params['dir'], float):
                     params['dir'] = np.degrees(params['dir'])
-                print(f"\033[2KMoving {current_dir}  vel={ef_vel:.3f} towards {params['dir']}", end="\r", flush=True)
+                print(f"\033[2KDecelerating  vel={ef_vel:.3f}  roll={imu_deg[0]:.1f}° pitch={imu_deg[1]:.1f}° yaw={imu_deg[2]:.1f}°", end="\r", flush=True)
 
                 if ef_vel == 0.0:
                     robot.apply_angles_robot(robot.init_angles)
@@ -386,10 +400,12 @@ if __name__ == "__main__":
             if rem > 0:
                 time.sleep(rem)
     
-    except Exception("No device detected"):
-        print("Plug in your DualSense controller")
+    except Exception as e:
+        teleop = None
+        print(f"{e}\nPlug in your DualSense controller")
     finally:
         if log_file:
             plot_log(log_file)
-        teleop.dualsense.close()
+        if teleop:
+            teleop.dualsense.close()
 
