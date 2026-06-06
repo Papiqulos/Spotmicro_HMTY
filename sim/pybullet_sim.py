@@ -12,7 +12,7 @@ from log.log_plotter import plot_log
 
 # CONSTANTS
 PI = math.pi
-TIME_STEP = 1. / 240.
+TIME_STEP = 1. / 100.
 
 class PybulletSim:
     
@@ -269,6 +269,15 @@ class PybulletSim:
             self.gKey = ord('g')
             self.hKey = ord('h')
 
+            # Default parameters
+            params = dict(desired_lin_vel=0.3, 
+                          desired_ang_vel=0.0, 
+                          T_cycle=0.25, 
+                          duty_factor=0.5,
+                          swing_height=0.035,
+                          dir="+x",  
+                          gait_type="trot")
+
             # Print imu data
             if self.key_is_pressed(keyboard_event, self.iKey):
                 imu_data_raw = self.get_imu_data()
@@ -309,31 +318,37 @@ class PybulletSim:
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(dir="+x", desired_lin_vel=0.4, desired_ang_vel=0.0)
+                self.move(params)
 
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                self.move(dir="-x", desired_lin_vel=0.4, desired_ang_vel=0.0)
+                params["dir"] = "-x"
+                self.move(params)
 
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                self.move(dir="+z")
+                params["dir"] = "+z"
+                self.move(params)
 
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                self.move(dir="-z")
+                params["dir"] = "-z"
+                self.move(params)
 
             # Go 45 degrees front left
             if self.key_is_pressed(keyboard_event, self.fKey):
-                self.move(dir=np.pi/4, desired_ang_vel=0.3)
+                params["dir"] = np.pi/4
+                self.move(params)
 
             # Go 45 degrees front right
             if self.key_is_pressed(keyboard_event, self.gKey):
-                self.move(dir=-np.pi/4)
+                params["dir"] = -np.pi/4
+                self.move(params)
 
             # Go 45 degrees back left
             if self.key_is_pressed(keyboard_event, self.hKey):
-                self.move(dir=3*np.pi/4)
+                params["dir"] = 3*np.pi/4
+                self.move(params)
 
     def respawn_robot(self):
         # I am inevitable
@@ -348,37 +363,68 @@ class PybulletSim:
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
         self.move_robot_to_pose(self.robotId, angles, unit="rad")
         
-    def move(self, desired_lin_vel=0.3, swing_height=0.04, stance_length=0.03, Tswing=0.25, dir="+x", desired_ang_vel=0.0):
+    def move(self, params=None):
+
+
+        # Default parameters
+        if params is None:
+            params = dict(desired_lin_vel=0.3, 
+                          desired_ang_vel=0.0, 
+                          T_cycle=0.25, 
+                          duty_factor=0.5,
+                          swing_height=0.035,
+                          dir="+x",  
+                          gait_type="trot")
+            # params = dict(desired_lin_vel=0.2,
+            #               desired_ang_vel=0.0,
+            #               swing_height=0.040,
+            #               stance_length=0.05,
+            #               Tswing=0.25,
+            #               dir="+x",
+            #               gait_type="trot")
         
-        if dir == "+x":
+        if params["dir"] == "+x":
             print("GOING FORWARDS")
-        elif dir == "-x":
+        elif params["dir"] == "-x":
             print("GOING BACKWARDS")
-        elif dir == "+z":
+        elif params["dir"] == "+z":
             print("GOING RIGHT")
-        elif dir == "-z":
+        elif params["dir"] == "-z":
             print("GOING LEFT")
         else:
-            print(f"GOING TOWARDS {np.degrees(dir):.2f}°")
+            direction = np.degrees(params["dir"])
+            print(f"GOING TOWARDS {direction:.2f}°")
         deceleration_flag = False
 
         current_time = 0
         # self.gait_controller.reset(kp=0.37, ki=0.0, kd=0.025)
 
         while True:
-            current_time += 1./240.
+            current_time += TIME_STEP
             p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
             keyboard_event = p.getKeyboardEvents()
 
             if self.key_is_pressed(keyboard_event, self.qKey):
                 deceleration_flag = True
                 print("DECELERATING")
-            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
-                            current_time, TIME_STEP,
-                            imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag,
-                            move_callback=self.move_callback, dir=dir,
-                            desired_lin_vel=desired_lin_vel, desired_ang_vel=desired_ang_vel,
-                            swing_height=swing_height, stance_length=stance_length, Tswing=Tswing)
+            ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance_old(
+                            current_time, TIME_STEP, imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag, move_callback=self.move_callback, 
+                            desired_lin_vel=params["desired_lin_vel"], 
+                            desired_ang_vel=params["desired_ang_vel"], 
+                            T_cycle=params["T_cycle"], 
+                            duty_factor=params["duty_factor"],
+                            swing_height=params["swing_height"],
+                            dir=params["dir"],
+                            gait_type=params["gait_type"])
+            # ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
+            # current_time, TIME_STEP, imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag, move_callback=self.move_callback,
+            # desired_lin_vel=params["desired_lin_vel"],
+            # desired_ang_vel=params["desired_ang_vel"],
+            # swing_height=params["swing_height"],
+            # stance_length=params["stance_length"],
+            # Tswing=params["Tswing"],
+            # dir=params["dir"],
+            # gait_type=params["gait_type"])
             p.stepSimulation()
             time.sleep(TIME_STEP)
             
