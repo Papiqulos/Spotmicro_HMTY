@@ -181,7 +181,7 @@ class Kinematics:
         for angle in rr_angles:
             angles.append(angle)
 
-        if unit == 'degrees':
+        if unit == 'deg':
             angles = [math.degrees(a) for a in angles]
 
         return angles # [FL angles, FR angles, RL angles, RR angles]

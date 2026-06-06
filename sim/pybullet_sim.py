@@ -5,6 +5,7 @@ import math
 import numpy as np
 import core.gait_controller as gait
 import core.kinematics as kinematics
+import core.robot_state as robot_state
 from tools.utils import from_pybullet_orn, from_pybullet_pos
 from log.log_plotter import plot_log
 
@@ -113,10 +114,14 @@ class PybulletSim:
         self.initial_ef_positions = self.kin_solver.robot_FK(self.center_kin, self.orientation_kin, self.initial_theta, unit=self.angle_unit)
 
         # Gait Controller
-        self.gait_controller = gait.GaitController(initial_ef_positions=self.initial_ef_positions,
-                                                   initial_theta=self.initial_theta,
-                                                   initial_center=self.center_kin,
-                                                   initial_orientation=self.orientation_kin)
+        _init_theta_rad = np.radians(self.initial_theta) if self.angle_unit == 'degrees' else np.array(self.initial_theta, dtype=float)
+        _state = robot_state.RobotState(
+            init_angles=_init_theta_rad,
+            init_ef_positions=np.array(self.initial_ef_positions, dtype=float),
+            init_center=self.center_kin,
+            init_orientation=self.orientation_kin,
+        )
+        self.gait_controller = gait.GaitController(_state)
 
         self._leg_joint_map = {
             "FL": [self.joint_dic["front_left_shoulder"],  self.joint_dic["front_left_leg"],  self.joint_dic["front_left_foot"]],
@@ -206,22 +211,26 @@ class PybulletSim:
     def move_robot_to_pose(self, robotId, theta, unit='degrees'):
         """
         Move the robot to a given pose.
-        
-        :param robotId: 
+
+        :param robotId:
         :param theta: angles for all legs [[FL], [FR], [RL], [RR]]
         :param unit: angle unit
         """
-
         if unit == 'degrees':
-            theta = [math.radians(angle) for angle in theta]
-        # Convert angles to radians and apply directions
-        theta = [angle * dir for angle, dir in zip(theta, self.theta_dirs)]
+            theta_rad = [math.radians(angle) for angle in theta]
+        else:
+            theta_rad = list(theta)
+        theta_pb = [angle * d for angle, d in zip(theta_rad, self.theta_dirs)]
         p.setJointMotorControlArray(robotId,
                                     jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
-                                    targetPositions=theta)
+                                    targetPositions=theta_pb)
         p.stepSimulation()
         time.sleep(1./240.)
+        self.gait_controller.state.angles       = np.array(theta_rad)
+        self.gait_controller.state.orientation  = np.array(from_pybullet_orn(self.get_imu_data()))
+        self.gait_controller.state.linear_vel   = 0.0
+        self.gait_controller.state.angular_vel  = 0.0
         
     def move_callback(self, leg, angles, unit="rad"):
         """Apply IK angles for one leg to pybullet joints.

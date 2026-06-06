@@ -8,6 +8,7 @@ from tools.utils import to_homogenous, trans_inv
 from tools.pid_controller import PIDControllerRP, PIDController
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
+import core.robot_state as RobotState
 from collections import deque
 from log.log_plotter import plot_log
 
@@ -52,27 +53,18 @@ _DIR_TO_LATERAL = {
 
 class GaitController:
 
-    def __init__(self, initial_ef_positions=None, initial_theta=None,
-                 initial_center=None, initial_orientation=None, imu=None):
+    def __init__(self, state):
         """
-        :param initial_ef_positions: foot positions in kinematics frame (mm, Y-up)
-        :param initial_theta:        initial joint angles
-        :param initial_center:       body center in kinematics frame (mm)
-        :param initial_orientation:  body RPY in kinematics frame (rad)
-        :param imu:                  IMU object
+        :param state: RobotState instance (owned by the caller)
         """
-        self.initial_ef_positions = initial_ef_positions
-        self.initial_theta = initial_theta
-        self.initial_center = initial_center
-        self.initial_orientation = initial_orientation
-        self.imu = imu
-        
+        self.state = state
 
         self.kin_solver = kinematics.Kinematics(length=LENGTH, width=WIDTH,
                                                 l1=L1, l2=L2, l3=L3, l4=L4)
-        
+        self.state.kin_solver = self.kin_solver
+
         # Cache body transforms
-        self.transforms = list(self.kin_solver.bodyIK(*self.initial_orientation, *self.initial_center))
+        self.transforms = list(self.kin_solver.bodyIK(*self.state.orientation, *self.state.init_center))
 
         self.gait_init = None
         self.deceleration_init = 0
@@ -82,8 +74,8 @@ class GaitController:
         self._sw_ref  = 0.0
         self._td_flag = False
 
-        if initial_ef_positions is not None:
-            self._prev_foot_pos = [np.array(p[:3], dtype=float) for p in initial_ef_positions]
+        if state.init_ef_positions is not None:
+            self._prev_foot_pos = [np.array(p[:3], dtype=float) for p in state.init_ef_positions]
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
@@ -112,15 +104,15 @@ class GaitController:
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self.pid_r = PIDController(kp=kp_r, ki=ki_r, kd=kd_r)
         self.pid_p = PIDController(kp=kp_p, ki=ki_p, kd=kd_p)
-        self.imu._imu_window.clear()
         self._pid_last_time = None
         self.gait_init = None
         self.deceleration_init = 0
         self._td_time = None
         self._sw_ref  = 0.0
         self._td_flag = False
-        if self.initial_ef_positions is not None:
-            self._prev_foot_pos = [np.array(p[:3], dtype=float) for p in self.initial_ef_positions]
+        self.state.reset()
+        if self.state.init_ef_positions is not None:
+            self._prev_foot_pos = [np.array(p[:3], dtype=float) for p in self.state.init_ef_positions]
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
@@ -158,7 +150,7 @@ class GaitController:
     def _imu_correction(self, imu_data, time_step, banked_roll=0.0):
         """30-tap moving average + PID.  Returns corrected_orientation [roll, pitch, yaw]."""
         if imu_data is None:
-            return np.array(self.initial_orientation, dtype=float)
+            return np.array(self.state.init_orientation, dtype=float)
         
         # Filtered roll and pitch(Low pass + 30-tap moving average)
         filtered = np.array([imu_data[0] + banked_roll,  imu_data[1]])
@@ -175,7 +167,7 @@ class GaitController:
                             f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
         self._log_file.flush()
 
-        return np.array([correction[0], correction[1], self.initial_orientation[2]])
+        return np.array([correction[0], correction[1], self.state.init_orientation[2]])
 
     def _step_legs(self, global_phase, duty_factor, T_cycle, sl_mm, sh_mm,
                    lateral_fraction, eff_ang, corrected_orientation, gait_type, move_callback):
@@ -190,13 +182,14 @@ class GaitController:
         delta_base = sh_mm * 0.05
         leg_offset = _GAIT_PHASES[gait_type]
         legs = ["FL", "FR", "RL", "RR"]
+        all_angles = []
 
         for i, leg in enumerate(legs):
             leg_phase = (global_phase + leg_offset[i]) % 1.0
             initial_pos = np.array([
-                self.initial_ef_positions[i][0],
-                self.initial_ef_positions[i][1] + dy[i],
-                self.initial_ef_positions[i][2],
+                self.state.init_ef_positions[i][0],
+                self.state.init_ef_positions[i][1] + dy[i],
+                self.state.init_ef_positions[i][2],
             ])
             stance_delta = delta_base + abs(dy[i]) * 0.2
 
@@ -224,9 +217,12 @@ class GaitController:
             Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
             target_pos_shoulder = Ix @ trans_inv(self.transforms[i]) @ target_pos
             angles = self.kin_solver.legIK(target_pos_shoulder)
+            all_angles.extend(angles)
 
             if move_callback is not None:
                 move_callback(leg, angles, unit="rad")
+
+        self.state.angles = all_angles  # FK auto-updates state.ef_positions
 
     # ------------------------------------------------------------------
     # Trajectory helpers
@@ -234,8 +230,8 @@ class GaitController:
 
     def _yaw_circle(self, i, leg):
         """Return (phi_arc, r) for leg i."""
-        leg_x  = float(self.initial_ef_positions[i][0])
-        leg_z  = float(self.initial_ef_positions[i][2])
+        leg_x  = float(self.state.init_ef_positions[i][0])
+        leg_z  = float(self.state.init_ef_positions[i][2])
         r      = np.sqrt(leg_x**2 + leg_z**2)
         hip_dir = np.arctan2(leg_z, leg_x)
 
@@ -332,6 +328,10 @@ class GaitController:
         self._step_legs(global_phase, duty_factor, T_cycle,
                         stance_length * 1000.0, swing_height * 1000.0,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
+        self.state.linear_vel = eff_lin
+        self.state.angular_vel = eff_ang
+        self.state.direction = dir
+        self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_swing(self,
@@ -370,6 +370,10 @@ class GaitController:
         self._step_legs(global_phase, duty_factor, T_cycle,
                         stance_length * 1000.0, swing_height * 1000.0,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
+        self.state.linear_vel = eff_lin
+        self.state.angular_vel = eff_ang
+        self.state.direction = dir
+        self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
 
     def execute_gait_fixed_stance(self,
@@ -409,8 +413,12 @@ class GaitController:
         self._step_legs(global_phase, duty_factor, T_cycle,
                         sl_mm, swing_height * 1000.0,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
+        self.state.linear_vel = eff_lin
+        self.state.angular_vel = eff_ang
+        self.state.direction = dir
+        self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
-    
+
     def execute_gait_fixed_stance_old(self,
             # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
@@ -442,10 +450,45 @@ class GaitController:
         self._step_legs(global_phase, duty_factor, T_cycle,
                         sl_mm, swing_height * 1000.0,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
+        self.state.linear_vel = eff_lin
+        self.state.angular_vel = eff_ang
+        self.state.direction = dir
+        self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
 
-    def body_manipulation(self):
-        raise NotImplementedError
+    def smooth_to_target(self, target_angles, duration=0.5, dt=0.01, move_callback=None, unit="deg"):
+        """Smoothly interpolate joint angles to target using cosine ramp.
+
+        :param target_angles: flat list/array of 12 target joint angles in radians
+        :param duration:      total motion time in seconds
+        :param dt:            time per interpolation step in seconds (0.01 is good)
+        :param move_callback: callable(angles, unit="rad") applied each step
+        :param unit:          unit of target_angles ("deg" or "rad")
+        """
+        self.state.linear_vel  = 0.0
+        self.state.angular_vel = 0.0
+
+        
+        starting_angles = self.state.angles # this is always in radians
+        if unit == "deg":
+            starting_angles = np.degrees(starting_angles)
+        start = time.time()
+
+        while time.time() - start < duration:
+            dt = time.time() - start
+            ramp_factor = 0.5 * (1.0 - np.cos(np.pi * dt / duration))
+            interpolated_angles = starting_angles + ramp_factor * (target_angles-starting_angles)
+            # time.sleep(0.005)
+            if unit == "deg":
+                self.state.angles = np.radians(interpolated_angles) # convert back to radians and store
+            move_callback(interpolated_angles, unit=unit)
+
+        
+        
+            
+
+
+       
 
 
 if __name__ == "__main__":
