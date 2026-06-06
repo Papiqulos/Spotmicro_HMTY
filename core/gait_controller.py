@@ -45,8 +45,8 @@ _GAIT_PHASES = {
 _DIR_TO_LATERAL = {
     "+x":  0.0,
     "-x":  np.pi,
-    "+z":  np.pi / 2.0,
-    "-z": -np.pi / 2.0,
+    "+z":  -np.pi / 2.0,
+    "-z":   np.pi / 2.0,
 }
 
 
