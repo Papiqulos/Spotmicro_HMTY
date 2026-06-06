@@ -410,6 +410,39 @@ class GaitController:
                         sl_mm, swing_height * 1000.0,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
         return eff_lin, self._log_file.name
+    
+    def execute_gait_fixed_stance_old(self,
+            # STANDARD PARAMETERS
+            current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 
+            # TUNABLE PARAMETERS
+            desired_lin_vel=0.3, 
+            desired_ang_vel=0.0, 
+            T_cycle=0.25, 
+            duty_factor=0.5,
+            swing_height=0.035,
+            dir="+x",  
+            gait_type="trot"):
+        """Fixed T_cycle and duty_factor derived from nominal (unramped) velocity.
+
+        T_cycle = Tswing + stance_length / desired_lin_vel (constant).
+        sl_mm scales with ramped velocity -> smooth ramp with stable phase clock.
+        Recommended for omnidirectional and turning gaits.
+        """
+        lateral_fraction = _DIR_TO_LATERAL[dir] if isinstance(dir, str) else float(dir)
+        eff_lin, eff_ang = self._compute_ramp(
+            current_time, desired_lin_vel, desired_ang_vel, deceleration_flag)
+
+        stance_length = eff_lin * T_cycle * duty_factor
+        global_phase = (current_time % T_cycle) / T_cycle
+
+        R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
+        banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
+        corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
+        sl_mm = stance_length * 1000.0  # proportional to ramped velocity
+        self._step_legs(global_phase, duty_factor, T_cycle,
+                        sl_mm, swing_height * 1000.0,
+                        lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
+        return eff_lin, self._log_file.name
 
     def body_manipulation(self):
         raise NotImplementedError
