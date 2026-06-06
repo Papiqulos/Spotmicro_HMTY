@@ -142,11 +142,11 @@ class Kinematics:
 
         thetas = [theta1, theta2, theta3]
         limits = [self.shoulder_lim, self.elbow_lim, self.knee_lim]
-        for i in range(3):
-            lo, hi = limits[i]
-            if thetas[i] < lo or thetas[i] > hi:
-                print(f"legIK: theta{i+1}={thetas[i]:.3f} rad clamped to [{lo:.3f}, {hi:.3f}]")
-                thetas[i] = np.clip(thetas[i], lo, hi)
+        # for i in range(3):
+        #     lo, hi = limits[i]
+        #     if thetas[i] < lo or thetas[i] > hi:
+        #         print(f"legIK: theta{i+1}={thetas[i]:.3f} rad clamped to [{lo:.3f}, {hi:.3f}]")
+        #         thetas[i] = np.clip(thetas[i], lo, hi)
         return thetas
     
     def robot_IK(self, center, orientation, ef_positions, unit='radians'):
