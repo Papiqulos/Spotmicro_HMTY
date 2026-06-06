@@ -279,13 +279,11 @@ if __name__ == "__main__":
             t0 = time.time()
             current_time = t0 - start_time
 
-            # Left joystick
+            # Joysticks
             left_joystick_motion = teleop._joystick_in_motion(joystick="l")
-            left_joystick_angle = teleop._get_joystick_angle(joystick="l")
-
-            # Right joystick
             right_joystick_motion = teleop._joystick_in_motion(joystick="r")
-            right_joystick_angle = teleop._get_joystick_angle(joystick="r")
+
+            left_joystick_angle, right_joystick_angle = teleop._get_joystick_angle()
 
             # D-pad
             dpad_up    = teleop.dualsense.state.DpadUp
@@ -344,15 +342,15 @@ if __name__ == "__main__":
                         dir="-z",  
                         gait_type="trot")
                 state ="moving"
-            # elif left_joystick_motion:
-            #     params = dict(desired_lin_vel=0.12, 
-            #             desired_ang_vel=0.0, 
-            #             swing_height=0.035, 
-            #             stance_length=0.06, 
-            #             Tswing=0.2, 
-            #             dir=left_joystick_angle,  
-            #             gait_type="trot")
-            #     state = "moving"
+            elif left_joystick_motion:
+                params = dict(desired_lin_vel=0.12, 
+                        desired_ang_vel=0.0, 
+                        swing_height=0.035, 
+                        stance_length=0.06, 
+                        Tswing=0.2, 
+                        dir=left_joystick_angle,  
+                        gait_type="trot")
+                state = "moving"
             elif r_bumper:
                 params = dict(desired_lin_vel=0, 
                             desired_ang_vel=0.1, 
@@ -401,8 +399,11 @@ if __name__ == "__main__":
                 time.sleep(rem)
     
     except Exception as e:
-        teleop = None
-        print(f"{e}\nPlug in your DualSense controller")
+        if e.args[0] == "No device detected":
+            teleop = None
+            print(f"No device detected\nPlug in your DualSense controller")
+        else:
+            print(f"Error: {e}")
     finally:
         if log_file:
             plot_log(log_file)

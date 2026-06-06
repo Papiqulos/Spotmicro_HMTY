@@ -12,15 +12,23 @@ class DualSenseController:
         self.dualsense = pydualsense()
         self.dualsense.init()
         print(f"Dualsense Battery: {self.dualsense.battery.State}%")
+
+    def config_angle(self, angle, in_deg=False):
+        if angle < 0 and angle > -np.pi:
+            angle = angle + np.pi
+        elif angle > 0 and angle < np.pi:
+            angle = angle - np.pi
+        return angle if not in_deg else np.degrees(angle)
     
 
-    def _get_joystick_angle(self, in_deg=False, joystick="l"):
-        if joystick == "r":
-            return np.degrees(np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY)) + 90 if in_deg else np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY) + np.pi/2
-        elif joystick == "l":
-            return np.degrees(np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)) + 90 if in_deg else np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY) + np.pi/2
-        else:
-            return np.degrees(np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)) + 90 if in_deg else np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY) + np.pi/2
+    def _get_joystick_angle(self, in_deg=False):
+        l_angle = np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)
+        r_angle = np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY)
+        l_angle = self.config_angle(l_angle, in_deg)
+        r_angle = self.config_angle(r_angle, in_deg)
+
+        return  np.array([l_angle, r_angle])
+
 
 
     def _joystick_in_motion(self, joystick="l"):
@@ -49,7 +57,7 @@ class DualSenseController:
             
             self.ljX = self.dualsense.state.LX
             self.ljY = self.dualsense.state.LY
-            print(f"\033[2KMotion={self._joystick_in_motion()} x={self.ljX:.2f} y={self.ljY:.2f} angle={self._get_joystick_angle():.2f}", end="\r", flush=True)
+            print(f"\033[2KMotion={self._joystick_in_motion()} angle={self._get_joystick_angle(in_deg=True)}", end="\r", flush=True)
 
             if dpad_up:
                 callback(0)
