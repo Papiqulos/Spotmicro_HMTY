@@ -1,0 +1,164 @@
+\documentclass[11pt]{report}
+\usepackage{fontspec}
+\setmainfont{Noto Sans}
+\usepackage[english,greek]{babel}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\geometry{a4paper, margin=2.5cm}
+
+\newcommand\authorname{Γεώργιος Παπουτσάς}
+\newcommand\blankpage{%
+    \null
+    \thispagestyle{empty}
+    \addtocounter{page}{-1}
+    \newpage}
+
+\fancypagestyle{frontmatterstyle}{%
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+\fancypagestyle{plain}{%
+    \fancyhf{}
+    \fancyfoot[L]{\authorname}
+    \fancyfoot[R]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0.4pt}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\slshape Κεφάλαιο \thechapter}}
+\fancyfoot[L]{\authorname}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+% Cover, copyright notice and certification page (already laid out in cover.pdf)
+\includepdf[pages=-]{cover.pdf}
+\blankpage
+
+% --- Acknowledgements ---
+\thispagestyle{empty}
+\begin{center}
+    \textbf{\Large ΕΥΧΑΡΙΣΤΙΕΣ}
+\end{center}
+\vspace{1em}
+\textit{[Κείμενο ευχαριστιών — προς συμπλήρωση]}
+\newpage
+
+% --- Greek abstract ---
+\thispagestyle{empty}
+\noindent\textbf{\Large ΠΕΡΙΛΗΨΗ}
+
+\begin{center}
+    \textbf{ΣΧΕΔΙΑΣΗ, ΥΛΟΠΟΙΗΣΗ ΚΑΙ ΕΛΕΓΧΟΣ ΚΙΝΗΣΗΣ ΤΕΤΡΑΠΟΔΟΥ ΡΟΜΠΟΤ}
+\end{center}
+
+\begin{center}
+\begin{tabular}{cc}
+    \textbf{Φοιτητής:} & \textbf{Επιβλέπων:} \\
+    Γεώργιος Παπουτσάς & Χαράλαμπος Μπεχλιούλης \\
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\textit{[Κείμενο περίληψης — προς συμπλήρωση]}
+
+\vspace{1em}
+\noindent\textbf{Λέξεις κλειδιά:} \textit{[προς συμπλήρωση, π.χ. τετράποδο ρομπότ, βάδιση trot, αντίστροφη κινηματική, PID, IMU]}
+\newpage
+
+% --- Extensive English summary ---
+\selectlanguage{english}
+\thispagestyle{empty}
+\begin{center}
+    \textbf{\Large EXTENSIVE ENGLISH SUMMARY}
+
+    \textbf{Design, Implementation and Control of a Quadruped Robot}
+\end{center}
+
+\begin{center}
+\begin{tabular}{cc}
+    \textbf{Student:} & \textbf{Supervisor:} \\
+    George Papoutsas & Charalampos Bechlioulis \\
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\textit{[Summary text -- to be completed]}
+
+\vspace{1em}
+\noindent\textbf{Keywords:} \textit{[to be completed, e.g. quadruped robot, trot gait, inverse kinematics, PID, IMU]}
+\selectlanguage{greek}
+\newpage
+
+% --- Front matter listings ---
+\pagenumbering{roman}
+\setcounter{page}{1}
+\pagestyle{frontmatterstyle}
+
+\tableofcontents
+\addcontentsline{toc}{chapter}{Περιεχόμενα}
+
+\listoffigures
+\addcontentsline{toc}{chapter}{Κατάλογος Σχημάτων}
+
+\listoftables
+\addcontentsline{toc}{chapter}{Κατάλογος Πινάκων}
+
+\chapter*{Ακρωνύμια}
+\addcontentsline{toc}{chapter}{Ακρωνύμια}
+\textit{[προς συμπλήρωση]}
+
+% --- Main matter ---
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+\chapter{Εισαγωγή}
+
+\section{Περιγραφή Προβλήματος και Κίνητρο}
+\textit{[προς συμπλήρωση — τι πρόβλημα αντιμετωπίζεται και γιατί έχει σημασία]}
+
+\section{Υφιστάμενη Κατάσταση}
+\textit{[προς συμπλήρωση — τι έχει γίνει ήδη στο πεδίο]}
+
+\section{Συνεισφορά της Παρούσας Εργασίας}
+\textit{[προς συμπλήρωση — τι έγινε στα πλαίσια αυτής της διπλωματικής]}
+
+\section{Δομή της Εργασίας}
+\textit{[προς συμπλήρωση — σύντομη περιγραφή των επόμενων κεφαλαίων]}
+
+\chapter{Βιβλιογραφική Ανασκόπηση}
+\textit{[προς συμπλήρωση]}
+
+\chapter{Περιγραφή Τεχνικού Προβλήματος}
+\textit{[προς συμπλήρωση]}
+
+\chapter{Λύση του Προβλήματος}
+\textit{[προς συμπλήρωση — πώς προσεγγίστηκε η λύση, επισκόπηση πριν τα Κεφάλαια 5-6]}
+
+\chapter{Προσομοίωση}
+\textit{[προς συμπλήρωση]}
+
+\chapter{Υλοποίηση σε Πραγματικό Ρομπότ}
+\textit{[προς συμπλήρωση]}
+
+\chapter{Αποτελέσματα}
+\textit{[προς συμπλήρωση]}
+
+\section{Βίντεο}
+\textit{[προς συμπλήρωση — σύνδεσμοι/αναφορές σε επίδειξη λειτουργίας]}
+
+\chapter{Συμπεράσματα και Μελλοντικές Επεκτάσεις}
+\textit{[προς συμπλήρωση]}
+
+\end{document}

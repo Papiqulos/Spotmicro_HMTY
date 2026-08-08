@@ -218,6 +218,21 @@ class Kinematics:
 
 
         return ef_positions
+    
+    def jacobian(self):
+        raise NotImplementedError
+    
+    def diffKin(self):
+        raise NotImplementedError
+    
+    def diffIK(self):
+        raise NotImplementedError
+    
+    def torques(self):
+        raise NotImplementedError
+    
+    def mech_power(self):
+        raise NotImplementedError
 
 
 

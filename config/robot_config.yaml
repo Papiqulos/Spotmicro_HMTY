@@ -31,6 +31,8 @@ body:
   com_offset_x: 0.0  # X offset (mm) geometric centre to COM
   com_offset_z: 0.0     # Z offset (mm) geometric centre to COM
 
+
+
 leg_segments:
   L1: 27.442          # Horizontal offset shoulder to leg
   L2: 10.618          # Vertical offset shoulder to leg
@@ -43,3 +45,45 @@ joint_limits:
   shoulder: [-0.548,  0.548]   # theta1 
   elbow:    [-2.17,   0.97]    # theta2
   knee:     [-0.10,   2.59]    # theta3 
+
+
+# Physical properties of some parts for CAD Design
+base_plate:
+  inner_length: 125
+  inner_width: 95 
+
+  outer_length: 94 
+  outer_width: 106
+
+
+holes:
+  step_down:
+    length: 55   # From center of hole to center of hole
+    width: 30    # From center of hole to center of hole
+    screw_diameter: 3
+  rpi:
+    length: 58 # From center of hole to center of hole
+    width: 49  # From center of hole to center of hole
+    screw_diameter: 2.5
+  pca:
+    length: 55.9 # From center of hole to center of hole
+    width: 18.8  # From center of hole to center of hole
+    screw_diameter: 2.5
+  bulges:
+    inner_radius: 3
+    outer_radius: 6
+
+
+imu:
+  length: 22
+  width: 17
+
+battery:
+  length: 93
+  width: 32
+  height: 18
+
+402.27
+
+
+

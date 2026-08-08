@@ -13,3 +13,7 @@ tests/
 improvements.txt
 RESEARCH_NOTES.md
 CLAUDE.md
+.claude/
+/thesis/patras-thesis-template-latex/
+/thesis/examples/
+
