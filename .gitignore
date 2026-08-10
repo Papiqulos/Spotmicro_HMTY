@@ -1,19 +1,81 @@
+# IDE
 .venv/
 __pycache__/
+.vscode/
+
+# ROS2 FUTURE IMPLEMENTATION
 ros2_ws/ 
+
+# test scripts
 tests/
 /hw/reset_i2c.py
+
+# simulation
 /sim/urdf/stlv2/
+
+# log
 /log/roll_pitch/
-.vscode/
+
+# package
 /spotmicro.egg-info/
 
-
-
+# Claude
 improvements.txt
 RESEARCH_NOTES.md
 CLAUDE.md
 .claude/
+
+# thesis
 /thesis/patras-thesis-template-latex/
 /thesis/examples/
+
+# LaTeX build artifacts
+*.acn
+*.acr
+*.alg
+*.aux
+*.bak
+*.bbl
+*.bcf
+*.blg
+*.brf
+*.dvi
+*.fdb_latexmk
+*.fls
+*.glg
+*.glo
+*.gls
+*.idx
+*.ilg
+*.ind
+*.ist
+*.lof
+*.log
+*.lol
+*.lot
+*.maf
+*.mtc*
+*.nav
+*.nlo
+*.nls
+*.out
+*.pyg
+*.run.xml
+*.snm
+*.synctex.gz
+*.synctex\(busy\)
+*.tex.backup
+*.thm
+*.toc
+*.vrb
+*.xdv
+*.xdy
+*blx.bib
+
+# pdfs, besides thesis
+*.pdf
+!thesis/**/cover.pdf
+!thesis/**/figures/**
+!thesis/first_draft/main.pdf
+
 

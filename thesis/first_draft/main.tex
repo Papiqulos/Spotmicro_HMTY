@@ -1,3 +1,4 @@
+% !TEX program = lualatex
 \documentclass[11pt]{report}
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
@@ -7,6 +8,9 @@
 \usepackage{geometry}
 \usepackage{fancyhdr}
 \geometry{a4paper, margin=2.5cm}
+
+\usepackage[backend=biber,style=ieee]{biblatex}
+\addbibresource{thesis.bib}
 
 \newcommand\authorname{Γεώργιος Παπουτσάς}
 \newcommand\blankpage{%
@@ -40,7 +44,7 @@
 
 \begin{document}
 
-% Cover, copyright notice and certification page (already laid out in cover.pdf)
+% Cover, copyright notice and certification page 
 \includepdf[pages=-]{cover.pdf}
 \blankpage
 
@@ -103,15 +107,25 @@
 \pagenumbering{roman}
 \setcounter{page}{1}
 \pagestyle{frontmatterstyle}
+% chapter-opening pages force `plain`; match it to the front matter style
+\fancypagestyle{plain}{%
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
 
-\tableofcontents
+\clearpage
 \addcontentsline{toc}{chapter}{Περιεχόμενα}
+\tableofcontents
 
-\listoffigures
+\clearpage
 \addcontentsline{toc}{chapter}{Κατάλογος Σχημάτων}
+\listoffigures
 
-\listoftables
+\clearpage
 \addcontentsline{toc}{chapter}{Κατάλογος Πινάκων}
+\listoftables
 
 \chapter*{Ακρωνύμια}
 \addcontentsline{toc}{chapter}{Ακρωνύμια}
@@ -122,43 +136,216 @@
 \pagenumbering{arabic}
 \setcounter{page}{1}
 \pagestyle{fancy}
+% restore the main matter chapter-opening footer
+\fancypagestyle{plain}{%
+    \fancyhf{}
+    \fancyfoot[L]{\authorname}
+    \fancyfoot[R]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0.4pt}
+}
 
+% --- Introduction ---
 \chapter{Εισαγωγή}
 
-\section{Περιγραφή Προβλήματος και Κίνητρο}
-\textit{[προς συμπλήρωση — τι πρόβλημα αντιμετωπίζεται και γιατί έχει σημασία]}
+\section{Κίνητρα και Προκλήσεις}
+\textit{[προς συμπλήρωση]}
 
-\section{Υφιστάμενη Κατάσταση}
-\textit{[προς συμπλήρωση — τι έχει γίνει ήδη στο πεδίο]}
+\section{Σκοπός Διπλωματικής Εργασίας}
+\textit{[προς συμπλήρωση]}
 
-\section{Συνεισφορά της Παρούσας Εργασίας}
-\textit{[προς συμπλήρωση — τι έγινε στα πλαίσια αυτής της διπλωματικής]}
+\section{Στόχοι και Συνεισφορά}
+\textit{[προς συμπλήρωση]}
 
 \section{Δομή της Εργασίας}
-\textit{[προς συμπλήρωση — σύντομη περιγραφή των επόμενων κεφαλαίων]}
+\textit{[προς συμπλήρωση]}
 
+% --- Literature Review ---
 \chapter{Βιβλιογραφική Ανασκόπηση}
 \textit{[προς συμπλήρωση]}
 
-\chapter{Περιγραφή Τεχνικού Προβλήματος}
+\section{Τετράποδα Ρομπότ και Open Source Λύσεις}
 \textit{[προς συμπλήρωση]}
 
-\chapter{Λύση του Προβλήματος}
-\textit{[προς συμπλήρωση — πώς προσεγγίστηκε η λύση, επισκόπηση πριν τα Κεφάλαια 5-6]}
+\section{Σχεδιασμός Βάδισης και Τροχιών Άκρου}
+\textit{[προς συμπλήρωση]}
 
+\section{State Estimation και Sensor Fusion}
+\textit{[προς συμπλήρωση]}
+
+\section{Έλεγχος Ευστάθειας Τετράποδων}
+\textit{[προς συμπλήρωση]}
+
+% --- Modeling and Gait Design ---
+\chapter{Μοντελοποίηση και Σχεδιασμός Βάδισης}
+\textit{[προς συμπλήρωση]}
+
+\section{Συστήματα Συντεταγμένων και Παραδοχές}
+\textit{[προς συμπλήρωση]}
+
+\section{Κινηματικό Μοντέλο}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Ευθεία Κινηματική}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Αντίστροφη Κινηματική}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Μετασχηματισμός Σώματος}
+\textit{[προς συμπλήρωση]}
+
+\section{Σχεδιασμός Τροχιάς στον Χώρο Αρθρώσεων}
+\textit{[προς συμπλήρωση]}
+
+\section{Σχεδιασμός Τροχιάς στον Καρτεσιανό Χώρο}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Καμπύλες Bezier}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Φάση Swing}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Φάση Stance}
+\textit{[προς συμπλήρωση]}
+
+\section{Βάδισμα Trot}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Κατανομή Φάσεων Διαγώνιων Ζευγών}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Προφίλ Ταχύτητας}
+\textit{[προς συμπλήρωση]}
+
+\section{Σχεδιασμός Βαδίσματος Στροφής}
+\textit{[προς συμπλήρωση]}
+
+\section{Σταθεροποίηση Προσανατολισμού}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Ελεγκτής PID Roll/Pitch}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Γεωμετρική Αντιστάθμιση Ύψους Άκρων}
+\textit{[προς συμπλήρωση]}
+
+% --- Simulation ---
 \chapter{Προσομοίωση}
 \textit{[προς συμπλήρωση]}
 
+\section{Επιλογή Περιβάλλοντος Προσομοίωσης}
+\textit{[προς συμπλήρωση]}
+
+\section{Μοντέλο Ρομπότ και Αντιστοίχιση Αξόνων}
+\textit{[προς συμπλήρωση]}
+
+\section{Υλοποίηση Βρόχου Ελέγχου}
+\textit{[προς συμπλήρωση]}
+
+\section{Ρύθμιση Παραμέτρων Ελεγκτή}
+\textit{[προς συμπλήρωση]}
+
+% --- Real Hardware Implementation ---
 \chapter{Υλοποίηση σε Πραγματικό Ρομπότ}
 \textit{[προς συμπλήρωση]}
 
+\section{Σχεδιασμός και Εκτύπωση Σκελετού Ρομπότ}
+\textit{[προς συμπλήρωση]}
+
+\section{Hardware}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Επιλογή Κινητήρων}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Επιλογή Υπολογιστικής Μονάδας}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Επιλογή Αισθητήρων}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Τροφοδοσία και Επιμέρους Ηλεκτρονικά}
+\textit{[προς συμπλήρωση]}
+
+\section{Αρχιτεκτονική Λογισμικού}
+\textit{[προς συμπλήρωση]}
+
+\section{Οδήγηση και Βαθμονόμηση Σερβοκινητήρων}
+\textit{[προς συμπλήρωση]}
+
+\section{Σύντηξη Αισθητήρων}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Φίλτρο Kalman}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Φίλτρο Madgwick}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Βαθμονόμηση και Θόρυβος Αισθητήρων}
+\textit{[προς συμπλήρωση]}
+
+\section{Έλεγχος σε Πραγματικό Χρόνο}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Φιλτράρισμα Σήματος (30-tap Moving Average)}
+\textit{[προς συμπλήρωση]}
+
+\subsection{Υλοποίηση Ελεγκτή PID}
+\textit{[προς συμπλήρωση]}
+
+\section{Τηλεχειρισμός}
+\textit{[προς συμπλήρωση]}
+
+\section{Καταγραφή Δεδομένων}
+\textit{[προς συμπλήρωση]}
+
+% --- Results ---
 \chapter{Αποτελέσματα}
+\textit{[προς συμπλήρωση]}
+
+\section{Μεθοδολογία Πειραμάτων}
+\textit{[προς συμπλήρωση]}
+
+\section{Αποτελέσματα Προσομοίωσης}
+\textit{[προς συμπλήρωση]}
+
+\section{Αποτελέσματα Βάδισης σε Πραγματικό Ρομπότ}
+\textit{[προς συμπλήρωση]}
+
+\section{Απόκριση Ελεγκτή Σταθεροποίησης}
 \textit{[προς συμπλήρωση]}
 
 \section{Βίντεο}
 \textit{[προς συμπλήρωση — σύνδεσμοι/αναφορές σε επίδειξη λειτουργίας]}
 
+% --- Conclusions ---
 \chapter{Συμπεράσματα και Μελλοντικές Επεκτάσεις}
 \textit{[προς συμπλήρωση]}
+
+\section{Σύνοψη Εργασίας}
+\textit{[προς συμπλήρωση]}
+
+\section{Περιορισμοί}
+\textit{[προς συμπλήρωση]}
+
+\section{Μελλοντικές Επεκτάσεις}
+\textit{[προς συμπλήρωση]}
+
+% --- Appendices ---
+\appendix
+\addcontentsline{toc}{chapter}{Παραρτήματα}
+
+\chapter{Φυσικές Διαστάσεις και Παράμετροι Ρομπότ}
+\textit{[προς συμπλήρωση]}
+
+\chapter{Παράμετροι Ελεγκτή και Βάδισης}
+\textit{[προς συμπλήρωση]}
+
+% --- Bibliography ---
+\printbibliography[title=Αναφορές]
+\addcontentsline{toc}{chapter}{Αναφορές}
 
 \end{document}
