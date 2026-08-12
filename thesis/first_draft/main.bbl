@@ -1,0 +1,702 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{raibert_legged_1986}{book}{}{}
+      \name{author}{1}{}{%
+        {{hash=e3a6d1fa7658c92031b383b683d5d6d8}{%
+           family={Raibert},
+           familyi={R\bibinitperiod},
+           given={Marc\bibnamedelima H.},
+           giveni={M\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Cambridge, MA, USA}%
+      }
+      \list{publisher}{1}{%
+        {MIT Press}%
+      }
+      \strng{namehash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{fullhash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{fullhashraw}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{bibnamehash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{authorbibnamehash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{authornamehash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{authorfullhash}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \strng{authorfullhashraw}{e3a6d1fa7658c92031b383b683d5d6d8}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Marc Raibert's book describes the study of physical machines that run and balance on just one leg, including analysis, computer simulation, and laboratory experiments. It describes how the principles of locomotion discovered with one leg can be extended to systems with several legs.}
+      \field{isbn}{978-0-262-18117-4}
+      \field{series}{{MIT} {Press} {Series} in {Artificial} {Intelligence}}
+      \field{title}{Legged {Robots} {That} {Balance}}
+      \field{year}{1986}
+    \endentry
+    \entry{li_quadruped_2025}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=0e9534fe0e8fa937ae0909aaae75cebd}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Qimeng},
+           giveni={Q\bibinitperiod}}}%
+        {{hash=ce96f1037801d638091cdb19e7b1c638}{%
+           family={Cicirelli},
+           familyi={C\bibinitperiod},
+           given={Franco},
+           giveni={F\bibinitperiod}}}%
+        {{hash=4fe45322a3d8a66d70513cb0f65da8c9}{%
+           family={Vinci},
+           familyi={V\bibinitperiod},
+           given={Andrea},
+           giveni={A\bibinitperiod}}}%
+        {{hash=c27744c7b0b2f42c55d49bd81d2e6001}{%
+           family={Guerrieri},
+           familyi={G\bibinitperiod},
+           given={Antonio},
+           giveni={A\bibinitperiod}}}%
+        {{hash=8cc178e1a79bd5699c9172cb681809b0}{%
+           family={Qi},
+           familyi={Q\bibinitperiod},
+           given={Wen},
+           giveni={W\bibinitperiod}}}%
+        {{hash=8e15b29ba99bb73810d65525efc588f2}{%
+           family={Fortino},
+           familyi={F\bibinitperiod},
+           given={Giancarlo},
+           giveni={G\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{0a482d4f9d345fac3b6b2cfcd228a32a}
+      \strng{fullhash}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \strng{fullhashraw}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \strng{bibnamehash}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \strng{authorbibnamehash}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \strng{authornamehash}{0a482d4f9d345fac3b6b2cfcd228a32a}
+      \strng{authorfullhash}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \strng{authorfullhashraw}{fb71cc7ad748bee9fd8257d18c0f5f82}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{Quadruped robots have emerged as a prominent field of research due to their exceptional mobility and adaptability in complex terrains. This paper presents an overview of quadruped robots, encompassing their design principles, control mechanisms, perception systems, and applications across various industries. We review the historical evolution and technological milestones that have shaped quadruped robotics. To understand their impact on performance and functionality, key aspects of mechanical design are analyzed, including leg configurations, actuation systems, and material selection. Control strategies for locomotion, balance, and navigation are all examined, highlighting the integration of artificial intelligence and machine learning to enhance adaptability and autonomy. This review also explores perception and sensing technologies that enable environmental interaction and decision-making capabilities. Furthermore, we systematically examine the diverse applications of quadruped robots in sectors including the military, search and rescue, industrial inspection, agriculture, and entertainment. Finally, we address challenges and limitations, including technical hurdles, ethical considerations, and regulatory issues, and propose future research directions to advance the field. By structuring this review as a systematic study, we ensure clarity and a comprehensive understanding of the domain, making it a valuable resource for researchers and engineers in quadruped robotics.}
+      \field{issn}{2218-6581}
+      \field{journaltitle}{Robotics}
+      \field{month}{4}
+      \field{number}{5}
+      \field{shorttitle}{Quadruped {Robots}}
+      \field{title}{Quadruped {Robots}: {Bridging} {Mechanical} {Design}, {Control}, and {Applications}}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{volume}{14}
+      \field{year}{2025}
+      \field{urldateera}{ce}
+      \field{pages}{57}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.3390/robotics14050057
+      \endverb
+      \verb{file}
+      \verb PDF:files/14/Li et al. - 2025 - Quadruped Robots Bridging Mechanical Design, Control, and Applications.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://www.mdpi.com/2218-6581/14/5/57
+      \endverb
+      \verb{url}
+      \verb https://www.mdpi.com/2218-6581/14/5/57
+      \endverb
+    \endentry
+    \entry{bledt_mit_2018}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=4027793c1b49393792aeccf6a7c0df34}{%
+           family={Bledt},
+           familyi={B\bibinitperiod},
+           given={Gerardo},
+           giveni={G\bibinitperiod}}}%
+        {{hash=8bb6671fd614ede7bb9233476cbc4a6f}{%
+           family={Powell},
+           familyi={P\bibinitperiod},
+           given={Matthew\bibnamedelima J.},
+           giveni={M\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=538987da5e39cac0ecbf051e6094bcdb}{%
+           family={Katz},
+           familyi={K\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod}}}%
+        {{hash=f5e20dffb3e35084023376ba5e0919df}{%
+           family={Di\bibnamedelima Carlo},
+           familyi={D\bibinitperiod\bibinitdelim C\bibinitperiod},
+           given={Jared},
+           giveni={J\bibinitperiod}}}%
+        {{hash=798be7fcfe7ce5d98b37f6cb266778e4}{%
+           family={Wensing},
+           familyi={W\bibinitperiod},
+           given={Patrick\bibnamedelima M.},
+           giveni={P\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=23a30c71925ebf508cf3e30627b69403}{%
+           family={Kim},
+           familyi={K\bibinitperiod},
+           given={Sangbae},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Madrid}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{91c0fed15635a579b43fab200698bc3a}
+      \strng{fullhash}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \strng{fullhashraw}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \strng{bibnamehash}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \strng{authorbibnamehash}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \strng{authornamehash}{91c0fed15635a579b43fab200698bc3a}
+      \strng{authorfullhash}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \strng{authorfullhashraw}{76d51bc2b4b3f6945c4d6b4b49613a12}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{This paper introduces a new robust, dynamic quadruped, the MIT Cheetah 3. Like its predecessor, the Cheetah 3 exploits tailored mechanical design to enable simple control strategies for dynamic locomotion and features highbandwidth proprioceptive actuators to manage physical interaction with the environment. A new leg design is presented that includes proprioceptive actuation on the abduction/adduction degrees of freedom in addition to an expanded range of motion on the hips and knees. To make full use of these new capabilities, general balance and locomotion controllers for Cheetah 3 are presented. These controllers are embedded into a modular control architecture that allows the robot to handle unexpected terrain disturbances through reactive gait modiﬁcation and without the need for external sensors or prior environment knowledge. The efﬁciency of the robot is demonstrated by a low Cost of Transport (CoT) over multiple gaits at moderate speeds, with the lowest CoT of 0.45 found during trotting. Experiments showcase the ability to blindly climb up stairs as a result of the full system integration. These results collectively represent a promising step toward a platform capable of generalized dynamic legged locomotion.}
+      \field{booktitle}{2018 {IEEE}/{RSJ} {International} {Conference} on {Intelligent} {Robots} and {Systems} ({IROS})}
+      \field{isbn}{978-1-5386-8094-0}
+      \field{month}{10}
+      \field{shorttitle}{{MIT} {Cheetah} 3}
+      \field{title}{{MIT} {Cheetah} 3: {Design} and {Control} of a {Robust}, {Dynamic} {Quadruped} {Robot}}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{year}{2018}
+      \field{urldateera}{ce}
+      \field{pages}{2245\bibrangedash 2252}
+      \range{pages}{8}
+      \verb{doi}
+      \verb 10.1109/IROS.2018.8593885
+      \endverb
+      \verb{file}
+      \verb PDF:files/13/Bledt et al. - 2018 - MIT Cheetah 3 Design and Control of a Robust, Dynamic Quadruped Robot.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://ieeexplore.ieee.org/document/8593885/
+      \endverb
+      \verb{url}
+      \verb https://ieeexplore.ieee.org/document/8593885/
+      \endverb
+    \endentry
+    \entry{fan_review_2024}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=61ee2739a6cf28ec7662089545696534}{%
+           family={Fan},
+           familyi={F\bibinitperiod},
+           given={Yanan},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=c1724bd6c6ada8fea9e7f4b0f8a48589}{%
+           family={Pei},
+           familyi={P\bibinitperiod},
+           given={Zhongcai},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=147b8560865739e558b0631402b38ee6}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Chen},
+           giveni={C\bibinitperiod}}}%
+        {{hash=122748fbd1766f07a1685dde181113ca}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Meng},
+           giveni={M\bibinitperiod}}}%
+        {{hash=f20bec9e6d6239a2d4f9afd5e3dba156}{%
+           family={Tang},
+           familyi={T\bibinitperiod},
+           given={Zhiyong},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=7c7337373a8d8c9e482652f942bc915a}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Qinghua},
+           giveni={Q\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{fce7b2a86042a2203bf3910255a3c2a5}
+      \strng{fullhash}{cbbd39e5bb466a12034f7b67cdf20882}
+      \strng{fullhashraw}{cbbd39e5bb466a12034f7b67cdf20882}
+      \strng{bibnamehash}{cbbd39e5bb466a12034f7b67cdf20882}
+      \strng{authorbibnamehash}{cbbd39e5bb466a12034f7b67cdf20882}
+      \strng{authornamehash}{fce7b2a86042a2203bf3910255a3c2a5}
+      \strng{authorfullhash}{cbbd39e5bb466a12034f7b67cdf20882}
+      \strng{authorfullhashraw}{cbbd39e5bb466a12034f7b67cdf20882}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{With their unique point‐contact ability with the ground and exceptional adaptability to complex terrains, quadruped robots have become a focal point in the fields of automation and robotic engineering. Significant research progress has been made in aspects such as structural design, motion planning, and balance control of these robots. However, a primary challenge in current research lies in further enhancing the dynamic performance, environmental adaptability, and payload capacity. In this article, research achievements in key technical areas of quadruped robots, encompassing structural design, gait planning, traditional control strategies, intelligent control strategies, and autonomous movement, are comprehensively discussed. The focus of the article is on analyzing trends in intelligence and technological innovation within the aforementioned areas, aiming to provide robust theoretical support and forward‐looking technical guidance for quadruped robots research. Additionally, it offers valuable references for scholars engaged in this field.}
+      \field{issn}{2640-4567, 2640-4567}
+      \field{journaltitle}{Advanced Intelligent Systems}
+      \field{month}{6}
+      \field{number}{6}
+      \field{shorttitle}{A {Review} of {Quadruped} {Robots}}
+      \field{title}{A {Review} of {Quadruped} {Robots}: {Structure}, {Control}, and {Autonomous} {Motion}}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{volume}{6}
+      \field{year}{2024}
+      \field{urldateera}{ce}
+      \field{pages}{2300783}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1002/aisy.202300783
+      \endverb
+      \verb{file}
+      \verb PDF:files/9/Fan et al. - 2024 - A Review of Quadruped Robots Structure, Control, and Autonomous Motion.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://advanced.onlinelibrary.wiley.com/doi/10.1002/aisy.202300783
+      \endverb
+      \verb{url}
+      \verb https://advanced.onlinelibrary.wiley.com/doi/10.1002/aisy.202300783
+      \endverb
+    \endentry
+    \entry{bares_configuration_1993}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=87c816098a81de02dd332d6fd99d6801}{%
+           family={Bares},
+           familyi={B\bibinitperiod},
+           given={John\bibnamedelima E.},
+           giveni={J\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=6a4b95e103e25427ce516202ed7877f7}{%
+           family={Whittaker},
+           familyi={W\bibinitperiod},
+           given={William\bibnamedelima L.},
+           giveni={W\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{fullhash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{fullhashraw}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{bibnamehash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{authorbibnamehash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{authornamehash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{authorfullhash}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \strng{authorfullhashraw}{b4f3f4434cec3d52523aa679e45a0cd6}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0278-3649, 1741-3176}
+      \field{journaltitle}{The International Journal of Robotics Research}
+      \field{month}{12}
+      \field{number}{6}
+      \field{title}{Configuration of {Autonomous} {Walkers} for {Extreme} {Terrain}}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{volume}{12}
+      \field{year}{1993}
+      \field{urldateera}{ce}
+      \field{pages}{535\bibrangedash 559}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1177/027836499301200603
+      \endverb
+      \verb{urlraw}
+      \verb https://journals.sagepub.com/doi/10.1177/027836499301200603
+      \endverb
+      \verb{url}
+      \verb https://journals.sagepub.com/doi/10.1177/027836499301200603
+      \endverb
+    \endentry
+    \entry{hyun_high_2014}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=0115a34b61bb8a00c283c640df9bca24}{%
+           family={Hyun},
+           familyi={H\bibinitperiod},
+           given={Dong\bibnamedelima Jin},
+           giveni={D\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=86afbee3fcffd59af5911471adbaea1e}{%
+           family={Seok},
+           familyi={S\bibinitperiod},
+           given={Sangok},
+           giveni={S\bibinitperiod}}}%
+        {{hash=b035e5594dcb32260b95108c3efb880e}{%
+           family={Lee},
+           familyi={L\bibinitperiod},
+           given={Jongwoo},
+           giveni={J\bibinitperiod}}}%
+        {{hash=23a30c71925ebf508cf3e30627b69403}{%
+           family={Kim},
+           familyi={K\bibinitperiod},
+           given={Sangbae},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{a92d1c741f967835e415f025b10ba2f6}
+      \strng{fullhash}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \strng{fullhashraw}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \strng{bibnamehash}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \strng{authorbibnamehash}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \strng{authornamehash}{a92d1c741f967835e415f025b10ba2f6}
+      \strng{authorfullhash}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \strng{authorfullhashraw}{c9c3fbd77f5c636ebe2a492bdee335bc}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{shorttitle}
+      \field{abstract}{This paper presents implementation of a highly dynamic running gait with a hierarchical controller on the MIT Cheetah. The developed controller enables high-speed running of up to 6 m/s (Froude number of Fr ≈ 7.34) incorporating proprioceptive feedback and programmable virtual leg compliance of the MIT Cheetah. To achieve a stable and fast trot gait, we applied three control strategies: (a) programmable virtual leg compliance that provides instantaneous reflexes to external disturbance and facilitates the self-stabilizing shown in the passive dynamics of locomotion; (b) tunable stance-trajectory design, intended to adjust impulse at each foot-end in the stance phase in a high speed trot-running according to the equilibrium-point hypothesis; and (c) a gait-pattern modulation that imposes a desired cyclic gait-pattern taking cues from proprioceptive TD feedback. Based on three strategies, the controller is hierarchically structured. The control parameters for forward speeds, a specific gait-pattern, and desired leg trajectories are managed by a high-level controller. It consists of both a gait-pattern modulator with proprioceptive leg TD detection and a leg-trajectory generator using a Bèzier curve and a tunable amplitude sinusoidal wave. Instead of employing physical spring/dampers in the robot’s leg, the programmable virtual leg compliance is realized using proprioceptive impedance control in individual low-level leg controllers. To verify the developed controller, a robot dynamic simulator is constructed based on the model parameters of the MIT Cheetah. The controller parameters are tuned with the simulator to achieve self-stability, and then applied to the MIT Cheetah in an experimental environment. Using leg kinematics and applied motor current feedbacks, the MIT Cheetah achieved a stable trot-running gait in the sagittal plane.}
+      \field{issn}{0278-3649, 1741-3176}
+      \field{journaltitle}{The International Journal of Robotics Research}
+      \field{month}{9}
+      \field{number}{11}
+      \field{shorttitle}{High speed trot-running}
+      \field{title}{High speed trot-running: {Implementation} of a hierarchical controller using proprioceptive impedance control on the {MIT} {Cheetah}}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{volume}{33}
+      \field{year}{2014}
+      \field{urldateera}{ce}
+      \field{pages}{1417\bibrangedash 1445}
+      \range{pages}{29}
+      \verb{doi}
+      \verb 10.1177/0278364914532150
+      \endverb
+      \verb{file}
+      \verb PDF:files/6/Hyun et al. - 2014 - High speed trot-running Implementation of a hierarchical controller using proprioceptive impedance.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://journals.sagepub.com/doi/10.1177/0278364914532150
+      \endverb
+      \verb{url}
+      \verb https://journals.sagepub.com/doi/10.1177/0278364914532150
+      \endverb
+    \endentry
+    \entry{bostondynamics_spot}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=9fff6234432849eb87e9f1aa94e91ff2}{%
+           family={{Boston Dynamics}},
+           familyi={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{fullhash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{fullhashraw}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{bibnamehash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{authorbibnamehash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{authornamehash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{authorfullhash}{9fff6234432849eb87e9f1aa94e91ff2}
+      \strng{authorfullhashraw}{9fff6234432849eb87e9f1aa94e91ff2}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Commercial quadruped platform}
+      \field{title}{Spot: {Automate} {Sensing} and {Inspection} {Data} {Collection}}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2025}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://bostondynamics.com/products/spot/
+      \endverb
+      \verb{url}
+      \verb https://bostondynamics.com/products/spot/
+      \endverb
+    \endentry
+    \entry{hutter_anymal_2016}{inproceedings}{}{}
+      \name{author}{14}{}{%
+        {{hash=164607f9daa616a03bed0e2bf6531a8d}{%
+           family={Hutter},
+           familyi={H\bibinitperiod},
+           given={Marco},
+           giveni={M\bibinitperiod}}}%
+        {{hash=0779c261d22505f312e6b8b679c19b69}{%
+           family={Gehring},
+           familyi={G\bibinitperiod},
+           given={Christian},
+           giveni={C\bibinitperiod}}}%
+        {{hash=acbca347de58693805f0dfcc2e723de6}{%
+           family={Jud},
+           familyi={J\bibinitperiod},
+           given={Dominic},
+           giveni={D\bibinitperiod}}}%
+        {{hash=8e30ec1f2fed486f6769e434cdeb8278}{%
+           family={Lauber},
+           familyi={L\bibinitperiod},
+           given={Andreas},
+           giveni={A\bibinitperiod}}}%
+        {{hash=ab0438c184f04a3ba8d05c0e79e6bb40}{%
+           family={Bellicoso},
+           familyi={B\bibinitperiod},
+           given={C.\bibnamedelimi Dario},
+           giveni={C\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=8365fb13ef3d3614cbb5c649c02da065}{%
+           family={Tsounis},
+           familyi={T\bibinitperiod},
+           given={Vassilios},
+           giveni={V\bibinitperiod}}}%
+        {{hash=8c6a64beba14091eba8c78ac2e5d2a2b}{%
+           family={Hwangbo},
+           familyi={H\bibinitperiod},
+           given={Jemin},
+           giveni={J\bibinitperiod}}}%
+        {{hash=73e469cecef514f8e80a0fac534902ca}{%
+           family={Bodie},
+           familyi={B\bibinitperiod},
+           given={Karen},
+           giveni={K\bibinitperiod}}}%
+        {{hash=ad3a2c0a9ee1f82936d3fd9deb28f870}{%
+           family={Fankhauser},
+           familyi={F\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod}}}%
+        {{hash=f1435bb9c30ae81b29d01029941e7068}{%
+           family={Bloesch},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=2e1f94ad3c1e3e89b5f89bc76ec9b37d}{%
+           family={Diethelm},
+           familyi={D\bibinitperiod},
+           given={Remo},
+           giveni={R\bibinitperiod}}}%
+        {{hash=de89f599945e8c2d6a6488eb7b241f56}{%
+           family={Bachmann},
+           familyi={B\bibinitperiod},
+           given={Samuel},
+           giveni={S\bibinitperiod}}}%
+        {{hash=3fa19670de70f7a654ec6c3d6b2cceca}{%
+           family={Melzer},
+           familyi={M\bibinitperiod},
+           given={Amir},
+           giveni={A\bibinitperiod}}}%
+        {{hash=4136deef80b341bd3bf11593dfdad52e}{%
+           family={Hoepflinger},
+           familyi={H\bibinitperiod},
+           given={Mark},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Daejeon, South Korea}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{477fca958e75709cb36e5e12a4de0218}
+      \strng{fullhash}{c833460d6e71a9d51e1dd2f4fd2995a1}
+      \strng{fullhashraw}{c833460d6e71a9d51e1dd2f4fd2995a1}
+      \strng{bibnamehash}{477fca958e75709cb36e5e12a4de0218}
+      \strng{authorbibnamehash}{477fca958e75709cb36e5e12a4de0218}
+      \strng{authornamehash}{477fca958e75709cb36e5e12a4de0218}
+      \strng{authorfullhash}{c833460d6e71a9d51e1dd2f4fd2995a1}
+      \strng{authorfullhashraw}{c833460d6e71a9d51e1dd2f4fd2995a1}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2016 {IEEE}/{RSJ} {International} {Conference} on {Intelligent} {Robots} and {Systems} ({IROS})}
+      \field{month}{10}
+      \field{title}{{ANYmal} - a highly mobile and dynamic quadrupedal robot}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2016}
+      \field{urldateera}{ce}
+      \field{pages}{38\bibrangedash 44}
+      \range{pages}{7}
+      \verb{doi}
+      \verb 10.1109/IROS.2016.7758092
+      \endverb
+      \verb{urlraw}
+      \verb https://ieeexplore.ieee.org/document/7758092
+      \endverb
+      \verb{url}
+      \verb https://ieeexplore.ieee.org/document/7758092
+      \endverb
+    \endentry
+    \entry{kim_spotmicro_2019}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=3bb46eae954554e669e58f04ca81868e}{%
+           family={Kim},
+           familyi={K\bibinitperiod},
+           given={Deok-yeon},
+           giveni={D\bibinithyphendelim y\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Thingiverse}%
+      }
+      \strng{namehash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{fullhash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{fullhashraw}{3bb46eae954554e669e58f04ca81868e}
+      \strng{bibnamehash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{authorbibnamehash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{authornamehash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{authorfullhash}{3bb46eae954554e669e58f04ca81868e}
+      \strng{authorfullhashraw}{3bb46eae954554e669e58f04ca81868e}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{2}
+      \field{note}{Creative Commons Attribution license}
+      \field{title}{Spotmicro - robot dog}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2019}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.thingiverse.com/thing:3445283
+      \endverb
+      \verb{url}
+      \verb https://www.thingiverse.com/thing:3445283
+      \endverb
+    \endentry
+    \entry{spotmicroai_project}{online}{}{}
+      \list{organization}{1}{%
+        {SpotMicroAI Community}%
+      }
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{note}{Continuously updated community project based on the SpotMicro design by D.-Y. Kim}
+      \field{title}{{SpotMicroAI}: open-source quadruped robot project}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2019}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://spotmicroai.readthedocs.io
+      \endverb
+      \verb{url}
+      \verb https://spotmicroai.readthedocs.io
+      \endverb
+    \endentry
+    \entry{tsiatsianas_quadruped_2024}{software}{}{}
+      \name{author}{4}{}{%
+        {{hash=4110334150e1dc34b2940321d0c16411}{%
+           family={Tsiatsianas},
+           familyi={T\bibinitperiod},
+           given={Vangelis},
+           giveni={V\bibinitperiod}}}%
+        {{hash=82ff81fc125fc0d5743948af914f2859}{%
+           family={Athanasakis},
+           familyi={A\bibinitperiod},
+           given={Christos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=cf5b6d4c7c78638c869d4abb7936fe9f}{%
+           family={Kiokakis},
+           familyi={K\bibinitperiod},
+           given={Christos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=3bbe88a755ea15ed59c7d3b8f01584bb}{%
+           family={Ntagas},
+           familyi={N\bibinitperiod},
+           given={Alexandros},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{organization}{2}{%
+        {University of Patras, Department of Electrical}%
+        {Computer Engineering}%
+      }
+      \strng{namehash}{b56d3bf935d29af172627e5cd05340f5}
+      \strng{fullhash}{a44c8eca5a5a1354f347601dbd210169}
+      \strng{fullhashraw}{a44c8eca5a5a1354f347601dbd210169}
+      \strng{bibnamehash}{a44c8eca5a5a1354f347601dbd210169}
+      \strng{authorbibnamehash}{a44c8eca5a5a1354f347601dbd210169}
+      \strng{authornamehash}{b56d3bf935d29af172627e5cd05340f5}
+      \strng{authorfullhash}{a44c8eca5a5a1354f347601dbd210169}
+      \strng{authorfullhashraw}{a44c8eca5a5a1354f347601dbd210169}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Course project, Introduction to Robotics}
+      \field{title}{Quadruped {Robot} {Project} (ECE\_{\textDelta}K703)}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2024}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://github.com/VagTsiats/QuadrupedRobotProject-ecedk703
+      \endverb
+      \verb{url}
+      \verb https://github.com/VagTsiats/QuadrupedRobotProject-ecedk703
+      \endverb
+    \endentry
+    \entry{taibo_spotmicro_2020}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=80a76ca5a96e2907f303161a002e5c9c}{%
+           family={{nahueltaibo}},
+           familyi={n\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Thingiverse}%
+      }
+      \strng{namehash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{fullhash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{fullhashraw}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{bibnamehash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{authorbibnamehash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{authornamehash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{authorfullhash}{80a76ca5a96e2907f303161a002e5c9c}
+      \strng{authorfullhashraw}{80a76ca5a96e2907f303161a002e5c9c}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Remix of the original SpotMicro design by D.-Y. Kim}
+      \field{title}{{SpotMicro} v2}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2020}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.thingiverse.com/thing:4155673
+      \endverb
+      \verb{url}
+      \verb https://www.thingiverse.com/thing:4155673
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

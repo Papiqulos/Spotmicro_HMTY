@@ -28,6 +28,8 @@ CLAUDE.md
 # thesis
 /thesis/patras-thesis-template-latex/
 /thesis/examples/
+/thesis/first_draft/cite_cheatsheet.txt
+/thesis/first_draft/My Library/
 
 # LaTeX build artifacts
 *.acn
