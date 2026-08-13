@@ -61,14 +61,25 @@ measured on the real robot.
 
 ```
 config/     robot_config.yaml (dimensions, joint limits), servo_calib.yaml
-core/       kinematics.py, gait_controller.py, bezier_curve_gen.py
+core/       kinematics.py, robot_state.py, gait_controller.py, bezier_curve_gen.py
 hw/         quad_controller.py, imu.py, sensor drivers, teleop.py
-sim/        pybullet_sim.py, matplotlib_sim.py, urdf/
+sim/        pybullet_sim.py, matplotlib_sim.py, urdf/ (+ STL meshes)
 tools/      pid_controller.py, utils.py
 log/        CSV/PNG logs + plotting scripts
-tests/      driver and filter test scripts
 thesis/     LaTeX source of the thesis
 ```
+
+`kinematics.py` reads `config/robot_config.yaml` by relative path, so **run every
+script from the repository root**.
+
+## Entry points
+
+| Command | What it does |
+|---|---|
+| `python sim/pybullet_sim.py` | PyBullet simulation, keyboard-driven |
+| `python hw/quad_controller.py` | Hardware controller (on the Pi) |
+| `python hw/teleop.py` | DualSense input test |
+| `python sim/matplotlib_sim.py` | Static kinematics visualiser |
 
 ---
 
@@ -98,9 +109,6 @@ root:
 sudo cp ps5_controller/70-ps5-controller.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
-
-Scripts import across packages via `sys.path`, so run them **from the repository
-root**.
 
 ---
 
@@ -144,6 +152,19 @@ Three frames disagree, which is the most common source of confusion:
 |---|---|
 | PyBullet → robot | `X→X`, `Y→Z`, `Z→Y` |
 | Robot → IMU | `X→−Y`, `Y→X`, `Z→−Z` |
+
+The kinematics frame is **X forward, Y up, Z left**, in millimetres.
+
+---
+
+## Known limitations
+
+- Only the trot gait is tuned. The other four are implemented but not validated.
+- Joint limits are loaded from `robot_config.yaml` but not currently enforced in
+  `legIK`; an unreachable target returns zero angles instead of raising.
+- The magnetometer is disabled, so yaw is not observable — only roll and pitch
+  are stabilised.
+- The tilt cut-off checks pitch only and does not stop an in-progress run.
 
 ---
 
