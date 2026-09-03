@@ -79,5 +79,7 @@ CLAUDE.md
 !thesis/**/cover.pdf
 !thesis/**/figures/**
 !thesis/first_draft/main.pdf
+papers/
 
 
+thesis/first_draft/tables/~$gait_patterns_tables.xlsx

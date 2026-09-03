@@ -1,4 +1,16 @@
 
+@thesis{kivikangas_estimating_2022,
+	title = {Estimating {Three}-{Dimensional} {Motion} {Using} {IMU} {Sensors}},
+	url = {https://trepo.tuni.fi/bitstream/handle/10024/140007/KivikangasMarko.pdf?sequence=2},
+	language = {en},
+	urldate = {2026-09-03},
+	author = {Kivikangas, Marko},
+	month = may,
+	year = {2022},
+	type = {Bachelor's thesis},
+	school = {Tampere University},
+}
+
 @software{spotminimini2020github,
   author = {Maurice Rahme and Ian Abraham and Matthew Elwin and Todd Murphey},
   title = {SpotMiniMini: Pybullet Gym Environment for Gait Modulation with Bezier Curves},
@@ -105,6 +117,31 @@
 	file = {PDF:files/6/Hyun et al. - 2014 - High speed trot-running Implementation of a hierarchical controller using proprioceptive impedance.pdf:application/pdf},
 }
 
+@inproceedings{shkolnik_inverse_2007,
+	title = {Inverse {Kinematics} for a {Point}-{Foot} {Quadruped} {Robot} with {Dynamic} {Redundancy} {Resolution}},
+	url = {https://ieeexplore.ieee.org/document/4209764/},
+	doi = {10.1109/ROBOT.2007.364142},
+	abstract = {In this work we examine the control of center of mass and swing leg trajectories in LittleDog, a point-foot quadruped robot. It is not clear how to formulate a function to compute forward kinematics of the center of mass of the robot as a function of actuated joint angles because point-foot walkers have no direct actuation between the feet and the ground. Nevertheless, we show that a whole-body Jacobian exists and is well defined when at least three of the feet are on the ground. An alternative redundancy resolution optimization is proposed which projects single-leg inverse kinematic solutions into the nullspace of the whole-body Jacobian.},
+	language = {en},
+	urldate = {2026-08-25},
+	booktitle = {Proceedings 2007 {IEEE} {International} {Conference} on {Robotics} and {Automation}},
+	publisher = {IEEE},
+	author = {Shkolnik, Alexander and Tedrake, Russ},
+	year = {2007},
+	pages = {4331--4336},
+}
+
+@misc{palanisamy_filtering_2016,
+	title = {Filtering of {IMU} {Data} using {Kalman} {Filter}},
+	url = {https://scholars.csus.edu/},
+	abstract = {A project presenting the design and implementation of a Kalman filter for processing raw IMU sensor data (accelerometer and gyroscope), submitted in partial satisfaction of the requirements for the degree of Master of Science in Electrical and Electronic Engineering.},
+	language = {en},
+	urldate = {2026-08-25},
+	author = {Palanisamy, Naveen Prabu},
+	year = {2016},
+	note = {Master's project, Department of Electrical and Electronic Engineering, California State University, Sacramento},
+}
+
 @article{sen_inverse_2017,
 	author = {Şen, Muhammed Arif and Bakırcıoğlu, Veli and Kalyoncu, Mete},
 	year = {2017},
@@ -151,6 +188,20 @@
 	year = {2019},
 	pages = {1508},
 	file = {PDF:files/11/Zeng et al. - 2019 - Leg Trajectory Planning for Quadruped Robots with High-Speed Trot Gait.pdf:application/pdf},
+}
+
+@misc{kim_highly_2019,
+	title = {Highly {Dynamic} {Quadruped} {Locomotion} via {Whole}-{Body} {Impulse} {Control} and {Model} {Predictive} {Control}},
+	url = {https://arxiv.org/abs/1909.06586},
+	doi = {10.48550/arXiv.1909.06586},
+	abstract = {This paper presents a control system that unifies the whole-body control (WBC) and model predictive control (MPC) for quadrupedal robots. Modern robotic systems are described by high dimensional dynamics to properly capture the behavior of the system. This complicates control design; while a more precise model more accurately captures the dynamic behavior, it may not be conducive to fast control calculations. It thus becomes crucial to properly balance model complexity and control speed to control the system. We propose a control strategy which effectively distributes the model complexity between the WBC and MPC. This distribution utilizes the strength of each controller, complex-model MPC for locomotion planning and simple-model WBC for state regulation and force control, in a synergistic manner. This decomposition allows the algorithms to properly account for other subtleties that are not well captured in the simple model, such as the joint limits. This decomposition method allows the algorithm to run on-line in real-time on a modern quadrupedal robot system. The performance of this approach is verified on the Mini-Cheetah quadruped robot, demonstrating dynamic locomotion over a variety of terrain and outperforming other state of the art control methods.},
+	language = {en},
+	urldate = {2026-08-17},
+	publisher = {arXiv},
+	author = {Kim, Donghyun and Di Carlo, Jared and Katz, Benjamin and Bledt, Gerardo and Kim, Sangbae},
+	month = sep,
+	year = {2019},
+	note = {arXiv:1909.06586 [cs.RO]},
 }
 
 @inproceedings{bledt_mit_2018,
@@ -424,6 +475,20 @@
 	pages = {38--44},
 }
 
+@article{silva_review_2026,
+	title = {A {Review} of {Central} {Pattern} {Generator}-{Based} {Approaches} for {Quadruped} {Robot} {Locomotion}},
+	volume = {9},
+	url = {https://jbth.com.br/index.php/JBTH/article/view/587},
+	doi = {10.34178/jbth.v9i2.587},
+	abstract = {This review examines locomotion control methods for quadruped robots using Central Pattern Generators (CPGs), bio-inspired neural circuits that generate rhythmic motor commands. The paper explores gait types, different oscillator types such as Hopf and Van der Pol oscillators, and their integration with inverse kinematics. It emphasizes hybrid control approaches combining CPGs with machine learning to improve adaptability across varying terrains.},
+	language = {en},
+	number = {2},
+	urldate = {2026-08-24},
+	journal = {Journal of Bioengineering, Technologies and Health},
+	author = {Silva, João Pedro Almeida Miranda and Santos, Felipe Mohr},
+	year = {2026},
+}
+
 @online{kim_spotmicro_2019,
 	title = {Spotmicro - robot dog},
 	url = {https://www.thingiverse.com/thing:3445283},
@@ -473,6 +538,34 @@
 	year = {2024},
 	organization = {University of Patras, Department of Electrical and Computer Engineering},
 	note = {Course project, Introduction to Robotics},
+}
+
+@online{chia_boston_2025,
+	title = {Boston {Dynamics}' {Forbidden} {Teardown}},
+	url = {https://hardwarefyi.substack.com/p/boston-dynamics-forbidden-teardown},
+	urldate = {2026-08-17},
+	author = {Chia, Benji},
+	year = {2025},
+	month = oct,
+	organization = {Hardware FYI (Substack)},
+	note = {200-page teardown report of the Boston Dynamics Spot leg module},
+}
+
+@online{unitree_website,
+	title = {Unitree {Robotics}},
+	url = {https://www.unitree.com/},
+	urldate = {2026-08-17},
+	organization = {Unitree Robotics},
+}
+
+@online{ifixit_unitree_go2,
+	title = {Tearing {Down} the {Unitree} {Go2}: {A} {Robotics} {Expert}'s {Deep} {Dive}},
+	shorttitle = {Tearing {Down} the {Unitree} {Go2}},
+	url = {https://www.youtube.com/watch?v=YjVbW6Fc11Y},
+	urldate = {2026-08-17},
+	author = {{iFixit}},
+	organization = {YouTube},
+	note = {Video},
 }
 
 @online{taibo_spotmicro_2020,
