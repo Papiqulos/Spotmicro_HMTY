@@ -1527,6 +1527,182 @@
       \verb https://ieeexplore.ieee.org/document/8576969/
       \endverb
     \endentry
+    \entry{zhou_tightly-coupled_2024}{article}{}{}
+      \name{author}{6}{}{%
+        {{hash=8f1d19d9c559685631a99f994ee5a780}{%
+           family={Zhou},
+           familyi={Z\bibinitperiod},
+           given={Zhifeng},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=4c7241b5b7c88fd4ebedf667ad081a48}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Chunyan},
+           giveni={C\bibinitperiod}}}%
+        {{hash=868c30fe68d2674e31f4d2a83eaf0fb6}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Chenchen},
+           giveni={C\bibinitperiod}}}%
+        {{hash=f4db9373a5ba3555eac8a45bcd339479}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Yi},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=1d2f5d03d8fd3d1c89305c3fe22a58c5}{%
+           family={Shi},
+           familyi={S\bibinitperiod},
+           given={Yun},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=25bbf4047d900f3760c65b01ee899dba}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Wei},
+           giveni={W\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{fb8301193de649deb57968dbb296490b}
+      \strng{fullhash}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \strng{fullhashraw}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \strng{bibnamehash}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \strng{authorbibnamehash}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \strng{authornamehash}{fb8301193de649deb57968dbb296490b}
+      \strng{authorfullhash}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \strng{authorfullhashraw}{c8ac3d4cabcf09830317c1d78b4cb566}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Aiming to address the issue of mapping failure resulting from unsmooth motion during SLAM (Simultaneous Localization and Mapping) performed by a quadruped robot, a tightly coupled SLAM algorithm that integrates LIDAR and IMU sensors is proposed in this paper. Firstly, the IMU information, after undergoing deviation correction, is utilized to remove point cloud distortion and serve as the initial value for point cloud registration. Subsequently, a registration algorithm based on Normal Distribution Transform (NDT) and sliding window is presented to ensure real-time positioning and accuracy. Then, an error function combining IMU and LIDAR is formulated using a factor graph, which iteratively optimizes position, attitude, and IMU deviation. Finally, loop closure detection based on Scan Context is introduced, and loop closure factors are incorporated into the factor graph to achieve effective mapping. An experimental platform is established to conduct accuracy and robustness comparison experiments. Results showed that the proposed algorithm significantly outperforms the LOAM algorithm, the NDT-based SLAM algorithm and the LeGO-LOAM algorithm in terms of positioning accuracy, with a reduction of 65.08\%, 22.81\%, and 37.14\% in root mean square error, respectively. Moreover, the proposed algorithm exhibits superior robustness compared to LOAM, NDT-based SLAM and LeGOLOAM.}
+      \field{issn}{0020-2940}
+      \field{journaltitle}{Measurement and Control}
+      \field{month}{7}
+      \field{number}{7}
+      \field{title}{A tightly-coupled {LIDAR}-{IMU} {SLAM} method for quadruped robots}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{volume}{57}
+      \field{year}{2024}
+      \field{urldateera}{ce}
+      \field{pages}{1004\bibrangedash 1013}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1177/00202940231224593
+      \endverb
+      \verb{file}
+      \verb PDF:files/56/Zhou et al. - 2024 - A tightly-coupled LIDAR-IMU SLAM method for quadruped robots.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://journals.sagepub.com/doi/10.1177/00202940231224593
+      \endverb
+      \verb{url}
+      \verb https://journals.sagepub.com/doi/10.1177/00202940231224593
+      \endverb
+    \endentry
+    \entry{lee_hierarchical_2013}{thesis}{}{}
+      \name{author}{1}{}{%
+        {{hash=b035e5594dcb32260b95108c3efb880e}{%
+           family={Lee},
+           familyi={L\bibinitperiod},
+           given={Jongwoo},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {Massachusetts Institute of Technology}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Cambridge, MA, USA}%
+      }
+      \strng{namehash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{fullhash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{fullhashraw}{b035e5594dcb32260b95108c3efb880e}
+      \strng{bibnamehash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{authorbibnamehash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{authornamehash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{authorfullhash}{b035e5594dcb32260b95108c3efb880e}
+      \strng{authorfullhashraw}{b035e5594dcb32260b95108c3efb880e}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{This thesis presents a hierarchical control algorithm for quadrupedal locomotion. We address three challenges in developing a controller for high-speed running: locomotion stability, control of ground reaction force, and coordination of four limbs. To tackle these challenges, the proposed algorithm employs three strategies. Leg impedance control provides programmable virtual compliance of each leg which achieve self-stability in locomotion. The four legs exert forces to the ground using equilibrium-point hypothesis. A gait pattern modulator imposes a desired footfall sequence. The control algorithm is verified in a dynamic simulator constructed using MATLAB and then in the subsequent experiments on the MIT Cheetah robot. The experiments on the MIT Cheetah robot demonstrates high speed trot running reaching up to the speed of 6 m/s on a treadmill. This speed corresponds to a Froude number (Fr = 7.34), which is comparatively higher than other existing quadrupedal robots.}
+      \field{title}{Hierarchical controller for highly dynamic locomotion utilizing pattern modulation and impedance control: implementation on the {MIT} {Cheetah} robot}
+      \field{type}{mathesis}
+      \field{urlday}{11}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2013}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb http://hdl.handle.net/1721.1/85490
+      \endverb
+      \verb{url}
+      \verb http://hdl.handle.net/1721.1/85490
+      \endverb
+      \keyw{Mechanical Engineering}
+    \endentry
+    \entry{vangen_terrain_2023}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=75751b21cd2da07e30aceb101ff72ce3}{%
+           family={Vangen},
+           familyi={V\bibinitperiod},
+           given={Aleksander},
+           giveni={A\bibinitperiod}}}%
+        {{hash=45642f9c21ed52d59e5edd508f0b1910}{%
+           family={Barnwal},
+           familyi={B\bibinitperiod},
+           given={Tejal},
+           giveni={T\bibinitperiod}}}%
+        {{hash=7ed9069c297fb1b66581242f3cd7ea01}{%
+           family={Olsen},
+           familyi={O\bibinitperiod},
+           given={Jørgen\bibnamedelima Anker},
+           giveni={J\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=607eea23552518c3e54a04a592995738}{%
+           family={Alexis},
+           familyi={A\bibinitperiod},
+           given={Kostas},
+           giveni={K\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \strng{namehash}{a858e97555984dfddcfc5118eed3890d}
+      \strng{fullhash}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \strng{fullhashraw}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \strng{bibnamehash}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \strng{authorbibnamehash}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \strng{authornamehash}{a858e97555984dfddcfc5118eed3890d}
+      \strng{authorfullhash}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \strng{authorfullhashraw}{c268e2da8b520bd3c1d09f37e8b9bf7e}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2023 21st {International} {Conference} on {Advanced} {Robotics} ({ICAR})}
+      \field{note}{arXiv:2311.03855 [cs.RO]}
+      \field{title}{Terrain {Recognition} and {Contact} {Force} {Estimation} through a {Sensorized} {Paw} for {Legged} {Robots}}
+      \field{urlday}{12}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{doi}
+      \verb 10.48550/arXiv.2311.03855
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2311.03855
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2311.03855
+      \endverb
+    \endentry
     \entry{pedley_tilt_2013}{article}{}{}
       \name{author}{1}{}{%
         {{hash=d08b7e5225584fe59d1a1477c5cae72d}{%
@@ -1543,8 +1719,8 @@
       \strng{authornamehash}{d08b7e5225584fe59d1a1477c5cae72d}
       \strng{authorfullhash}{d08b7e5225584fe59d1a1477c5cae72d}
       \strng{authorfullhashraw}{d08b7e5225584fe59d1a1477c5cae72d}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Freescale Semiconductor Application Note}
@@ -1589,8 +1765,8 @@
       \strng{authornamehash}{d6d238a9b93b8ffbbdc30593de420da5}
       \strng{authorfullhash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
       \strng{authorfullhashraw}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{International Journal of Scientific \& Technology Research}
@@ -1657,8 +1833,8 @@
       \strng{authornamehash}{fa59b884e7e67bd555a348dcaad05dfc}
       \strng{authorfullhash}{5d151df6972f27484b43ce6a94286adc}
       \strng{authorfullhashraw}{5d151df6972f27484b43ce6a94286adc}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{abstract}{Kinematics analysis is essential for finding the robot manipulator's joint motions. Using kinematics, we can determine how the robot's arms will move and the possible direction of that arm's end-effector. Kinematics analysis is split into two parts forward Kinematics and Inverse Kinematics. Forward Kinematics measure the positions and orientations of the robot's end-effector, and we can calculate the joint angles by using inverse kinematics. This study provided mathematical derivation for forward and Inverse kinematics to determine our robots' positions and joint angles briefly. To implement different walking motions in a quadruped robot, firstly, we need to analyze the single-leg structure. In this study, we analyzed and derived the forward and inverse kinematics of the quadruped robots and verified their correlation. We used python and Pybullet physics engines to analyze our robot leg motions for mathematical programming.}
@@ -1714,8 +1890,8 @@
       \strng{authornamehash}{bbe5494eecc80f288dcc581d463f4b1d}
       \strng{authorfullhash}{bbe5494eecc80f288dcc581d463f4b1d}
       \strng{authorfullhashraw}{bbe5494eecc80f288dcc581d463f4b1d}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{In this work we examine the control of center of mass and swing leg trajectories in LittleDog, a point-foot quadruped robot. It is not clear how to formulate a function to compute forward kinematics of the center of mass of the robot as a function of actuated joint angles because point-foot walkers have no direct actuation between the feet and the ground. Nevertheless, we show that a whole-body Jacobian exists and is well defined when at least three of the feet are on the ground. An alternative redundancy resolution optimization is proposed which projects single-leg inverse kinematic solutions into the nullspace of the whole-body Jacobian.}
@@ -1826,8 +2002,8 @@
       \strng{authornamehash}{6361abc7472a9ee5cbfa6dee2a594c3e}
       \strng{authorfullhash}{6361abc7472a9ee5cbfa6dee2a594c3e}
       \strng{authorfullhashraw}{6361abc7472a9ee5cbfa6dee2a594c3e}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{A project presenting the design and implementation of a Kalman filter for processing raw IMU sensor data (accelerometer and gyroscope), submitted in partial satisfaction of the requirements for the degree of Master of Science in Electrical and Electronic Engineering.}
