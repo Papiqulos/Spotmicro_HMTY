@@ -28,7 +28,7 @@ WIDTH = kinematics.WIDTH
 #     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
 # _H: height factor relative to swing_height
 
-# Modified normalized values from combined spot_mini_mini and claude's values
+# Modified normalized values from spot_mini_mini
 # Tripled stacked points at beginning and end
 _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
 _SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]

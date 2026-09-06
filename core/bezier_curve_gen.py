@@ -1,4 +1,4 @@
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import math
 
@@ -75,49 +75,52 @@ if __name__ == "__main__":
         [72.29, 56.12, -107],
         [77.29, 46.12, -107]])
 
-    # control_points = [
-    # [-200.0, 500.0, 100.0],
-    # [-280.5, 500.0, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [0.0, 361.1, 100.0],
-    # [0.0, 361.1, 100.0],
-    # [0.0, 321.4, 100.0],
-    # [303.2, 321.4, 100.0],
-    # [303.2, 321.4, 100.0],
-    # [282.6, 500.0, 100.0],
-    # [200.0, 500.0, 100.0],
+    control_points = [
+    [-200.0, 500.0, 100.0],
+    [-280.5, 500.0, 100.0],
+    [-300.0, 361.1, 100.0],
+    [-300.0, 361.1, 100.0],
+    [-300.0, 361.1, 100.0],
+    [0.0, 361.1, 100.0],
+    [0.0, 361.1, 100.0],
+    [0.0, 321.4, 100.0],
+    [303.2, 321.4, 100.0],
+    [303.2, 321.4, 100.0],
+    [282.6, 500.0, 100.0],
+    [200.0, 500.0, 100.0],
     
-    # ]
+    ]
 
 
-    # control_points = [start, middle1, end]
 
     # Create Bezier curve generator
-    # bezier_gen = BezierCurveGen(ef_positions2)
+    bezier_gen = BezierCurveGen(control_points)
 
-    # # Generate curve points
-    # curve_points = bezier_gen.generate_curve(num_points=1000)
+    # Generate curve points
+    curve_points = bezier_gen.generate_curve(num_points=1000)
 
-    # # Plotting
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
+    # Plotting
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
-    # # Plot control points
-    # cp = np.array(ef_positions2)
-    # ax.plot(cp[:, 0], cp[:, 1], cp[:, 2], 'ro--', label='Control Points')
+    # Plot control points
+    cp = np.array(control_points)
+    ax.plot(cp[:, 0], cp[:, 1], cp[:, 2], 'ro--', label='Control Points')
 
-    # # Plot Bezier curve
-    # ax.plot(curve_points[:, 0], curve_points[:, 1], curve_points[:, 2], 'b-', label='Bezier Curve')
+    # Plot Bezier curve
+    ax.plot(curve_points[:, 0], curve_points[:, 1], curve_points[:, 2], 'b-', label='Bezier Curve')
 
     
 
-    # # Set labels and title
+    # Set labels and title
 
-    # ax.set_title('Cubic Bezier Curve')
-    # ax.legend()
-    # plt.show()
+    ax.set_title('Bezier Curve')
+    ax.legend()
+    # Hide numbers but show axis labels
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    ax.get_zaxis().set_visible(False)
+    plt.show()
     
 
 
