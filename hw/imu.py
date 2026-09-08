@@ -15,7 +15,6 @@ from collections import deque
 
 
 # X-imu-> Left, Y-imu-> Backwards, Z-imu-> Down
-# X-robot-> Forward, Y-robot-> Left, Z-robot-> Up
 
 # X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 
@@ -115,7 +114,7 @@ class IMU:
                                                        dt=dt)
 
         self.last_time = current_time
-
+        # Pitch first then roll then yaw to match the coordinate system of the robot
         pitch, roll, yaw = q2rpy(self.q0, in_deg=in_deg)
         if in_deg:
             pitch = pitch - self.initial_orientation_deg[0]

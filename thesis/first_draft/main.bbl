@@ -44,8 +44,8 @@
       \strng{authornamehash}{e3a6d1fa7658c92031b383b683d5d6d8}
       \strng{authorfullhash}{e3a6d1fa7658c92031b383b683d5d6d8}
       \strng{authorfullhashraw}{e3a6d1fa7658c92031b383b683d5d6d8}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Marc Raibert's book describes the study of physical machines that run and balance on just one leg, including analysis, computer simulation, and laboratory experiments. It describes how the principles of locomotion discovered with one leg can be extended to systems with several legs.}
@@ -99,8 +99,8 @@
       \strng{authorfullhash}{fb71cc7ad748bee9fd8257d18c0f5f82}
       \strng{authorfullhashraw}{fb71cc7ad748bee9fd8257d18c0f5f82}
       \field{extraname}{1}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{abstract}{Quadruped robots have emerged as a prominent field of research due to their exceptional mobility and adaptability in complex terrains. This paper presents an overview of quadruped robots, encompassing their design principles, control mechanisms, perception systems, and applications across various industries. We review the historical evolution and technological milestones that have shaped quadruped robotics. To understand their impact on performance and functionality, key aspects of mechanical design are analyzed, including leg configurations, actuation systems, and material selection. Control strategies for locomotion, balance, and navigation are all examined, highlighting the integration of artificial intelligence and machine learning to enhance adaptability and autonomy. This review also explores perception and sensing technologies that enable environmental interaction and decision-making capabilities. Furthermore, we systematically examine the diverse applications of quadruped robots in sectors including the military, search and rescue, industrial inspection, agriculture, and entertainment. Finally, we address challenges and limitations, including technical hurdles, ethical considerations, and regulatory issues, and propose future research directions to advance the field. By structuring this review as a systematic study, we ensure clarity and a comprehensive understanding of the domain, making it a valuable resource for researchers and engineers in quadruped robotics.}
@@ -181,8 +181,8 @@
       \strng{authornamehash}{91c0fed15635a579b43fab200698bc3a}
       \strng{authorfullhash}{76d51bc2b4b3f6945c4d6b4b49613a12}
       \strng{authorfullhashraw}{76d51bc2b4b3f6945c4d6b4b49613a12}
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{abstract}{This paper introduces a new robust, dynamic quadruped, the MIT Cheetah 3. Like its predecessor, the Cheetah 3 exploits tailored mechanical design to enable simple control strategies for dynamic locomotion and features highbandwidth proprioceptive actuators to manage physical interaction with the environment. A new leg design is presented that includes proprioceptive actuation on the abduction/adduction degrees of freedom in addition to an expanded range of motion on the hips and knees. To make full use of these new capabilities, general balance and locomotion controllers for Cheetah 3 are presented. These controllers are embedded into a modular control architecture that allows the robot to handle unexpected terrain disturbances through reactive gait modiﬁcation and without the need for external sensors or prior environment knowledge. The efﬁciency of the robot is demonstrated by a low Cost of Transport (CoT) over multiple gaits at moderate speeds, with the lowest CoT of 0.45 found during trotting. Experiments showcase the ability to blindly climb up stairs as a result of the full system integration. These results collectively represent a promising step toward a platform capable of generalized dynamic legged locomotion.}
@@ -255,8 +255,8 @@
       \strng{authornamehash}{fce7b2a86042a2203bf3910255a3c2a5}
       \strng{authorfullhash}{cbbd39e5bb466a12034f7b67cdf20882}
       \strng{authorfullhashraw}{cbbd39e5bb466a12034f7b67cdf20882}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{abstract}{With their unique point‐contact ability with the ground and exceptional adaptability to complex terrains, quadruped robots have become a focal point in the fields of automation and robotic engineering. Significant research progress has been made in aspects such as structural design, motion planning, and balance control of these robots. However, a primary challenge in current research lies in further enhancing the dynamic performance, environmental adaptability, and payload capacity. In this article, research achievements in key technical areas of quadruped robots, encompassing structural design, gait planning, traditional control strategies, intelligent control strategies, and autonomous movement, are comprehensively discussed. The focus of the article is on analyzing trends in intelligence and technological innovation within the aforementioned areas, aiming to provide robust theoretical support and forward‐looking technical guidance for quadruped robots research. Additionally, it offers valuable references for scholars engaged in this field.}
@@ -311,8 +311,8 @@
       \strng{authornamehash}{b4f3f4434cec3d52523aa679e45a0cd6}
       \strng{authorfullhash}{b4f3f4434cec3d52523aa679e45a0cd6}
       \strng{authorfullhashraw}{b4f3f4434cec3d52523aa679e45a0cd6}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{issn}{0278-3649, 1741-3176}
@@ -372,8 +372,8 @@
       \strng{authornamehash}{a92d1c741f967835e415f025b10ba2f6}
       \strng{authorfullhash}{c9c3fbd77f5c636ebe2a492bdee335bc}
       \strng{authorfullhashraw}{c9c3fbd77f5c636ebe2a492bdee335bc}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{shorttitle}
       \field{abstract}{This paper presents implementation of a highly dynamic running gait with a hierarchical controller on the MIT Cheetah. The developed controller enables high-speed running of up to 6 m/s (Froude number of Fr ≈ 7.34) incorporating proprioceptive feedback and programmable virtual leg compliance of the MIT Cheetah. To achieve a stable and fast trot gait, we applied three control strategies: (a) programmable virtual leg compliance that provides instantaneous reflexes to external disturbance and facilitates the self-stabilizing shown in the passive dynamics of locomotion; (b) tunable stance-trajectory design, intended to adjust impulse at each foot-end in the stance phase in a high speed trot-running according to the equilibrium-point hypothesis; and (c) a gait-pattern modulation that imposes a desired cyclic gait-pattern taking cues from proprioceptive TD feedback. Based on three strategies, the controller is hierarchically structured. The control parameters for forward speeds, a specific gait-pattern, and desired leg trajectories are managed by a high-level controller. It consists of both a gait-pattern modulator with proprioceptive leg TD detection and a leg-trajectory generator using a Bèzier curve and a tunable amplitude sinusoidal wave. Instead of employing physical spring/dampers in the robot’s leg, the programmable virtual leg compliance is realized using proprioceptive impedance control in individual low-level leg controllers. To verify the developed controller, a robot dynamic simulator is constructed based on the model parameters of the MIT Cheetah. The controller parameters are tuned with the simulator to achieve self-stability, and then applied to the MIT Cheetah in an experimental environment. Using leg kinematics and applied motor current feedbacks, the MIT Cheetah achieved a stable trot-running gait in the sagittal plane.}
@@ -419,8 +419,8 @@
       \strng{authorfullhash}{9fff6234432849eb87e9f1aa94e91ff2}
       \strng{authorfullhashraw}{9fff6234432849eb87e9f1aa94e91ff2}
       \field{extraname}{1}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{note}{Commercial quadruped platform}
@@ -527,8 +527,8 @@
       \strng{authornamehash}{477fca958e75709cb36e5e12a4de0218}
       \strng{authorfullhash}{c833460d6e71a9d51e1dd2f4fd2995a1}
       \strng{authorfullhashraw}{c833460d6e71a9d51e1dd2f4fd2995a1}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{2016 {IEEE}/{RSJ} {International} {Conference} on {Intelligent} {Robots} and {Systems} ({IROS})}
@@ -758,8 +758,8 @@
       \list{organization}{1}{%
         {Unitree Robotics}%
       }
-      \field{sortinit}{2}
-      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labeltitlesource}{title}
       \field{title}{Unitree {Robotics}}
       \field{urlday}{17}
@@ -1532,8 +1532,8 @@
       \strng{authornamehash}{89e4e40b728ecde1ea22545db47f1c04}
       \strng{authorfullhash}{c7d3d0bbfcef6e3dbcf6d2bbec07ae80}
       \strng{authorfullhashraw}{c7d3d0bbfcef6e3dbcf6d2bbec07ae80}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Robotics technology is always growing very quickly. One type of the robot is 4 legged robot (Quadruped). The Problem from this robot is if quadruped find the uneven floor, the movement of robot can be late and the center of the gravity are not balance. This research makes a designed stabilization algorithm quadruped on uneven floor with 6 DOF IMU MPU 6050 based on invers kinematic. MPU 6050 sensor are consist of accelerometer and gyroscope. This sensor will give an input of tilting degree of the robot and then it can be processed in stabilization algorithm with proportional controller to balance the body of robot on uneven floor. Quadruped robot moves using inverse kinematics by following the coordinates given. The method of inverse kinematics will help to find the angle value of servo moves through the final coordinates. The test result shows that quadruped robot with stabilization algorithm can increase stability percentage of pitch angle equal to 75,58\% and stability percentage of roll angle equal to 71,15\%.}
@@ -2158,77 +2158,59 @@
       \endverb
       \keyw{Computer Science - Robotics}
     \endentry
-    \entry{pedley_tilt_2013}{article}{}{}
-      \name{author}{1}{}{%
-        {{hash=d08b7e5225584fe59d1a1477c5cae72d}{%
-           family={Pedley},
-           familyi={P\bibinitperiod},
-           given={Mark},
-           giveni={M\bibinitperiod}}}%
+    \entry{siciliano_robotics_2009}{book}{}{}
+      \name{author}{4}{}{%
+        {{hash=38f7a70abf2d86e432d63826f560ab93}{%
+           family={Siciliano},
+           familyi={S\bibinitperiod},
+           given={Bruno},
+           giveni={B\bibinitperiod}}}%
+        {{hash=8ee631ade831cd9df4fdd3ecba074704}{%
+           family={Sciavicco},
+           familyi={S\bibinitperiod},
+           given={Lorenzo},
+           giveni={L\bibinitperiod}}}%
+        {{hash=ff3e3865edda89166207ec2d8a4c22aa}{%
+           family={Villani},
+           familyi={V\bibinitperiod},
+           given={Luigi},
+           giveni={L\bibinitperiod}}}%
+        {{hash=dcc89269b2eb1155024b2da9fd7c68eb}{%
+           family={Oriolo},
+           familyi={O\bibinitperiod},
+           given={Giuseppe},
+           giveni={G\bibinitperiod}}}%
       }
-      \strng{namehash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{fullhash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{fullhashraw}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{bibnamehash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{authorbibnamehash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{authornamehash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{authorfullhash}{d08b7e5225584fe59d1a1477c5cae72d}
-      \strng{authorfullhashraw}{d08b7e5225584fe59d1a1477c5cae72d}
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {London}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{87b7a62a01263043a997b937dfe79845}
+      \strng{fullhash}{ee90168e098b65fb796c51b65c7348da}
+      \strng{fullhashraw}{ee90168e098b65fb796c51b65c7348da}
+      \strng{bibnamehash}{ee90168e098b65fb796c51b65c7348da}
+      \strng{authorbibnamehash}{ee90168e098b65fb796c51b65c7348da}
+      \strng{authornamehash}{87b7a62a01263043a997b937dfe79845}
+      \strng{authorfullhash}{ee90168e098b65fb796c51b65c7348da}
+      \strng{authorfullhashraw}{ee90168e098b65fb796c51b65c7348da}
       \field{sortinit}{1}
       \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{Freescale Semiconductor Application Note}
-      \field{title}{Tilt sensing using a three-axis accelerometer}
-      \field{urlday}{17}
-      \field{urlmonth}{8}
-      \field{urlyear}{2016}
-      \field{year}{2013}
-      \field{urldateera}{ce}
-      \field{pages}{2012\bibrangedash 2013}
-      \range{pages}{2}
-      \verb{urlraw}
-      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+      \field{labeltitlesource}{shorttitle}
+      \field{isbn}{978-1-84628-641-4}
+      \field{issn}{1439-2232}
+      \field{series}{Advanced {Textbooks} in {Control} and {Signal} {Processing}}
+      \field{shorttitle}{Robotics}
+      \field{title}{Robotics: {Modelling}, {Planning} and {Control}}
+      \field{year}{2009}
+      \verb{doi}
+      \verb 10.1007/978-1-84628-642-1
       \endverb
-      \verb{url}
-      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
-      \endverb
-    \endentry
-    \entry{sen_inverse_2017}{article}{}{}
-      \name{author}{3}{}{%
-        {{hash=d8f8627bee7872699edca5862f5f1a08}{%
-           family={Şen},
-           familyi={Ş\bibinitperiod},
-           given={Muhammed\bibnamedelima Arif},
-           giveni={M\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
-        {{hash=ac8330b5cd0256bf602a6b1c9e9ca22c}{%
-           family={Bakırcıoğlu},
-           familyi={B\bibinitperiod},
-           given={Veli},
-           giveni={V\bibinitperiod}}}%
-        {{hash=e263bed0f367b30bb772f807c8976a60}{%
-           family={Kalyoncu},
-           familyi={K\bibinitperiod},
-           given={Mete},
-           giveni={M\bibinitperiod}}}%
-      }
-      \strng{namehash}{d6d238a9b93b8ffbbdc30593de420da5}
-      \strng{fullhash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \strng{fullhashraw}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \strng{bibnamehash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \strng{authorbibnamehash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \strng{authornamehash}{d6d238a9b93b8ffbbdc30593de420da5}
-      \strng{authorfullhash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \strng{authorfullhashraw}{ece6d73347f18d0ccdb6c95c45dc8ae5}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{International Journal of Scientific \& Technology Research}
-      \field{month}{10}
-      \field{title}{Inverse Kinematic Analysis Of A Quadruped Robot}
-      \field{volume}{6}
-      \field{year}{2017}
     \endentry
     \entry{rahman_kinematics_2022}{inproceedings}{}{}
       \name{author}{8}{}{%
@@ -2318,55 +2300,76 @@
       \verb https://ieeexplore.ieee.org/document/9798744/
       \endverb
     \endentry
-    \entry{shkolnik_inverse_2007}{inproceedings}{}{}
-      \name{author}{2}{}{%
-        {{hash=d8895487f3a3974249620883249a3d3e}{%
-           family={Shkolnik},
-           familyi={S\bibinitperiod},
-           given={Alexander},
-           giveni={A\bibinitperiod}}}%
-        {{hash=480d067fbc7c00be4a01a0e4902c984e}{%
-           family={Tedrake},
-           familyi={T\bibinitperiod},
-           given={Russ},
-           giveni={R\bibinitperiod}}}%
+    \entry{sen_inverse_2017}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=d8f8627bee7872699edca5862f5f1a08}{%
+           family={Şen},
+           familyi={Ş\bibinitperiod},
+           given={Muhammed\bibnamedelima Arif},
+           giveni={M\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=ac8330b5cd0256bf602a6b1c9e9ca22c}{%
+           family={Bakırcıoğlu},
+           familyi={B\bibinitperiod},
+           given={Veli},
+           giveni={V\bibinitperiod}}}%
+        {{hash=e263bed0f367b30bb772f807c8976a60}{%
+           family={Kalyoncu},
+           familyi={K\bibinitperiod},
+           given={Mete},
+           giveni={M\bibinitperiod}}}%
       }
-      \list{language}{1}{%
-        {en}%
-      }
-      \list{publisher}{1}{%
-        {IEEE}%
-      }
-      \strng{namehash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{fullhash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{fullhashraw}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{bibnamehash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{authorbibnamehash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{authornamehash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{authorfullhash}{bbe5494eecc80f288dcc581d463f4b1d}
-      \strng{authorfullhashraw}{bbe5494eecc80f288dcc581d463f4b1d}
+      \strng{namehash}{d6d238a9b93b8ffbbdc30593de420da5}
+      \strng{fullhash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
+      \strng{fullhashraw}{ece6d73347f18d0ccdb6c95c45dc8ae5}
+      \strng{bibnamehash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
+      \strng{authorbibnamehash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
+      \strng{authornamehash}{d6d238a9b93b8ffbbdc30593de420da5}
+      \strng{authorfullhash}{ece6d73347f18d0ccdb6c95c45dc8ae5}
+      \strng{authorfullhashraw}{ece6d73347f18d0ccdb6c95c45dc8ae5}
       \field{sortinit}{1}
       \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{abstract}{In this work we examine the control of center of mass and swing leg trajectories in LittleDog, a point-foot quadruped robot. It is not clear how to formulate a function to compute forward kinematics of the center of mass of the robot as a function of actuated joint angles because point-foot walkers have no direct actuation between the feet and the ground. Nevertheless, we show that a whole-body Jacobian exists and is well defined when at least three of the feet are on the ground. An alternative redundancy resolution optimization is proposed which projects single-leg inverse kinematic solutions into the nullspace of the whole-body Jacobian.}
-      \field{booktitle}{Proceedings 2007 {IEEE} {International} {Conference} on {Robotics} and {Automation}}
-      \field{title}{Inverse {Kinematics} for a {Point}-{Foot} {Quadruped} {Robot} with {Dynamic} {Redundancy} {Resolution}}
-      \field{urlday}{25}
+      \field{journaltitle}{International Journal of Scientific \& Technology Research}
+      \field{month}{10}
+      \field{title}{Inverse Kinematic Analysis Of A Quadruped Robot}
+      \field{volume}{6}
+      \field{year}{2017}
+    \endentry
+    \entry{pedley_tilt_2013}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=d08b7e5225584fe59d1a1477c5cae72d}{%
+           family={Pedley},
+           familyi={P\bibinitperiod},
+           given={Mark},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{fullhash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{fullhashraw}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{bibnamehash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{authorbibnamehash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{authornamehash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{authorfullhash}{d08b7e5225584fe59d1a1477c5cae72d}
+      \strng{authorfullhashraw}{d08b7e5225584fe59d1a1477c5cae72d}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Freescale Semiconductor Application Note}
+      \field{title}{Tilt sensing using a three-axis accelerometer}
+      \field{urlday}{17}
       \field{urlmonth}{8}
-      \field{urlyear}{2026}
-      \field{year}{2007}
+      \field{urlyear}{2016}
+      \field{year}{2013}
       \field{urldateera}{ce}
-      \field{pages}{4331\bibrangedash 4336}
-      \range{pages}{6}
-      \verb{doi}
-      \verb 10.1109/ROBOT.2007.364142
-      \endverb
+      \field{pages}{2012\bibrangedash 2013}
+      \range{pages}{2}
       \verb{urlraw}
-      \verb https://ieeexplore.ieee.org/document/4209764/
+      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
       \endverb
       \verb{url}
-      \verb https://ieeexplore.ieee.org/document/4209764/
+      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
       \endverb
     \endentry
     \entry{palanisamy_filtering_2016}{misc}{}{}

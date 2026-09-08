@@ -100,9 +100,6 @@ class PybulletSim:
         # Load the quadruped
         self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
 
-        # Display Initial Pose 
-        self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
-
         # Kinematics Controller
         self.kin_solver = kinematics.Kinematics(self.length, 
                                                 self.width, 
@@ -122,6 +119,9 @@ class PybulletSim:
             init_orientation=self.orientation_kin,
         )
         self.gait_controller = gait.GaitController(_state)
+
+        # Display Initial Pose
+        self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
 
         self._leg_joint_map = {
             "FL": [self.joint_dic["front_left_shoulder"],  self.joint_dic["front_left_leg"],  self.joint_dic["front_left_foot"]],
