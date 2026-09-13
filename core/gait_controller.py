@@ -197,6 +197,7 @@ class GaitController:
             yaw_sl_mm = eff_ang * T_cycle * r
             step_x = sl_mm * np.cos(lateral_fraction) + yaw_sl_mm * np.cos(phi_arc)
             step_z = sl_mm * np.sin(lateral_fraction) + yaw_sl_mm * np.sin(phi_arc)
+            print(f"step_x: {step_x}, step_z: {step_z}")
             combined_sl = np.sqrt(step_x**2 + step_z**2)
             combined_lf = np.arctan2(step_z, step_x) if combined_sl > 1e-6 else lateral_fraction
 
@@ -376,6 +377,7 @@ class GaitController:
         self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
 
+    # THIS IS USED AND HAS BEEN TESTED
     def execute_gait_fixed_stance(self,
             # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 

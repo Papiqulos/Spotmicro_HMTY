@@ -81,5 +81,9 @@ CLAUDE.md
 !thesis/first_draft/main.pdf
 papers/
 
+# One time use files for thesis graphs
+graphs_for_thesis/
+
 
 thesis/first_draft/tables/~$gait_patterns_tables.xlsx
+guide.txt

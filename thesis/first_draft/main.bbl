@@ -995,6 +995,130 @@
       \verb https://github.com/moribots/spot_mini_mini
       \endverb
     \endentry
+    \entry{lee_turning_2014}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=05fec33a532812f47a699dc383e66af3}{%
+           family={Lee},
+           familyi={L\bibinitperiod},
+           given={Jeong\bibnamedelima Hoon},
+           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+        {{hash=050d863a5fe5b1e22deae57211c4511a}{%
+           family={Park},
+           familyi={P\bibinitperiod},
+           given={Jong\bibnamedelima Hyeon},
+           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Santorini, Greece}%
+      }
+      \list{publisher}{1}{%
+        {INASE}%
+      }
+      \strng{namehash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{fullhash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{fullhashraw}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{bibnamehash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{authorbibnamehash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{authornamehash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{authorfullhash}{2daac90e0297be1fe16b3eecb548ade1}
+      \strng{authorfullhashraw}{2daac90e0297be1fe16b3eecb548ade1}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{This paper proposes that a quadruped robot turns with an accurate turning radius through natural motion even if irregular terrain exists at the turning location. For a accurate and stable turning motion, two distinctive methods are proposed. First, the robot imitates a turning motion of animals such as a horse and a dog with their spine. To implement this, a scheme that is similar to a steering system of fourwheel-driven vehicle (4WS) at a low speed. Second, variable impedance control is used in passing an irregular terrain during the turning and maintaining a stable posture control. At the posture control, geometrical compensation scheme is additionally used for more accurate and sensitive control. Despite using these control methods, errors occur between desired turning radius and actual turning radius. In this paper, the errors are appropriately compensated in two steps. First of all, the errors are compensated by changing the stride and the directions of the axes of rotation of the feet motion when the errors are small. But, if the errors grow larger than a threshold, they is compensated by moving the feet in the lateral direction. The effectiveness of the proposed control schemes was veriﬁed in computer simulations.}
+      \field{booktitle}{Advances in {Robotics}, {Mechatronics} and {Circuits}}
+      \field{isbn}{978-1-61804-242-2}
+      \field{title}{Turning {Control} for {Quadruped} {Robots} in {Trotting} on {Irregular} {Terrain}}
+      \field{urlday}{11}
+      \field{urlmonth}{8}
+      \field{urlyear}{2026}
+      \field{year}{2014}
+      \field{urldateera}{ce}
+      \field{pages}{303\bibrangedash 308}
+      \range{pages}{6}
+      \verb{file}
+      \verb PDF:files/19/Lee and Park - Turning Control for Quadruped Robots in Trotting on Irregular Terrain.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://www.inase.org/library/2014/santorini/bypaper/ROBCIRC/ROBCIRC-54.pdf
+      \endverb
+      \verb{url}
+      \verb https://www.inase.org/library/2014/santorini/bypaper/ROBCIRC/ROBCIRC-54.pdf
+      \endverb
+    \endentry
+    \entry{liu_turning_2017}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=01995991f91b6a9014effc50e333a818}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Wan},
+           giveni={W\bibinitperiod}}}%
+        {{hash=b33c945baf1fd03e6f74b0e83124a824}{%
+           family={Zhou},
+           familyi={Z\bibinitperiod},
+           given={Liguang},
+           giveni={L\bibinitperiod}}}%
+        {{hash=48173c63faf20b8689892a9ea0b0afb5}{%
+           family={Qian},
+           familyi={Q\bibinitperiod},
+           given={Huihuan},
+           giveni={H\bibinitperiod}}}%
+        {{hash=d9a75653badc49780cd313ab8773b328}{%
+           family={Xu},
+           familyi={X\bibinitperiod},
+           given={Yangsheng},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {en}%
+      }
+      \list{location}{1}{%
+        {Macau}%
+      }
+      \list{publisher}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{fbe59aad874f13c7abac43cae4ea8661}
+      \strng{fullhash}{a26d611210d2e8e89cf66e2f6adad277}
+      \strng{fullhashraw}{a26d611210d2e8e89cf66e2f6adad277}
+      \strng{bibnamehash}{a26d611210d2e8e89cf66e2f6adad277}
+      \strng{authorbibnamehash}{a26d611210d2e8e89cf66e2f6adad277}
+      \strng{authornamehash}{fbe59aad874f13c7abac43cae4ea8661}
+      \strng{authorfullhash}{a26d611210d2e8e89cf66e2f6adad277}
+      \strng{authorfullhashraw}{a26d611210d2e8e89cf66e2f6adad277}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Accurate turning is not an easy task for the quadruped robot and previous work mainly addresses the problem with complex control strategy or systems. This paper proposes a design method for the accurate turning motion of a quadruped robot with 12 degrees of freedom (DOF). Unlike others, we have achieved precise turning motion with a relatively simple geometric approach. Once the parameters of desired movement are set, such as the turning radius and angles, the robot can realize corresponding circle locomotion. A design architecture including geometric analysis, 3D foot trajectory design and inverse kinematics is presented to solve the problem systematically. In addition, according to the different conditions, the corresponding compensation coefﬁcient is necessarily considered in order to acquire precise values of leg joints. At last, comparison results by several experiments have identiﬁed the feasibility and accuracy of turning along a circle trajectory based on our proposed method.}
+      \field{booktitle}{2017 {IEEE} {International} {Conference} on {Robotics} and {Biomimetics} ({ROBIO})}
+      \field{isbn}{978-1-5386-3742-5}
+      \field{month}{12}
+      \field{title}{Turning strategy analysis based on trot gait of a quadruped robot}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2026}
+      \field{year}{2017}
+      \field{urldateera}{ce}
+      \field{pages}{1306\bibrangedash 1311}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.1109/ROBIO.2017.8324598
+      \endverb
+      \verb{file}
+      \verb PDF:files/20/Liu et al. - 2017 - Turning strategy analysis based on trot gait of a quadruped robot.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb http://ieeexplore.ieee.org/document/8324598/
+      \endverb
+      \verb{url}
+      \verb http://ieeexplore.ieee.org/document/8324598/
+      \endverb
+    \endentry
     \entry{silva_review_2026}{article}{}{}
       \name{author}{2}{}{%
         {{hash=8cae157e87de3679d23f891fa67d7313}{%
@@ -1180,8 +1304,8 @@
       \strng{authornamehash}{c7e9999111f796e1b9ef386dfd2f53f7}
       \strng{authorfullhash}{92e7f07f359dd0a97764de91e5653b47}
       \strng{authorfullhashraw}{92e7f07f359dd0a97764de91e5653b47}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{This paper describes a stable trot gait control system for a quadruped robot that enables faster walking with stability. Compared to other gait types, it is possible to walk faster with relatively little energy expenditure, which means trot gait is suitable to control for the quadruped robot. However, trot gait does not prevent roll and pitch angle fluctuations, essentially, even when walking on flat terrain, because two legs temporarily support the robot body. Therefore, to suppress the effect of this fluctuation and stabilize the posture of the robot body, we proposed a trot gait control system using an IMU sensor and achieved faster walking without slipping. To confirm the validity of the proposed stable trot gait control system, we built a quadruped robot based on TurtleBot3 chassis and implement our system. To validate the system's effectiveness, we carried out several experiments running on various types of terrain, including sloping terrain.}
@@ -1207,130 +1331,6 @@
       \endverb
       \verb{url}
       \verb https://ieeexplore.ieee.org/document/9905832/
-      \endverb
-    \endentry
-    \entry{lee_turning_2014}{inproceedings}{}{}
-      \name{author}{2}{}{%
-        {{hash=05fec33a532812f47a699dc383e66af3}{%
-           family={Lee},
-           familyi={L\bibinitperiod},
-           given={Jeong\bibnamedelima Hoon},
-           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
-        {{hash=050d863a5fe5b1e22deae57211c4511a}{%
-           family={Park},
-           familyi={P\bibinitperiod},
-           given={Jong\bibnamedelima Hyeon},
-           giveni={J\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
-      }
-      \list{language}{1}{%
-        {en}%
-      }
-      \list{location}{1}{%
-        {Santorini, Greece}%
-      }
-      \list{publisher}{1}{%
-        {INASE}%
-      }
-      \strng{namehash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{fullhash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{fullhashraw}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{bibnamehash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{authorbibnamehash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{authornamehash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{authorfullhash}{2daac90e0297be1fe16b3eecb548ade1}
-      \strng{authorfullhashraw}{2daac90e0297be1fe16b3eecb548ade1}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{abstract}{This paper proposes that a quadruped robot turns with an accurate turning radius through natural motion even if irregular terrain exists at the turning location. For a accurate and stable turning motion, two distinctive methods are proposed. First, the robot imitates a turning motion of animals such as a horse and a dog with their spine. To implement this, a scheme that is similar to a steering system of fourwheel-driven vehicle (4WS) at a low speed. Second, variable impedance control is used in passing an irregular terrain during the turning and maintaining a stable posture control. At the posture control, geometrical compensation scheme is additionally used for more accurate and sensitive control. Despite using these control methods, errors occur between desired turning radius and actual turning radius. In this paper, the errors are appropriately compensated in two steps. First of all, the errors are compensated by changing the stride and the directions of the axes of rotation of the feet motion when the errors are small. But, if the errors grow larger than a threshold, they is compensated by moving the feet in the lateral direction. The effectiveness of the proposed control schemes was veriﬁed in computer simulations.}
-      \field{booktitle}{Advances in {Robotics}, {Mechatronics} and {Circuits}}
-      \field{isbn}{978-1-61804-242-2}
-      \field{title}{Turning {Control} for {Quadruped} {Robots} in {Trotting} on {Irregular} {Terrain}}
-      \field{urlday}{11}
-      \field{urlmonth}{8}
-      \field{urlyear}{2026}
-      \field{year}{2014}
-      \field{urldateera}{ce}
-      \field{pages}{303\bibrangedash 308}
-      \range{pages}{6}
-      \verb{file}
-      \verb PDF:files/19/Lee and Park - Turning Control for Quadruped Robots in Trotting on Irregular Terrain.pdf:application/pdf
-      \endverb
-      \verb{urlraw}
-      \verb https://www.inase.org/library/2014/santorini/bypaper/ROBCIRC/ROBCIRC-54.pdf
-      \endverb
-      \verb{url}
-      \verb https://www.inase.org/library/2014/santorini/bypaper/ROBCIRC/ROBCIRC-54.pdf
-      \endverb
-    \endentry
-    \entry{liu_turning_2017}{inproceedings}{}{}
-      \name{author}{4}{}{%
-        {{hash=01995991f91b6a9014effc50e333a818}{%
-           family={Liu},
-           familyi={L\bibinitperiod},
-           given={Wan},
-           giveni={W\bibinitperiod}}}%
-        {{hash=b33c945baf1fd03e6f74b0e83124a824}{%
-           family={Zhou},
-           familyi={Z\bibinitperiod},
-           given={Liguang},
-           giveni={L\bibinitperiod}}}%
-        {{hash=48173c63faf20b8689892a9ea0b0afb5}{%
-           family={Qian},
-           familyi={Q\bibinitperiod},
-           given={Huihuan},
-           giveni={H\bibinitperiod}}}%
-        {{hash=d9a75653badc49780cd313ab8773b328}{%
-           family={Xu},
-           familyi={X\bibinitperiod},
-           given={Yangsheng},
-           giveni={Y\bibinitperiod}}}%
-      }
-      \list{language}{1}{%
-        {en}%
-      }
-      \list{location}{1}{%
-        {Macau}%
-      }
-      \list{publisher}{1}{%
-        {IEEE}%
-      }
-      \strng{namehash}{fbe59aad874f13c7abac43cae4ea8661}
-      \strng{fullhash}{a26d611210d2e8e89cf66e2f6adad277}
-      \strng{fullhashraw}{a26d611210d2e8e89cf66e2f6adad277}
-      \strng{bibnamehash}{a26d611210d2e8e89cf66e2f6adad277}
-      \strng{authorbibnamehash}{a26d611210d2e8e89cf66e2f6adad277}
-      \strng{authornamehash}{fbe59aad874f13c7abac43cae4ea8661}
-      \strng{authorfullhash}{a26d611210d2e8e89cf66e2f6adad277}
-      \strng{authorfullhashraw}{a26d611210d2e8e89cf66e2f6adad277}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{abstract}{Accurate turning is not an easy task for the quadruped robot and previous work mainly addresses the problem with complex control strategy or systems. This paper proposes a design method for the accurate turning motion of a quadruped robot with 12 degrees of freedom (DOF). Unlike others, we have achieved precise turning motion with a relatively simple geometric approach. Once the parameters of desired movement are set, such as the turning radius and angles, the robot can realize corresponding circle locomotion. A design architecture including geometric analysis, 3D foot trajectory design and inverse kinematics is presented to solve the problem systematically. In addition, according to the different conditions, the corresponding compensation coefﬁcient is necessarily considered in order to acquire precise values of leg joints. At last, comparison results by several experiments have identiﬁed the feasibility and accuracy of turning along a circle trajectory based on our proposed method.}
-      \field{booktitle}{2017 {IEEE} {International} {Conference} on {Robotics} and {Biomimetics} ({ROBIO})}
-      \field{isbn}{978-1-5386-3742-5}
-      \field{month}{12}
-      \field{title}{Turning strategy analysis based on trot gait of a quadruped robot}
-      \field{urlday}{15}
-      \field{urlmonth}{5}
-      \field{urlyear}{2026}
-      \field{year}{2017}
-      \field{urldateera}{ce}
-      \field{pages}{1306\bibrangedash 1311}
-      \range{pages}{6}
-      \verb{doi}
-      \verb 10.1109/ROBIO.2017.8324598
-      \endverb
-      \verb{file}
-      \verb PDF:files/20/Liu et al. - 2017 - Turning strategy analysis based on trot gait of a quadruped robot.pdf:application/pdf
-      \endverb
-      \verb{urlraw}
-      \verb http://ieeexplore.ieee.org/document/8324598/
-      \endverb
-      \verb{url}
-      \verb http://ieeexplore.ieee.org/document/8324598/
       \endverb
     \endentry
     \entry{zeng_leg_2019}{article}{}{}
@@ -1427,8 +1427,8 @@
       \strng{authornamehash}{bdc53f6b70b95da011aca83aa500ee17}
       \strng{authorfullhash}{bdc53f6b70b95da011aca83aa500ee17}
       \strng{authorfullhashraw}{bdc53f6b70b95da011aca83aa500ee17}
-      \field{sortinit}{6}
-      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{Gait planning parameters are important for quadruped robots to walk stably. In this paper, application of inverted pendulum model is widdened and a new collision model of quadruped trotting between feet and the ground that can indicate body-attitude changes in walking is established. Influences of initial foot position, walking cyclic period and stride length on walking stability are discussed. The influence varies with different initial foot positons and we get the optimal initial foot position for the quadruped in trot gait with minimum variation in body attitude and maximum walking stability. Finally, we get the optimal initial foot position and walking cyclic period with minimal collision velocity. Simulation results are presented.}
@@ -1480,8 +1480,8 @@
       \strng{authornamehash}{f1fa496c15d973d1aba3340b87c6daaf}
       \strng{authorfullhash}{f1fa496c15d973d1aba3340b87c6daaf}
       \strng{authorfullhashraw}{f1fa496c15d973d1aba3340b87c6daaf}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{month}{5}
@@ -1940,8 +1940,8 @@
       \strng{authornamehash}{907c1fecd31054023a0459215498ad74}
       \strng{authorfullhash}{907c1fecd31054023a0459215498ad74}
       \strng{authorfullhashraw}{907c1fecd31054023a0459215498ad74}
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{This report presents a novel orientation filter applicable to IMUs consisting of tri-axis gyroscopes and accelerometers, and MARG sensor arrays that also include tri-axis magnetometers. The MARG implementation incorporates magnetic distortion and gyroscope bias drift compensation. The filter uses a quaternion representation, allowing accelerometer and magnetometer data to be used in an analytically derived and optimised gradient-descent algorithm to compute the direction of the gyroscope measurement error as a quaternion derivative. Results indicate the filter achieves levels of accuracy exceeding that of the Kalman-based algorithm; {<} 0.6°{} static RMS error, {<} 0.8°{} dynamic RMS error.}
@@ -2130,8 +2130,8 @@
       \strng{authornamehash}{5044a4768c7fc20f25fb680bb11f4aaf}
       \strng{authorfullhash}{ac1e4537033d07029f5e05c7c39beb93}
       \strng{authorfullhashraw}{ac1e4537033d07029f5e05c7c39beb93}
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{abstract}{In search of a simple baseline for Deep Reinforcement Learning in locomotion tasks, we propose a model-free open-loop strategy. By leveraging prior knowledge and the elegance of simple oscillators to generate periodic joint motions, it achieves respectable performance in five different locomotion environments, with a number of tunable parameters that is a tiny fraction of the thousands typically required by DRL algorithms. We conduct two additional experiments using open-loop oscillators to identify current shortcomings of these algorithms. Our results show that, compared to the baseline, DRL is more prone to performance degradation when exposed to sensor noise or failure. Furthermore, we demonstrate a successful transfer from simulation to reality using an elastic quadruped, where RL fails without randomization or reward engineering. Overall, the proposed baseline and associated experiments highlight the existing limitations of DRL for robotic applications, provide insights on how to address them, and encourage reflection on the costs of complexity and generality.}
@@ -2335,6 +2335,51 @@
       \field{title}{Inverse Kinematic Analysis Of A Quadruped Robot}
       \field{volume}{6}
       \field{year}{2017}
+    \endentry
+    \entry{haberland}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=35bb9c71f55048509a3e9018c349ed73}{%
+           family={Haberland},
+           familyi={H\bibinitperiod},
+           given={Matt},
+           giveni={M\bibinitperiod}}}%
+        {{hash=71395dcacf88e7bfa08c883df79c54a1}{%
+           family={Karssen},
+           familyi={K\bibinitperiod},
+           given={J.G.\bibnamedelimi Daniël},
+           giveni={J\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=23a30c71925ebf508cf3e30627b69403}{%
+           family={Kim},
+           familyi={K\bibinitperiod},
+           given={Sangbae},
+           giveni={S\bibinitperiod}}}%
+        {{hash=1b691066881d57c6afcda03175062ec6}{%
+           family={Wisse},
+           familyi={W\bibinitperiod},
+           given={Martijn},
+           giveni={M\bibinitperiod}}}%
+      }
+      \strng{namehash}{6b53b32e7ff007d6301ba0715dbd3e50}
+      \strng{fullhash}{a716b1663b68be5ac18b801088b3feeb}
+      \strng{fullhashraw}{a716b1663b68be5ac18b801088b3feeb}
+      \strng{bibnamehash}{a716b1663b68be5ac18b801088b3feeb}
+      \strng{authorbibnamehash}{a716b1663b68be5ac18b801088b3feeb}
+      \strng{authornamehash}{6b53b32e7ff007d6301ba0715dbd3e50}
+      \strng{authorfullhash}{a716b1663b68be5ac18b801088b3feeb}
+      \strng{authorfullhashraw}{a716b1663b68be5ac18b801088b3feeb}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2011 IEEE/RSJ International Conference on Intelligent Robots and Systems}
+      \field{title}{The effect of swing leg retraction on running energy efficiency}
+      \field{year}{2011}
+      \field{pages}{3957\bibrangedash 3962}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.1109/IROS.2011.6094627
+      \endverb
+      \keyw{Foot;Mathematical model;Springs;Force;Legged locomotion;Equations;Analytical models}
     \endentry
     \entry{pedley_tilt_2013}{article}{}{}
       \name{author}{1}{}{%
