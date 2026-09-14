@@ -2417,6 +2417,148 @@
       \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
       \endverb
     \endentry
+    \entry{macenski_ros2_2022}{article}{}{}
+      \name{author}{5}{}{%
+        {{hash=7b84d10a03303cd00f198fefb38a5da3}{%
+           family={Macenski},
+           familyi={M\bibinitperiod},
+           given={Steven},
+           giveni={S\bibinitperiod}}}%
+        {{hash=0d11ace6e44e4742ea1692d7ddf4819e}{%
+           family={Foote},
+           familyi={F\bibinitperiod},
+           given={Tully},
+           giveni={T\bibinitperiod}}}%
+        {{hash=a8ad4a5f43253f69552460c946e34e49}{%
+           family={Gerkey},
+           familyi={G\bibinitperiod},
+           given={Brian},
+           giveni={B\bibinitperiod}}}%
+        {{hash=4e2c9f9d04cf548117105f50a9c8a7a1}{%
+           family={Lalancette},
+           familyi={L\bibinitperiod},
+           given={Chris},
+           giveni={C\bibinitperiod}}}%
+        {{hash=fe838d86b89f8983167a3747e11998bb}{%
+           family={Woodall},
+           familyi={W\bibinitperiod},
+           given={William},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{4a195e02383364d4009f77ca22451e11}
+      \strng{fullhash}{c321d95ccac4f92536f0f1ed99f34d05}
+      \strng{fullhashraw}{c321d95ccac4f92536f0f1ed99f34d05}
+      \strng{bibnamehash}{c321d95ccac4f92536f0f1ed99f34d05}
+      \strng{authorbibnamehash}{c321d95ccac4f92536f0f1ed99f34d05}
+      \strng{authornamehash}{4a195e02383364d4009f77ca22451e11}
+      \strng{authorfullhash}{c321d95ccac4f92536f0f1ed99f34d05}
+      \strng{authorfullhashraw}{c321d95ccac4f92536f0f1ed99f34d05}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Science Robotics}
+      \field{number}{66}
+      \field{title}{Robot {Operating} {System} 2: {Design}, architecture, and uses in the wild}
+      \field{volume}{7}
+      \field{year}{2022}
+      \field{pages}{eabm6074}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1126/scirobotics.abm6074
+      \endverb
+    \endentry
+    \entry{koenig_gazebo_2004}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=b36ad28302103ee23f9d095ae271054f}{%
+           family={Koenig},
+           familyi={K\bibinitperiod},
+           given={Nathan},
+           giveni={N\bibinitperiod}}}%
+        {{hash=315c4166fc1f7cb66324a7f0d82827cd}{%
+           family={Howard},
+           familyi={H\bibinitperiod},
+           given={Andrew},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{fullhash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{fullhashraw}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{bibnamehash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{authorbibnamehash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{authornamehash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{authorfullhash}{956b19be78deabb0cea6aa73f05590c0}
+      \strng{authorfullhashraw}{956b19be78deabb0cea6aa73f05590c0}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2004 {IEEE}/{RSJ} {International} {Conference} on {Intelligent} {Robots} and {Systems} ({IROS})}
+      \field{title}{Design and use paradigms for {Gazebo}, an open-source multi-robot simulator}
+      \field{volume}{3}
+      \field{year}{2004}
+      \field{pages}{2149\bibrangedash 2154}
+      \range{pages}{6}
+      \verb{doi}
+      \verb 10.1109/IROS.2004.1389727
+      \endverb
+    \endentry
+    \entry{coumans_pybullet_2021}{misc}{}{}
+      \name{author}{2}{}{%
+        {{hash=cb5d8e1abc8f025ae375181f1fa6aa94}{%
+           family={Coumans},
+           familyi={C\bibinitperiod},
+           given={Erwin},
+           giveni={E\bibinitperiod}}}%
+        {{hash=4e894fab619f8dd9d682b92cc981bf43}{%
+           family={Bai},
+           familyi={B\bibinitperiod},
+           given={Yunfei},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{fullhash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{fullhashraw}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{bibnamehash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{authorbibnamehash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{authornamehash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{authorfullhash}{0906d7c6225b74c0d4b0cc1970130529}
+      \strng{authorfullhashraw}{0906d7c6225b74c0d4b0cc1970130529}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{endyear}{2021}
+      \field{title}{{PyBullet}, a {Python} module for physics simulation for games, robotics and machine learning}
+      \field{year}{2016}
+      \field{enddateera}{ce}
+      \field{dateera}{ce}
+      \verb{urlraw}
+      \verb http://pybullet.org
+      \endverb
+      \verb{url}
+      \verb http://pybullet.org
+      \endverb
+    \endentry
+    \entry{ros2_urdf_jazzy}{online}{}{}
+      \list{organization}{1}{%
+        {Open Robotics}%
+      }
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labeltitlesource}{title}
+      \field{title}{{URDF} --- {ROS} 2 {Documentation}: {Jazzy}}
+      \field{urlday}{14}
+      \field{urlmonth}{9}
+      \field{urlyear}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html
+      \endverb
+      \verb{url}
+      \verb https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html
+      \endverb
+    \endentry
     \entry{palanisamy_filtering_2016}{misc}{}{}
       \name{author}{1}{}{%
         {{hash=6361abc7472a9ee5cbfa6dee2a594c3e}{%

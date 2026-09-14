@@ -283,7 +283,7 @@ class PybulletSim:
             # OLD
             # params = dict(desired_lin_vel=0.3, 
             #               desired_ang_vel=0.0, 
-            #               T_cycle=0.25, 
+            #               T_cycle=0.4, 
             #               duty_factor=0.5,
             #               swing_height=0.035,
             #               dir="+x",  
@@ -365,7 +365,7 @@ class PybulletSim:
                 params["dir"] = -np.pi/4
                 self.move(params)
 
-            # Go 45 degrees back left
+            # Rotate in palce
             if self.key_is_pressed(keyboard_event, self.hKey):
                 params["desired_lin_vel"] = 0.0
                 params["desired_ang_vel"] = 0.3

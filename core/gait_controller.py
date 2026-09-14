@@ -79,8 +79,10 @@ class GaitController:
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
+
+        # 0.4, 0.025, 0.05 THEY WORK IRL
         self.pid = PIDControllerRP(kp=0.4, ki=0.025, kd=0.05)
-        self.pid_r = PIDController(kp=0.4, ki=0.025, kd=0.05)
+        self.pid_r = PIDController(kp=0.55, ki=0.1, kd=0.05)
         self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self._pid_last_time = None
 
