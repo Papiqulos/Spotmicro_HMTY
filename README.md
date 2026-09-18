@@ -8,49 +8,45 @@ Built on the open-source [SpotMicro](https://www.thingiverse.com/thing:3445283)
 design by Deok-yeon Kim (CC-BY), using the
 [SpotMicro v2](https://www.thingiverse.com/thing:4155673) remix by nahueltaibo.
 
-> **Status:** work in progress. Trot gait is fully tuned and validated; the other
-> four gaits are implemented but not tuned.
+> **Status:** work in progress.
 
 <!-- TODO: demo video / GIF here -->
+
 <!-- TODO: photo of the assembled robot here -->
 
 ---
 
 ## What it does
 
-- **Omnidirectional gait** — linear translation along an arbitrary heading
-  composed with an angular turn rate, resolved per leg through a yaw-arc
-  correction
+- **Omnidirectional gait** — The standard inputs for the Gait are linear velocity, angular velocity and direction, resulting in a robust omnidirectional gait. Further parameters can be inputed to tune stability
 - **Closed-loop attitude stabilisation** — roll/pitch PID acting on fused IMU
   data, applied as per-leg foot-height offsets
 - **Five gait patterns** — trot, walk, bound, pace, pronk (phase distribution is
   parametric); only trot is tuned
-- **Simulation-first workflow** — controller parameters are tuned in PyBullet
-  before being moved to hardware
+- **Simulation-first workflow** — The kinematic and locomotion model is first tested on sim and then tuned on real hardware. Tuning does not happen on sim because of outdated URDF File inceasing the sim-to-real gap even more
 - **Real-time teleoperation** via a DualSense controller
-- **CSV logging** of filtered IMU and PID output for quantitative evaluation
+- **CSV logging** of filtered IMU and PID output and local saving of latest run in a .png image for headless operation. Just SSH from a remote machine
 
 The robot has no joint encoders and no foot contact sensors. The IMU is the only
-feedback source — a deliberate consequence of using low-cost position-controlled
-servos.
+feedback source
 
 ---
 
 ## Hardware
 
-| Component | Part |
-|---|---|
-| Compute | Raspberry Pi 5 (5 V / 5 A USB-C) |
-| Servos | 12× Feetech FT5116M |
-| Servo drivers | 2× PCA9685 (front `0x40`, rear `0x41`) |
-| Power | 2× XL4015 step-down, one per driver board |
-| Battery | Gens ace 1100 mAh 11.1 V 3S 60C, XT60 |
-| IMU | GY-85 (ADXL345 accel + ITG-3200 gyro + QMC5883L mag) |
-| Frame | 3D-printed body, legs and servo mounts |
-| Feet | Rubber balls cut into hemispheres |
+| Component     | Part                                                                |
+| ------------- | ------------------------------------------------------------------- |
+| Compute       | Raspberry Pi 5 (5 V / 5 A USB-C)                                    |
+| Servos        | 10× Feetech FT5116M+ 2x Feetech FB5118M for Front shoulder joints |
+| Servo drivers | 2× PCA9685 (front`0x40`, rear `0x41`)                          |
+| Power         | 2× XL4015 step-down, one per driver board                          |
+| Battery       | Gens ace 1100 mAh 11.1 V 3S 60C, XT60 or Standard Lab Power Supply  |
+| IMU           | GY-85 (ADXL345 accel + ITG-3200 gyro + QMC5883L mag)                |
+| Frame         | 3D-printed body, legs and servo mounts with PLA                     |
+| Feet          | Rubber balls cut into hemispheres                                   |
 
-The magnetometer is present but disabled — too noisy without shielding. Yaw is
-therefore not observable; only roll and pitch are stabilised.
+The magnetometer is present but disabled, too noisy without shielding. Yaw is
+therefore has an arbirtary starting point; only roll and pitch are stabilised.
 
 Physical dimensions live in [`config/robot_config.yaml`](config/robot_config.yaml),
 measured on the real robot.
@@ -74,12 +70,12 @@ script from the repository root**.
 
 ## Entry points
 
-| Command | What it does |
-|---|---|
-| `python sim/pybullet_sim.py` | PyBullet simulation, keyboard-driven |
-| `python hw/quad_controller.py` | Hardware controller (on the Pi) |
-| `python hw/teleop.py` | DualSense input test |
-| `python sim/matplotlib_sim.py` | Static kinematics visualiser |
+| Command                          | What it does                         |
+| -------------------------------- | ------------------------------------ |
+| `python sim/pybullet_sim.py`   | PyBullet simulation, keyboard-driven |
+| `python hw/quad_controller.py` | Hardware controller (on the Pi)      |
+| `python hw/teleop.py`          | DualSense input test                 |
+| `python sim/matplotlib_sim.py` | Static kinematics visualiser         |
 
 ---
 
@@ -94,7 +90,7 @@ pip install -r requirements_sim.txt
 python sim/pybullet_sim.py
 ```
 
-### Hardware (Raspberry Pi)
+### Hardware (Raspberry Pi) ( TODO FIX)
 
 ```bash
 pip install -r requirements.txt
@@ -105,10 +101,7 @@ i2cdetect -y 1         # expect 0x40 and 0x41 (PCA9685) plus the IMU addresses
 For the DualSense controller, install the udev rule so it is reachable without
 root:
 
-```bash
-sudo cp ps5_controller/70-ps5-controller.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
+TODO
 
 ---
 
@@ -148,10 +141,10 @@ which would otherwise be fed straight into the PID.
 
 Three frames disagree, which is the most common source of confusion:
 
-| | Mapping |
-|---|---|
-| PyBullet → robot | `X→X`, `Y→Z`, `Z→Y` |
-| Robot → IMU | `X→−Y`, `Y→X`, `Z→−Z` |
+|                   | Mapping                          |
+| ----------------- | -------------------------------- |
+| PyBullet → robot | `X→X`, `Y→Z`, `Z→Y`     |
+| Robot → IMU      | `X→−Y`, `Y→X`, `Z→−Z` |
 
 The kinematics frame is **X forward, Y up, Z left**, in millimetres.
 
@@ -160,11 +153,7 @@ The kinematics frame is **X forward, Y up, Z left**, in millimetres.
 ## Known limitations
 
 - Only the trot gait is tuned. The other four are implemented but not validated.
-- Joint limits are loaded from `robot_config.yaml` but not currently enforced in
-  `legIK`; an unreachable target returns zero angles instead of raising.
-- The magnetometer is disabled, so yaw is not observable — only roll and pitch
-  are stabilised.
-- The tilt cut-off checks pitch only and does not stop an in-progress run.
+- TODO
 
 ---
 
@@ -189,8 +178,11 @@ Requires LuaLaTeX and Biber; `.latexmkrc` selects the right engine automatically
   reference
 - Previous student implementation at the same department
   ([QuadrupedRobotProject](https://github.com/VagTsiats/QuadrupedRobotProject-ecedk703))
+- TODO(  INCLUDE ALL MAJOR PAPERS )
 
 Supervisor: Prof. Charalampos Bechlioulis, University of Patras.
+
+FUTURE WORK
 
 <!-- TODO: pick and add a LICENSE file. Note the SpotMicro design is CC-BY,
      which requires attribution to be preserved. -->

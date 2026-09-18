@@ -30,9 +30,10 @@ WIDTH = kinematics.WIDTH
 
 # Modified normalized values from spot_mini_mini
 # Tripled stacked points at beginning and end
-_SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
-_SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]
-
+# _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
+# _SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]
+_SWING_X_NORM = [0.0, -0.2, -0.25, -0.25, -0.25, 0.5, 0.5, 0.5, 1.2, 1.2, 1.1, 1.0]
+_SWING_H_NORM = [0.0, 0.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.0, 0.0]
 # Phase offsets per leg [FL, FR, RL, RR] as fraction of cycle (0-1).
 _GAIT_PHASES = {
     "trot":  [0.0, 0.5, 0.5, 0.0],   # diagonals: FL+RR, FR+RL
