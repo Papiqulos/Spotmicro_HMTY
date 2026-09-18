@@ -128,7 +128,7 @@ class IMU:
         smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
         self.s_roll = smoothed
         smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
-        self.s_pitch = smoothed
+        self.s_pitch = -smoothed
 
         # Apply the 30-tap moving average filter
         self.smoothed_orientation = np.array([ self.s_roll, self.s_pitch, yaw])
