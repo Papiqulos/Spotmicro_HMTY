@@ -325,6 +325,7 @@ if __name__ == "__main__":
 
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
     robot = RobotController(kin_solver, init_angles=theta_default, skip_rest=False)
+    # robot.change_orientation(np.array([0, 10, 0]), unit="deg")
 
     # robot.apply_angles_robot(theta_default)
 
@@ -476,8 +477,7 @@ if __name__ == "__main__":
                             gait_type="trot")
                 state = "Running"
             # elif right_joystick_motion:
-            #     new_orientation = [0, right_joystick_angle, 0]
-            #     robot.change_orientation(new_orientation, unit="rad")
+            #     print(right_joystick_angle)
                 
             elif state == "Running":
                 state = "Decelerating"
