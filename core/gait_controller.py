@@ -28,11 +28,12 @@ WIDTH = kinematics.WIDTH
 #     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
 # _H: height factor relative to swing_height
 
-# Modified normalized values from combined spot_mini_mini and claude's values
+# Modified normalized values from spot_mini_mini
 # Tripled stacked points at beginning and end
-_SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
-_SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]
-
+# _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
+# _SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]
+_SWING_X_NORM = [0.0, -0.2, -0.25, -0.25, -0.25, 0.5, 0.5, 0.5, 1.2, 1.2, 1.1, 1.0]
+_SWING_H_NORM = [0.0, 0.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.0, 0.0]
 # Phase offsets per leg [FL, FR, RL, RR] as fraction of cycle (0-1).
 _GAIT_PHASES = {
     "trot":  [0.0, 0.5, 0.5, 0.0],   # diagonals: FL+RR, FR+RL
@@ -79,8 +80,10 @@ class GaitController:
         else:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
+
+        # 0.4, 0.025, 0.05 THEY WORK IRL
         self.pid = PIDControllerRP(kp=0.4, ki=0.025, kd=0.05)
-        self.pid_r = PIDController(kp=0.4, ki=0.025, kd=0.05)
+        self.pid_r = PIDController(kp=0.55, ki=0.1, kd=0.05)
         self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self._pid_last_time = None
 
@@ -197,6 +200,7 @@ class GaitController:
             yaw_sl_mm = eff_ang * T_cycle * r
             step_x = sl_mm * np.cos(lateral_fraction) + yaw_sl_mm * np.cos(phi_arc)
             step_z = sl_mm * np.sin(lateral_fraction) + yaw_sl_mm * np.sin(phi_arc)
+            print(f"step_x: {step_x}, step_z: {step_z}")
             combined_sl = np.sqrt(step_x**2 + step_z**2)
             combined_lf = np.arctan2(step_z, step_x) if combined_sl > 1e-6 else lateral_fraction
 
@@ -376,6 +380,7 @@ class GaitController:
         self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
         return eff_lin, self._log_file.name
 
+    # THIS IS USED AND HAS BEEN TESTED
     def execute_gait_fixed_stance(self,
             # STANDARD PARAMETERS
             current_time, time_step, imu_data=None, deceleration_flag=False, move_callback=None, 

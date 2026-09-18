@@ -126,9 +126,9 @@ class Kinematics:
         if x**2 + y**2 - self.l1**2 < 0:
             return (0, 0, 0) # Error safety
 
-        F = sqrt(x**2 + y**2 - self.l1**2)
-        G = F - self.l2  
-        H = sqrt(G**2 + z**2)
+        F = sqrt(x**2 + y**2 - self.l1**2) # Length of shoulder-point to target-point on x/y only
+        G = F - self.l2  # Length we need to reach to the point on x/y
+        H = sqrt(G**2 + z**2) # 3-Dimensional length we need to reach
         
         theta1 = -atan2(y, x) - atan2(F, - self.l1)
 
@@ -141,12 +141,6 @@ class Kinematics:
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
 
         thetas = [theta1, theta2, theta3]
-        limits = [self.shoulder_lim, self.elbow_lim, self.knee_lim]
-        # for i in range(3):
-        #     lo, hi = limits[i]
-        #     if thetas[i] < lo or thetas[i] > hi:
-        #         print(f"legIK: theta{i+1}={thetas[i]:.3f} rad clamped to [{lo:.3f}, {hi:.3f}]")
-        #         thetas[i] = np.clip(thetas[i], lo, hi)
         return thetas
     
     def robot_IK(self, center, orientation, ef_positions, unit='radians'):
@@ -218,6 +212,21 @@ class Kinematics:
 
 
         return ef_positions
+    
+    def jacobian(self):
+        raise NotImplementedError
+    
+    def diffKin(self):
+        raise NotImplementedError
+    
+    def diffIK(self):
+        raise NotImplementedError
+    
+    def torques(self):
+        raise NotImplementedError
+    
+    def mech_power(self):
+        raise NotImplementedError
 
 
 
