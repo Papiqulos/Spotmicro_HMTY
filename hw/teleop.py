@@ -20,7 +20,6 @@ class DualSenseController:
             angle = angle - np.pi
         return angle if not in_deg else np.degrees(angle)
     
-
     def _get_joystick_angle(self, in_deg=False):
         l_angle = np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)
         r_angle = np.arctan2(self.dualsense.state.RX, self.dualsense.state.RY)
@@ -28,8 +27,6 @@ class DualSenseController:
         r_angle = self.config_angle(r_angle, in_deg)
 
         return  np.array([l_angle, r_angle])
-
-
 
     def _joystick_in_motion(self, joystick="l"):
         if joystick == "r":

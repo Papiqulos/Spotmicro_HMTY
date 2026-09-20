@@ -349,154 +349,154 @@ if __name__ == "__main__":
     
     # robot.move(params=params, steps=80)
 
-    # try:
-    #     log_file = None
-    #     teleop = DualSenseController()
+    try:
+        log_file = None
+        teleop = DualSenseController()
 
-    #     state = "Idle"
-    #     current_dir = "+x"
-    #     start_time = time.time()
-    #     time_step = 1.0 / 100
+        state = "Idle"
+        current_dir = "+x"
+        start_time = time.time()
+        time_step = 1.0 / 100
 
         
         
-    #     robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
-    #                                 kp_p=0.4, ki_p=0.05,  kd_p=0.03)
-    #     robot._start_live_display()
-    #     while not teleop.dualsense.state.circle:
-    #         t0 = time.time()
-    #         current_time = t0 - start_time
+        robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
+                                    kp_p=0.4, ki_p=0.05,  kd_p=0.03)
+        robot._start_live_display()
+        while not teleop.dualsense.state.circle:
+            t0 = time.time()
+            current_time = t0 - start_time
 
-    #         # Joysticks
-    #         left_joystick_motion = teleop._joystick_in_motion(joystick="l")
-    #         right_joystick_motion = teleop._joystick_in_motion(joystick="r")
+            # Joysticks
+            left_joystick_motion = teleop._joystick_in_motion(joystick="l")
+            right_joystick_motion = teleop._joystick_in_motion(joystick="r")
 
-    #         left_joystick_angle, right_joystick_angle = teleop._get_joystick_angle()
+            left_joystick_angle, right_joystick_angle = teleop._get_joystick_angle()
 
-    #         # D-pad
-    #         dpad_up    = teleop.dualsense.state.DpadUp
-    #         dpad_down  = teleop.dualsense.state.DpadDown
-    #         dpad_right = teleop.dualsense.state.DpadRight
-    #         dpad_left  = teleop.dualsense.state.DpadLeft
+            # D-pad
+            dpad_up    = teleop.dualsense.state.DpadUp
+            dpad_down  = teleop.dualsense.state.DpadDown
+            dpad_right = teleop.dualsense.state.DpadRight
+            dpad_left  = teleop.dualsense.state.DpadLeft
 
-    #         # Right buttons
-    #         square     = teleop.dualsense.state.square
-    #         triangle   = teleop.dualsense.state.triangle
-    #         circle     = teleop.dualsense.state.circle
-    #         cross      = teleop.dualsense.state.cross
+            # Right buttons
+            square     = teleop.dualsense.state.square
+            triangle   = teleop.dualsense.state.triangle
+            circle     = teleop.dualsense.state.circle
+            cross      = teleop.dualsense.state.cross
 
-    #         # Bumpers
-    #         r_bumper   = teleop.dualsense.state.R1
-    #         l_bumper   = teleop.dualsense.state.L1
+            # Bumpers
+            r_bumper   = teleop.dualsense.state.R1
+            l_bumper   = teleop.dualsense.state.L1
 
-    #         # Triggers
-    #         r_trigger  = teleop.dualsense.state.R2
-    #         l_trigger  = teleop.dualsense.state.L2
+            # Triggers
+            r_trigger  = teleop.dualsense.state.R2
+            l_trigger  = teleop.dualsense.state.L2
             
 
-    #         if dpad_up:
-    #             params = dict(desired_lin_vel=0.12, 
-    #                         desired_ang_vel=0.0, 
-    #                         swing_height=0.035, 
-    #                         stance_length=0.06, 
-    #                         Tswing=0.2, 
-    #                         dir="+x",  
-    #                         gait_type="trot")
-    #             # params = dict(desired_lin_vel=0.15, 
-    #             #           desired_ang_vel=0.0, 
-    #             #           T_cycle=0.4, 
-    #             #           duty_factor=0.5,
-    #             #           swing_height=0.035,
-    #             #           dir="-x",  
-    #             #           gait_type="trot")
-    #             state = "Running"
-    #         elif dpad_down:
-    #             params = dict(desired_lin_vel=0.12, 
-    #                         desired_ang_vel=0.0, 
-    #                         swing_height=0.035, 
-    #                         stance_length=0.06, 
-    #                         Tswing=0.2, 
-    #                         dir="-x",  
-    #                         gait_type="trot")
-    #             state = "Running"
-    #         elif dpad_right:
-    #             params = dict(desired_lin_vel=0.12, 
-    #                         desired_ang_vel=0.0, 
-    #                         swing_height=0.035, 
-    #                         stance_length=0.06, 
-    #                         Tswing=0.2, 
-    #                         dir="+z",  
-    #                         gait_type="trot")
-    #             state = "Running"
-    #         elif dpad_left:
-    #             params = dict(desired_lin_vel=0.12, 
-    #                     desired_ang_vel=0.0, 
-    #                     swing_height=0.035, 
-    #                     stance_length=0.06, 
-    #                     Tswing=0.2, 
-    #                     dir="-z",  
-    #                     gait_type="trot")
-    #             state = "Running"
-    #         # elif left_joystick_motion:
-    #         #     params = dict(desired_lin_vel=0.12, 
-    #         #             desired_ang_vel=0.0, 
-    #         #             swing_height=0.035, 
-    #         #             stance_length=0.06, 
-    #         #             Tswing=0.2, 
-    #         #             dir=left_joystick_angle,  
-    #         #             gait_type="trot")
-    #         #     state = "Running"
-    #         elif r_bumper:
-    #             params = dict(desired_lin_vel=0, 
-    #                         desired_ang_vel=0.1, 
-    #                         swing_height=0.035, 
-    #                         stance_length=0.06, 
-    #                         Tswing=0.2, 
-    #                         dir="+x",  
-    #                         gait_type="trot")
-    #             state = "Running"
-    #         elif l_bumper:
-    #             params = dict(desired_lin_vel=0, 
-    #                         desired_ang_vel=-0.1, 
-    #                         swing_height=0.035, 
-    #                         stance_length=0.06, 
-    #                         Tswing=0.2, 
-    #                         dir="+x",  
-    #                         gait_type="trot")
-    #             state = "Running"
-    #         elif state == "Running":
-    #             state = "Decelerating"
+            if dpad_up:
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                # params = dict(desired_lin_vel=0.15, 
+                #           desired_ang_vel=0.0, 
+                #           T_cycle=0.4, 
+                #           duty_factor=0.5,
+                #           swing_height=0.035,
+                #           dir="-x",  
+                #           gait_type="trot")
+                state = "Running"
+            elif dpad_down:
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="-x",  
+                            gait_type="trot")
+                state = "Running"
+            elif dpad_right:
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+z",  
+                            gait_type="trot")
+                state = "Running"
+            elif dpad_left:
+                params = dict(desired_lin_vel=0.12, 
+                        desired_ang_vel=0.0, 
+                        swing_height=0.035, 
+                        stance_length=0.06, 
+                        Tswing=0.2, 
+                        dir="-z",  
+                        gait_type="trot")
+                state = "Running"
+            elif left_joystick_motion:
+                params = dict(desired_lin_vel=0.12, 
+                        desired_ang_vel=0.0, 
+                        swing_height=0.035, 
+                        stance_length=0.06, 
+                        Tswing=0.2, 
+                        dir=left_joystick_angle,  
+                        gait_type="trot")
+                state = "Running"
+            elif r_bumper:
+                params = dict(desired_lin_vel=0, 
+                            desired_ang_vel=0.1, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "Running"
+            elif l_bumper:
+                params = dict(desired_lin_vel=0, 
+                            desired_ang_vel=-0.1, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "Running"
+            elif state == "Running":
+                state = "Decelerating"
             
 
-    #         if state == "Running":
-    #             robot._live_status = state
-    #             ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False, verbose=True)
-    #         elif state == "Decelerating":
-    #             robot._live_status = state
-    #             ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True, verbose=True)
+            if state == "Running":
+                robot._live_status = state
+                ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=False, verbose=True)
+            elif state == "Decelerating":
+                robot._live_status = state
+                ef_vel, log_file, imu_data = robot.trot_step(current_time, time_step, params=params, deceleration_flag=True, verbose=True)
 
-    #             if ef_vel == 0.0:
-    #                 robot.apply_angles_robot(robot.init_angles)
-    #                 state = "Idle"
-    #         else:
-    #             robot._live_status = "Idle — waiting for command"
-    #             robot.show_state("\r")
+                if ef_vel == 0.0:
+                    robot.apply_angles_robot(robot.init_angles)
+                    state = "Idle"
+            else:
+                robot._live_status = "Idle — waiting for command"
+                robot.show_state("\r")
 
-    #         elapsed = time.time() - t0
-    #         rem = time_step - elapsed
-    #         if rem > 0:
-    #             time.sleep(rem)
-    #     # Verbose output
-    #     print(f"\033[7B", end='', flush=True)
-    # except Exception as e:
-    #     if e.args[0] == "No device detected":
-    #         teleop = None
-    #         print(f"No device detected\nPlug in your DualSense controller")
-    #     else:
-    #         print(f"Error: {e}")
-    # finally:
-    #     if log_file:
-    #         plot_log(log_file)
-    #     if teleop:
-    #         teleop.dualsense.close()
+            elapsed = time.time() - t0
+            rem = time_step - elapsed
+            if rem > 0:
+                time.sleep(rem)
+        # Verbose output
+        print(f"\033[7B", end='', flush=True)
+    except Exception as e:
+        if e.args[0] == "No device detected":
+            teleop = None
+            print(f"No device detected\nPlug in your DualSense controller")
+        else:
+            print(f"Error: {e}")
+    finally:
+        if log_file:
+            plot_log(log_file)
+        if teleop:
+            teleop.dualsense.close()
 
