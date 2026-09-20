@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import yaml
 
 
 
@@ -91,8 +92,11 @@ if __name__ == "__main__":
     
     # ]
 
-    _SWING_X_NORM = [0.0, -0.2, -0.25, -0.25, -0.25, 0.5, 0.5, 0.5, 1.2, 1.2, 1.1, 1.0]
-    _SWING_H_NORM = [0.0, 0.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.0, 0.0]
+    with open("config/robot_config.yaml") as f:
+        _robot_cfg = yaml.safe_load(f)
+
+    _SWING_X_NORM = _robot_cfg["gait"]["swing_x_norm"]
+    _SWING_H_NORM = _robot_cfg["gait"]["swing_h_norm"]
 
     control_points = np.array([[_SWING_X_NORM[i], _SWING_H_NORM[i], 0.0] for i in range(len(_SWING_X_NORM))])
 

@@ -18,10 +18,16 @@ with open("config/servo_calib.yaml") as f:
 LEGS   = ["FL", "FR", "RL", "RR"]
 JOINTS = ["shoulder", "leg", "foot"]
 _LEG_SLICE = {"FL": slice(0, 3), "FR": slice(3, 6), "RL": slice(6, 9), "RR": slice(9, 12)}
+THETA_RESTING = np.array([
+                            0, -45, 115,  # FL
+                            0, -45, 115,  # FR
+                            0, -45, 115,  # RL
+                            0, -45, 115,  # RR
+                            ])
 
 class RobotController:
 
-    def __init__(self, kin_solver, init_angles=None, init_ef_positions=None, init_center=[0, 0, 0]):
+    def __init__(self, kin_solver, init_angles=None, init_ef_positions=None, init_center=[0, 0, 0] , skip_rest=False):
         """
         :param kin_solver: kinematics solver
         :param init_angles: initial joint angles in degrees
@@ -33,6 +39,7 @@ class RobotController:
         """
         self.kin_solver = kin_solver
         self.init_center = init_center
+        self.skip_rest = skip_rest
         self._live_status = ""
         self.zeros      = [calib[leg][joint]["zero_deg"]  for leg in LEGS for joint in JOINTS]
         self.indexes    = [calib[leg][joint]["channel"]   for leg in LEGS for joint in JOINTS]
@@ -62,23 +69,22 @@ class RobotController:
         if init_angles is not None and init_ef_positions is not None:
             print("WARNING: Both init_angles and init_ef_positions were given. init_ef_positions will be ignored.")
 
-        init_angles_rad = np.array([math.radians(a) for a in self.init_angles])
+        if self.skip_rest:
+            theta_resting = np.radians(self.init_angles)
+        else:
+            theta_resting = np.radians(THETA_RESTING)
         self.state = RobotState(
-            init_angles=init_angles_rad,
+            init_angles=theta_resting,
             init_ef_positions=np.array(self.init_ef_positions, dtype=float),
             init_center=self.init_center,
             init_orientation=self.init_orientation_rad,
             kin_solver=self.kin_solver,
         )
-        # self.state.angles = np.zeros(12)
-
         self.gait_controller = GaitController(self.state)
 
-        # self.apply_angles_robot([0.0] * 12, unit="deg")
-        
         self.gait_controller.smooth_to_target(
             np.array(self.init_angles, dtype=float),
-            duration=1.0,
+            duration=1.5,
             move_callback=self.apply_angles_robot,
             unit="deg",
         )
@@ -152,7 +158,6 @@ class RobotController:
         if unit == "deg":
             new_orientation = np.radians(new_orientation)
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.state.ef_positions)
-        print(angles)
         self.gait_controller.smooth_to_target(angles, move_callback=self.apply_angles_robot, unit="rad")
 
     def move(self, 
@@ -309,36 +314,43 @@ class RobotController:
     
 if __name__ == "__main__":
     center = [0, 0, 0]
-    theta_default = np.array([
-        0, -45, 60,  # FL
-        0, -45, 60,  # FR
-        0, -45, 60,  # RL
-        0, -45, 60,  # RR
-    ])
 
-    ef_dafault = np.array([[92.25, -223.09,  93.94, 1],
-                           [92.25, -223.09, -93.94, 1],
-                           [-92.25, -223.09,  93.94, 1],
-                           [-92.25, -223.09, -93.94, 1]])
     
+    theta_default = np.array([
+                            0, -45, 60,  # FL
+                            0, -45, 60,  # FR
+                            0, -45, 60,  # RL
+                            0, -45, 60,  # RR
+                        ])
 
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
-    robot = RobotController(kin_solver, init_angles=theta_default)
+    robot = RobotController(kin_solver, init_angles=theta_default, skip_rest=False)
+    # robot.change_orientation(np.array([0, 10, 0]), unit="deg")
 
+    # robot.apply_angles_robot(theta_default)
 
-    robot.change_orientation([0, -10, 0])
-    robot.show_state()
-    
+    # robot.gait_controller.smooth_to_target(np.array([
+    #                                         0, -50, 117,  # FL
+    #                                         0, -50, 117,  # FR
+    #                                         0, -50, 117,  # RL
+    #                                         0, -50, 117,  # RR
+    #                                     ]), 
+    #                                        duration=1.0, 
+    #                                        move_callback=robot.apply_angles_robot, 
+    #                                        unit="deg")
 
-
+   
     # Test a gait
-    params = dict(desired_lin_vel=0.12, 
-            desired_ang_vel=0.0, 
-            swing_height=0.035, 
-            stance_length=0.05, 
-            Tswing=0.2, 
-            dir="+x",  
-            gait_type="trot")
+    # params = dict(desired_lin_vel=0.0, 
+    #         desired_ang_vel=0.15, 
+    #         swing_height=0.035, 
+    #         stance_length=0.05, 
+    #         Tswing=0.2, 
+    #         dir="+x",  
+    #         gait_type="trot")
+    # robot.move(params=params, steps=300)
+
+
     # params = dict(desired_lin_vel=0.1, 
     #             desired_ang_vel=0.0, 
     #             T_cycle=0.25, 
@@ -347,7 +359,7 @@ if __name__ == "__main__":
     #             dir="+x",  
     #             gait_type="trot")
     
-    # robot.move(params=params, steps=80)
+    
 
     try:
         log_file = None
@@ -448,7 +460,7 @@ if __name__ == "__main__":
                 state = "Running"
             elif r_bumper:
                 params = dict(desired_lin_vel=0, 
-                            desired_ang_vel=0.1, 
+                            desired_ang_vel=-0.2, 
                             swing_height=0.035, 
                             stance_length=0.06, 
                             Tswing=0.2, 
@@ -457,13 +469,16 @@ if __name__ == "__main__":
                 state = "Running"
             elif l_bumper:
                 params = dict(desired_lin_vel=0, 
-                            desired_ang_vel=-0.1, 
+                            desired_ang_vel=0.2, 
                             swing_height=0.035, 
                             stance_length=0.06, 
                             Tswing=0.2, 
                             dir="+x",  
                             gait_type="trot")
                 state = "Running"
+            # elif right_joystick_motion:
+            #     print(right_joystick_angle)
+                
             elif state == "Running":
                 state = "Decelerating"
             
@@ -495,6 +510,7 @@ if __name__ == "__main__":
         else:
             print(f"Error: {e}")
     finally:
+        robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.0, move_callback=robot.apply_angles_robot, unit="deg")
         if log_file:
             plot_log(log_file)
         if teleop:

@@ -74,6 +74,18 @@ holes:
     outer_radius: 6
 
 
+# 16-point Bezier swing trajectory (normalized).
+# _X: horizontal progression 0=liftoff, 1=touchdown
+#     3 clustered at each end -> zero endpoint tangent velocity AND acceleration (smooth lift/land)
+# _H: height factor relative to swing_height
+gait:
+  swing_x_norm: [0.0, 0.0, 0.0, -0.2, -0.25, -0.25, -0.25, 0.5, 0.5, 0.5, 1.2, 1.2, 1.1, 1.0, 1.0, 1.0]
+  swing_h_norm: [0.0, 0.0, 0.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.7, 0.0, 0.0, 0.0]
+
+  # Stance sine dip (mid-stance ground penetration): delta = base_frac * sh_mm + tilt_frac * |dy|
+  stance_penetration_base_frac: 0.12   # fraction of swing_height for the base dip 
+  stance_penetration_tilt_frac: 0.0    # fraction of per-leg roll/pitch leveling offset added to the dip
+
 imu:
   length: 22
   width: 17

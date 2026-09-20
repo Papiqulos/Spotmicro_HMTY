@@ -21,19 +21,17 @@ L4 = kinematics.L4
 LENGTH = kinematics.LENGTH
 WIDTH = kinematics.WIDTH
 
-# 12-point Bezier swing parameters (normalized).
-# Values from open-source community implementations (spot_mini_mini et al.),
-# inspired by MIT Cheetah.
+# Bezier swing parameters (normalized), loaded from config/robot_config.yaml
+# (gait.swing_x_norm / gait.swing_h_norm) so they can be tuned in one place.
 # _X: horizontal progression 0=liftoff, 1=touchdown
-#     3 clustered at each end -> zero endpoint tangent velocity (smooth lift/land)
+#     3 clustered at each end -> zero endpoint tangent velocity AND acceleration (smooth lift/land)
 # _H: height factor relative to swing_height
+_SWING_X_NORM = kinematics.robot_cfg["gait"]["swing_x_norm"]
+_SWING_H_NORM = kinematics.robot_cfg["gait"]["swing_h_norm"]
 
-# Modified normalized values from spot_mini_mini
-# Tripled stacked points at beginning and end
-# _SWING_X_NORM = [0.00, 0.00, 0.00, 0.15, 0.30, 0.45, 0.55, 0.70, 0.85, 1.00, 1.00, 1.00]
-# _SWING_H_NORM = [0.00, 0.00, 0.00, 0.9, 0.9, 0.9, 0.9, 1.0, 1.1, 0.00, 0.00, 0.00]
-_SWING_X_NORM = [0.0, -0.2, -0.25, -0.25, -0.25, 0.5, 0.5, 0.5, 1.2, 1.2, 1.1, 1.0]
-_SWING_H_NORM = [0.0, 0.0, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7, 0.7, 0.7, 0.0, 0.0]
+# Mid-stance ground-penetration (sine dip) fractions, also from config/robot_config.yaml.
+_STANCE_PEN_BASE_FRAC = kinematics.robot_cfg["gait"]["stance_penetration_base_frac"]
+_STANCE_PEN_TILT_FRAC = kinematics.robot_cfg["gait"]["stance_penetration_tilt_frac"]
 # Phase offsets per leg [FL, FR, RL, RR] as fraction of cycle (0-1).
 _GAIT_PHASES = {
     "trot":  [0.0, 0.5, 0.5, 0.0],   # diagonals: FL+RR, FR+RL
@@ -182,7 +180,7 @@ class GaitController:
             - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
         ]
 
-        delta_base = sh_mm * 0.05
+        delta_base = sh_mm * _STANCE_PEN_BASE_FRAC
         leg_offset = _GAIT_PHASES[gait_type]
         legs = ["FL", "FR", "RL", "RR"]
         all_angles = []
@@ -194,7 +192,7 @@ class GaitController:
                 self.state.init_ef_positions[i][1] + dy[i],
                 self.state.init_ef_positions[i][2],
             ])
-            stance_delta = delta_base + abs(dy[i]) * 0.2
+            stance_delta = delta_base + abs(dy[i]) * _STANCE_PEN_TILT_FRAC
 
             phi_arc, r = self._yaw_circle(i, leg)
             yaw_sl_mm = eff_ang * T_cycle * r
