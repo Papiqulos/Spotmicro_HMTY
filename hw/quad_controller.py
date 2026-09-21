@@ -183,20 +183,20 @@ class RobotController:
         self.gait_controller.reset(kp=0.4, ki=0.025, kd=0.05)
         if not params:
             # Default parameters
-            # params = dict(desired_lin_vel=0.2,
-            #               desired_ang_vel=0.0,
-            #               swing_height=0.040,
-            #               stance_length=0.05,
-            #               Tswing=0.25,
-            #               dir="+x",
-            #               gait_type="trot")
-            params = dict(desired_lin_vel=0.3, 
-                          desired_ang_vel=0.0, 
-                          T_cycle=0.25, 
-                          duty_factor=0.5,
-                          swing_height=0.035,
-                          dir="+x",  
+            params = dict(desired_lin_vel=0.2,
+                          desired_ang_vel=0.0,
+                          swing_height=0.040,
+                          stance_length=0.05,
+                          Tswing=0.25,
+                          dir="+x",
                           gait_type="trot")
+            # params = dict(desired_lin_vel=0.3, 
+            #               desired_ang_vel=0.0, 
+            #               T_cycle=0.25, 
+            #               duty_factor=0.5,
+            #               swing_height=0.035,
+            #               dir="+x",  
+            #               gait_type="trot")
         
         self._start_live_display()
         self._live_status = "Running"

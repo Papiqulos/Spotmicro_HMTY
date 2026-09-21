@@ -79,8 +79,11 @@ class GaitController:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
 
-        # 0.4, 0.025, 0.05 THEY WORK IRL
+        # NOT USED
         self.pid = PIDControllerRP(kp=0.4, ki=0.025, kd=0.05)
+
+        # USED
+        # 0.4, 0.025, 0.05 THEY WORK IRL
         self.pid_r = PIDController(kp=0.55, ki=0.1, kd=0.05)
         self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
         self._pid_last_time = None
@@ -198,7 +201,7 @@ class GaitController:
             yaw_sl_mm = eff_ang * T_cycle * r
             step_x = sl_mm * np.cos(lateral_fraction) + yaw_sl_mm * np.cos(phi_arc)
             step_z = sl_mm * np.sin(lateral_fraction) + yaw_sl_mm * np.sin(phi_arc)
-            print(f"step_x: {step_x}, step_z: {step_z}")
+            # print(f"step_x: {step_x}, step_z: {step_z}")
             combined_sl = np.sqrt(step_x**2 + step_z**2)
             combined_lf = np.arctan2(step_z, step_x) if combined_sl > 1e-6 else lateral_fraction
 

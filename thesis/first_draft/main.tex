@@ -83,7 +83,10 @@
     \textbf{\Large ΕΥΧΑΡΙΣΤΙΕΣ}
 \end{center}
 \vspace{1em}
-\textit{[Κείμενο ευχαριστιών — προς συμπλήρωση, BIG BECH, λαμπρος, τσιπιανιτης, devnol, χατζ, ολοι οι phds]}
+Θα ήθελα να ευχαριστήσω τον Κ. Μπεχλιούλη για τη εξαιρετική συνεργασία που είχαμε και την άμεση επικοινωνία. Επίσης όλους τους διδακτορικούς φοιτητές του Τομέα ΣΑΕ που βοηθούσαν για τυχόν
+απορίες και ιδιαίτερα τον Λάμπρο Πρίντζιο, τον Κ. Χατζυληγερούδη για το Raspberry Pi 5 και τον πρωτοετή φοιτητή Devnol που με οικειοποίησε με το πρόγραμμα FreeCAD
+. Τέλος θα ήθελα να ευχαριστήσω τους φίλους μου και την οικογένεια μου
+που ήταν δίπλα μου καθ'όλη τη διάρκεια της εργασίας.
 \newpage
 
 % --- Greek abstract ---
@@ -102,10 +105,39 @@
 \end{center}
 
 \vspace{1em}
-\textit{[Κείμενο περίληψης — προς συμπλήρωση]}
+Αντικείμενο της παρούσας διπλωματικής εργασίας είναι η σχεδίαση, η υλοποίηση
+και ο έλεγχος κίνησης ενός τετράποδου ρομπότ χαμηλού κόστους, βασισμένου στην
+πλατφόρμα ανοιχτού κώδικα SpotMicro. Ζητούμενο είναι η ευσταθής και
+πανκατευθυντική βάδιση σε μια κατασκευή που διαθέτει μόνο σερβοκινητήρες θέσης,
+χωρίς ανάδραση από τις αρθρώσεις, με μοναδικό αισθητήρα μια αδρανειακή μονάδα.
+
+Αναπτύχθηκε αρχικά το πλήρες κινηματικό μοντέλο, δηλαδή η ευθεία και η
+αντίστροφη κινηματική κάθε σκέλους και ο μετασχηματισμός στάσης του σώματος.
+Πάνω σε αυτό σχεδιάστηκε γεννήτρια βαδίσματος trot, με τροχιά αιώρησης από
+καμπύλη Bezier και ημιτονοειδή τροχιά στήριξης με ελεγχόμενο βάθος διείσδυσης,
+ώστε η ταχύτητα του πέλματος να μηδενίζεται κατά την απογείωση και την
+προσγείωση. Η γεννήτρια επεκτάθηκε σε πανκατευθυντική κίνηση, συνθέτοντας
+γραμμική μετατόπιση προς αυθαίρετη κατεύθυνση με στροφή, και συμπληρώθηκε με
+συνημιτονοειδή ράμπα ταχύτητας.
+
+Για τη σταθεροποίηση του προσανατολισμού υλοποιήθηκαν δύο ελεγκτές PID στις
+γωνίες roll και pitch, των οποίων η έξοδος μετατρέπεται γεωμετρικά σε
+κατακόρυφη μετατόπιση των πελμάτων. Η είσοδός τους προκύπτει από τη σύντηξη των
+μετρήσεων του γυροσκοπίου και του επιταχυνσιομέτρου με εκτεταμένο φίλτρο Kalman
+και από συμπληρωματικό φιλτράρισμα του σήματος.
+
+Ο ίδιος κώδικας ελέγχου εκτελείται στην προσομοίωση στο PyBullet και στο
+πραγματικό ρομπότ, το οποίο φέρει δώδεκα σερβοκινητήρες, δύο οδηγούς PCA9685,
+αδρανειακή μονάδα GY-85 και υπολογιστική μονάδα Raspberry Pi 5, και
+τηλεχειρίζεται με χειριστήριο DualSense. Το αποτέλεσμα είναι ένα ρομπότ που
+βαδίζει προς οποιαδήποτε κατεύθυνση και στρέφεται, διατηρώντας τον σκελετό του
+οριζόντιο με ενεργή σταθεροποίηση και με μοναδική ανάδραση την αδρανειακή
+μονάδα.
 
 \vspace{1em}
-\noindent\textbf{Λέξεις κλειδιά:} \textit{[προς συμπλήρωση, π.χ. τετράποδο ρομπότ, βάδιση trot, αντίστροφη κινηματική, PID, IMU]}
+\noindent\textbf{Λέξεις κλειδιά:} τετράποδο ρομπότ, βάδισμα trot, αντίστροφη
+κινηματική, καμπύλες Bezier, πανκατευθυντική κίνηση, ελεγκτής PID, αδρανειακή
+μονάδα, σύντηξη αισθητήρων, φίλτρο Kalman, PyBullet, SpotMicro
 \newpage
 
 % --- Extensive English summary ---
@@ -125,10 +157,54 @@
 \end{center}
 
 \vspace{1em}
-\textit{[Summary text -- to be completed]}
+This thesis covers the design, implementation and motion control of a low cost
+quadruped robot, built on the open source SpotMicro platform. The goal is
+stable, omnidirectional walking on a machine driven by position controlled
+servos with no joint feedback, whose only sensor is an inertial measurement
+unit.
+
+The work starts from the kinematics. Forward and inverse kinematics are derived
+for each leg, together with the body pose transform that lets the body
+translate and rotate over fixed foot positions. The model is verified first in
+a lightweight visualisation tool and then in the PyBullet dynamic simulation.
+
+On top of the model, a trot gait generator is developed. The swing phase
+follows a Bezier curve whose repeated end control points give zero foot
+velocity and acceleration at liftoff and touchdown, while the stance phase
+follows a sinusoidal profile with a controlled ground penetration depth. The
+generator is extended to omnidirectional motion by composing a linear step
+vector towards an arbitrary heading with the per leg step vector produced by a
+yaw rate, so that walking and turning can be commanded at the same time. A
+cosine velocity ramp is applied to both the linear and the angular command, and
+a banked roll term compensates the lean during turns.
+
+Orientation is stabilised in closed loop. Two independent PID controllers act
+on the roll and pitch angles, and their output is converted geometrically into
+a vertical offset of each foot, so the correction is applied through the
+trajectories rather than through the body pose. The controller input comes from
+the inertial unit: the gyroscope and accelerometer readings are fused with an
+extended Kalman filter, and the resulting angles pass through a low pass filter
+and a moving average before reaching the controller.
+
+The same control code runs in simulation and on the real robot, the only
+differences being the module that applies the joint angles and the source of
+the orientation measurement. The physical robot uses a three dimensional
+printed frame with rubber ball feet, twelve servos driven by two PCA9685
+boards, a GY-85 inertial unit and a Raspberry Pi 5, and is teleoperated with a
+DualSense controller. Sensor and servo calibration, per run data logging and a
+live status display complete the implementation.
+
+The robot walks in any direction of the horizontal plane, turns in place and
+while moving, and keeps its frame level through the stabilisation loop, with a
+single inertial unit as the only feedback. The main limitations, namely the
+absence of joint feedback, of contact detection and of any perception of the
+environment, together with the extensions they suggest, are discussed in the
+final chapter.
 
 \vspace{1em}
-\noindent\textbf{Keywords:} \textit{[to be completed, e.g. quadruped robot, trot gait, inverse kinematics, PID, IMU]}
+\noindent\textbf{Keywords:} quadruped robot, trot gait, inverse kinematics,
+Bezier curves, omnidirectional locomotion, PID control, inertial measurement
+unit, sensor fusion, Kalman filter, PyBullet, SpotMicro
 \selectlanguage{greek}
 \newpage
 
@@ -160,10 +236,12 @@
 \addcontentsline{toc}{chapter}{Ακρωνύμια}
 
 \begin{longtable}{@{}p{2.4cm}p{11cm}@{}}
+ADC & Μετατροπέας Αναλογικού σε Ψηφιακό (Analog-to-Digital Converter) \\
 AI & Τεχνητή Νοημοσύνη (Artificial Intelligence) \\
 BOM & Κατάλογος Υλικών (Bill of Materials) \\
 CAD & Σχεδίαση Υποβοηθούμενη από Υπολογιστή (Computer-Aided Design) \\
 CPG & Γεννήτρια Κεντρικών Προτύπων (Central Pattern Generator) \\
+CSV & Τιμές Διαχωρισμένες με Κόμμα (Comma-Separated Values) \\
 DOF & Βαθμοί Ελευθερίας (Degrees of Freedom) \\
 DRL & Βαθιά Ενισχυτική Μάθηση (Deep Reinforcement Learning) \\
 EKF & Εκτεταμένο Φίλτρο Kalman (Extended Kalman Filter) \\
@@ -175,16 +253,23 @@ IMU & Αδρανειακή Μονάδα Μέτρησης (Inertial Measurement U
 LiDAR & Ανίχνευση και Εντοπισμός Απόστασης μέσω Φωτός (Light Detection and Ranging) \\
 MARG & Μαγνητικό Πεδίο, Γωνιακός Ρυθμός και Βαρύτητα (Magnetic, Angular Rate, and Gravity) \\
 MPC & Προβλεπτικός Έλεγχος Μοντέλου (Model Predictive Control) \\
+PD & Αναλογικός-Διαφορικός ελεγκτής (Proportional-Derivative) \\
 PID & Αναλογικός-Ολοκληρωτικός-Διαφορικός ελεγκτής (Proportional-Integral-Derivative) \\
 PLA & Πολυγαλακτικό Οξύ (Polylactic Acid) \\
 PWM & Διαμόρφωση Εύρους Παλμού (Pulse-Width Modulation) \\
 QR & Κώδικας Ταχείας Απόκρισης (Quick Response code) \\
 RL & Ενισχυτική Μάθηση (Reinforcement Learning) \\
 RMS & Μέση Τετραγωνική Ρίζα (Root Mean Square) \\
+ROS & Λειτουργικό Σύστημα Ρομπότ (Robot Operating System) \\
+RPY & Γωνίες διατοιχισμού, πρόνευσης και εκτροπής (Roll, Pitch, Yaw) \\
 SDK & Κιτ Ανάπτυξης Λογισμικού (Software Development Kit) \\
 SLAM & Ταυτόχρονος Εντοπισμός και Χαρτογράφηση (Simultaneous Localization and Mapping) \\
+SLIP & Ανεστραμμένο Εκκρεμές με Ελατήριο (Spring-Loaded Inverted Pendulum) \\
 TPU & Θερμοπλαστική Πολυουρεθάνη (Thermoplastic Polyurethane) \\
+UBEC & Καθολικό Κύκλωμα Απαλοιφής Μπαταρίας (Universal Battery Elimination Circuit) \\
 URDF & Ενοποιημένη Μορφή Περιγραφής Ρομπότ (Unified Robot Description Format) \\
+VMC & Έλεγχος Εικονικού Μοντέλου (Virtual Model Control) \\
+ZMP & Σημείο Μηδενικής Ροπής (Zero Moment Point) \\
 \end{longtable}
 
 \noindent\textbf{Ταυτοποίηση ποδιών:} FL (Front-Left, εμπρός αριστερό), FR
@@ -1380,12 +1465,24 @@ $\theta_3$ ορίζουν μια επίπεδη αλυσίδα δύο συνδέ
 εξισώσεις \eqref{eq:fk-p1p2} έως \eqref{eq:fk-R} εκφράζονται στο τοπικό πλαίσιο
 του ώμου· η αναγωγή τους στο πλαίσιο του σώματος παρουσιάζεται στην
 ενότητα~\ref{subsec:body-transform}. Οι αριθμητικές τιμές των μηκών
-$l_1$ έως $l_4$ δίνονται στον Πίνακα~\ref{tab:leg-link-params}.
+$l_1$ έως $l_4$ δίνονται στον Πίνακα~\ref{tab:leg-link-params}, ενώ στο
+Σχήμα~\ref{fig:leg-fk-schematic} φαίνονται σημειωμένα πάνω στο πραγματικό
+σκέλος.
 
 
 
-\figTODO{πραγματική εικόνα που φαίνονται πάνω τα $\theta_1,\theta_2,\theta_3$ και
-τα μήκη συνδέσμων $l_1,l_2,l_3,l_4$ ΑΠΟ ΚΟΝΤΑ}{fig:leg-fk-schematic}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.62\textwidth]{images/leg_annotated.png}
+    \caption[Γωνίες αρθρώσεων και μήκη συνδέσμων στο πραγματικό σκέλος]{Οι
+    τρεις γωνίες άρθρωσης και τα τέσσερα μήκη συνδέσμων, σημειωμένα στο εμπρός
+    αριστερό σκέλος του ρομπότ. Οι γωνίες $\theta_2$ και $\theta_3$ μετρώνται
+    από τις διακεκομμένες διευθύνσεις αναφοράς, ενώ η $\theta_1$ περιστρέφει
+    ολόκληρο το επίπεδο του σκέλους γύρω από τον άξονα του ώμου. Οι μετατοπίσεις
+    $l_1$ και $l_2$ βρίσκονται στο εσωτερικό του ώμου. Λόγω της προοπτικής, οι
+    ενδείξεις δείχνουν ποιο μέγεθος είναι ποιο και όχι πραγματικές αναλογίες}
+    \label{fig:leg-fk-schematic}
+\end{figure}
 
 \begin{table}[htbp]
     \centering
@@ -1863,12 +1960,14 @@ d = \left(x_n - \tfrac{5}{6}\right) S,
 ονομαστική θέση του πέλματος, σύμφωνα με τη μέθοδο βέλτιστης αρχικής θέσης
 ποδιού για βάδισμα trot \cite{he_optimal_2020}.
 
-Στα δύο άκρα, τόσο η οριζόντια όσο και η κατακόρυφη συντεταγμένη
-επαναλαμβάνονται τρεις φορές. Σύμφωνα με την \eqref{eq:bezier-derivative}, η
-επανάληψη αυτή μηδενίζει την ταχύτητα και την επιτάχυνση του πέλματος κατά την
-απογείωση και κατά την προσγείωση, χωρίς καμία άλλη παρέμβαση στον αλγόριθμο.
-Στο Σχήμα~\ref{fig:bezier-swing} οι τριπλές αυτές ομάδες εμφανίζονται ως ένα
-σημείο η καθεμία, σημειωμένες με $\times 3$.
+Στα δύο άκρα η οριζόντια συντεταγμένη επαναλαμβάνεται τρεις φορές και η
+κατακόρυφη τέσσερις, καθώς μηδενικό ύψος έχει και το γειτονικό σημείο κάθε
+ομάδας. Σύμφωνα με την \eqref{eq:bezier-derivative}, η επανάληψη αυτή μηδενίζει
+την ταχύτητα και την επιτάχυνση του πέλματος κατά την απογείωση και κατά την
+προσγείωση, ενώ στην κατακόρυφη διεύθυνση μηδενίζει επιπλέον και τον ρυθμό
+μεταβολής της επιτάχυνσης, χωρίς καμία άλλη παρέμβαση στον αλγόριθμο. Στο
+Σχήμα~\ref{fig:bezier-swing} τα τρία ταυτισμένα σημεία κάθε άκρου εμφανίζονται
+ως ένα, σημειωμένα με $\times 3$.
 
 \begin{figure}[htbp]
     \centering
@@ -1890,12 +1989,12 @@ d = \left(x_n - \tfrac{5}{6}\right) S,
         $i$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\
         \midrule
         $x_n$ & 0,00 & 0,00 & 0,00 & $-0{,}20$ & $-0{,}25$ & $-0{,}25$ & $-0{,}25$ & 0,50 \\
-        $h_n$ & 0,00 & 0,00 & 0,00 & 0,60 & 0,60 & 0,60 & 0,60 & 0,60 \\
+        $h_n$ & 0,00 & 0,00 & 0,00 & 0,00 & 0,60 & 0,60 & 0,60 & 0,60 \\
         \midrule
         $i$ & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 \\
         \midrule
         $x_n$ & 0,50 & 0,50 & 1,20 & 1,20 & 1,10 & 1,00 & 1,00 & 1,00 \\
-        $h_n$ & 0,60 & 0,70 & 0,70 & 0,70 & 0,70 & 0,00 & 0,00 & 0,00 \\
+        $h_n$ & 0,60 & 0,70 & 0,70 & 0,70 & 0,00 & 0,00 & 0,00 & 0,00 \\
         \bottomrule
     \end{tabular}
     \caption[Κανονικοποιημένα σημεία ελέγχου Bezier της τροχιάς αιώρησης]{Οι
@@ -1913,7 +2012,7 @@ d = \left(x_n - \tfrac{5}{6}\right) S,
 την προσγείωση. Επειδή όμως η καμπύλη
 Bezier δεν διέρχεται από τα ενδιάμεσα σημεία ελέγχου παρά μόνο έλκεται προς
 αυτά, η τελική τροχιά είναι ομαλή και ικανοποιεί τις απαιτήσεις που τέθηκαν
-παραπάνω. Χαρακτηριστικά, το πραγματικό μέγιστο ύψος της είναι $0{,}64H$ και όχι
+παραπάνω. Χαρακτηριστικά, το πραγματικό μέγιστο ύψος της είναι $0{,}61H$ και όχι
 $0{,}7H$, δηλαδή η παράμετρος $H$ λειτουργεί ως συντελεστής κλίμακας και όχι ως
 απόλυτο ύψος. Οι τιμές διατηρήθηκαν ως έχουν, καθώς επαληθεύτηκαν πειραματικά
 τόσο στην προσομοίωση όσο και στο πραγματικό ρομπότ.
@@ -2057,7 +2156,7 @@ t =
     \centering
     \includegraphics[width=0.85\textwidth]{images/phase_sawtooth.png}
     \caption[Πριονωτό σήμα της φάσης βάδισης]{Το πριονωτό σήμα της φάσης για
-    $T_{cyc} = 0{,}45$~s και $\beta = 0{,}44$. (α) Η καθολική φάση $\phi$ της
+    $T_{cyc} = 0{,}46$~s και $\beta = 0{,}565$. (α) Η καθολική φάση $\phi$ της
     \eqref{eq:global-phase}. (β) Οι φάσεις $\phi_i$ των ποδιών της
     \eqref{eq:leg-phase} για το βάδισμα trot: τα δύο διαγώνια ζεύγη διαφέρουν
     κατά μισό κύκλο, ενώ κάθε πόδι βρίσκεται σε στήριξη όσο $\phi_i < \beta$}
@@ -2104,7 +2203,7 @@ $1{,}3\,T_{sw}$ αποτρέπει υπερβολικά αργούς κύκλο�
 Πίνακα~\ref{tab:trot-timing-params}. Αξίζει να σημειωθεί ότι το ονομαστικό ύψος
 αιώρησης $H = 35$~mm δεν είναι το πραγματικό μέγιστο ύψος του πέλματος: όπως
 προέκυψε στην ενότητα~\ref{subsec:swing-phase}, η καμπύλη Bezier φτάνει στο
-$0{,}64H$, δηλαδή περίπου $22$~mm, ενώ το βάθος διείσδυσης της φάσης στήριξης
+$0{,}61H$, δηλαδή περίπου $21$~mm, ενώ το βάθος διείσδυσης της φάσης στήριξης
 είναι $\delta = 0{,}12H \approx 4{,}2$~mm.
 
 \begin{table}[htbp]
@@ -2115,11 +2214,11 @@ $0{,}64H$, δηλαδή περίπου $22$~mm, ενώ το βάθος διεί�
         Παράμετρος & Σύμβολο & Τιμή \\
         \midrule
         \multicolumn{3}{@{}l}{\textit{Ρυθμιζόμενες}} \\
-        Επιθυμητή γραμμική ταχύτητα & $v$ & $0{,}30$ m/s$^{*}$ \\
+        Επιθυμητή γραμμική ταχύτητα & $v$ & $0{,}12$ m/s$^{*}$ \\
         Επιθυμητή γωνιακή ταχύτητα & $\omega$ & $0{,}00$ rad/s$^{*}$ \\
         Ονομαστικό ύψος αιώρησης & $H$ & $35$ mm \\
         Μήκος διαδρομής στήριξης & $S_{st}$ & $60$ mm \\
-        Διάρκεια αιώρησης & $T_{sw}$ & $0{,}25$ s \\
+        Διάρκεια αιώρησης & $T_{sw}$ & $0{,}20$ s \\
         Κατεύθυνση κίνησης & --- & $+x^{*}$ \\
         Είδος βαδίσματος & --- & trot \\
         \midrule
@@ -2385,23 +2484,24 @@ I_j[k] = \operatorname{sat}\!\left(I_j[k-1] + e_j[k]\,\Delta t_k\right),
 \end{equation}
 όπου η $\operatorname{sat}$ περιορίζει τον ολοκληρωτικό όρο στο
 $[-I_{max},\ I_{max}]$ ως μέτρο anti-windup \cite{caparroz_antiwindup_2026}. Οι
-τιμές των κερδών δίνονται στον Πίνακα~\ref{tab:pid-gains}.
+τιμές των κερδών, οι οποίες προσδιορίστηκαν πειραματικά και διαφέρουν ανά
+άξονα, δίνονται στον Πίνακα~\ref{tab:pid-gains}.
 
 \begin{table}[htbp]
     \centering
     \small
-    \begin{tabular}{@{}l l l@{}}
+    \begin{tabular}{@{}l l c c@{}}
         \toprule
-        Παράμετρος & Σύμβολο & Τιμή \\
+        Παράμετρος & Σύμβολο & roll & pitch \\
         \midrule
-        Αναλογικό κέρδος & $K_p$ & $0{,}4$ \\
-        Ολοκληρωτικό κέρδος & $K_i$ & $0{,}025$ \\
-        Διαφορικό κέρδος & $K_d$ & $0{,}05$ \\
-        Όριο ολοκληρωτικού όρου & $I_{max}$ & $0{,}7$ \\
+        Αναλογικό κέρδος & $K_p$ & $0{,}50$ & $0{,}40$ \\
+        Ολοκληρωτικό κέρδος & $K_i$ & $0{,}025$ & $0{,}050$ \\
+        Διαφορικό κέρδος & $K_d$ & $0{,}06$ & $0{,}03$ \\
+        Όριο ολοκληρωτικού όρου & $I_{max}$ & $0{,}7$ & $0{,}7$ \\
         \bottomrule
     \end{tabular}
-    \caption[Κέρδη των ελεγκτών PID]{Κέρδη των ελεγκτών PID, κοινά για roll και
-    pitch}
+    \caption[Κέρδη των ελεγκτών PID]{Κέρδη των δύο ελεγκτών PID, όπως
+    προσδιορίστηκαν πειραματικά στο ρομπότ}
     \label{tab:pid-gains}
 \end{table}
 
@@ -2951,8 +3051,8 @@ $90^\circ$, ώστε το διαθέσιμο εύρος κίνησης να εί
 \label{eq:servo-map}
 \end{equation}
 όπου $\theta_0$ η γωνία μηδενισμού και $d = \pm 1$ η φορά περιστροφής, η οποία
-εξαρτάται από τον τρόπο τοποθέτησης του κινητήρα στο πόδι. Το εύρος του παλμού
-ορίζεται από $750$ έως $2250$~$\mu$s.
+εξαρτάται από τον τρόπο τοποθέτησης του κινητήρα στο πόδι. Το εύρος του
+παλμού είναι το προεπιλεγμένο της βιβλιοθήκης, από $750$ έως $2250$~$\mu$s.
 
 
 \begin{table}[htbp]
@@ -3350,7 +3450,8 @@ fraction) της \eqref{eq:omni-foot} και δίνεται αυτούσια σ�
 γωνίες σε μοίρες και παράγει ένα γράφημα με δύο άξονες, έναν για το roll και
 έναν για το pitch, όπου σε κάθε άξονα εμφανίζονται μαζί η μέτρηση του αισθητήρα
 και η αντίστοιχη έξοδος του ελεγκτή. Το γράφημα αποθηκεύεται ως εικόνα δίπλα
-στο αρχείο δεδομένων, με το ίδιο όνομα. Διατίθεται και ισοδύναμη υλοποίηση σε
+στο αρχείο δεδομένων, με το ίδιο όνομα, όπως στο
+Σχήμα~\ref{fig:log-plotter-sample}. Διατίθεται και ισοδύναμη υλοποίηση σε
 MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείου.
 
 Πριν από κάθε νέα εκτέλεση τα προηγούμενα αρχεία δεδομένων και εικόνων
@@ -3359,8 +3460,15 @@ MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείο�
 συστήματος, κάτι που χρησιμοποιήθηκε για τη ρύθμιση των κερδών του ελεγκτή στο
 πραγματικό ρομπότ.
 
-\figTODO{Δείγμα γραφήματος καταγεγραμμένων δεδομένων
-(\texttt{log\_plotter.py}) ΜΕΤΡΗΣΗ ΣΤΟ ΡΟΜΠΟΤ}{fig:log-plotter-sample}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.72\textwidth, trim=48 28 64 62, clip]{images/log_plot_sim_combo.png}
+    \caption[Δείγμα γραφήματος καταγεγραμμένων δεδομένων]{Δείγμα του
+    γραφήματος που παράγει η \texttt{log\_plotter.py} στο τέλος κάθε
+    εκτέλεσης, από ένα τυχαίο πέρασμα. Πάνω το roll και κάτω το pitch, με τη
+    μέτρηση του αισθητήρα και την έξοδο του ελεγκτή σε κοινό άξονα}
+    \label{fig:log-plotter-sample}
+\end{figure}
 
 \chapter{Αποτελέσματα}
 \label{ch:results}
@@ -3387,14 +3495,17 @@ MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείο�
 παραμέτρων βάδισης και του ελεγκτή PID, αυτή τη φορά με πραγματικές μετρήσεις,
 μέσω των γραφημάτων που παράγονται από τα αρχεία καταγραφής
 (ενότητα~\ref{sec:data-logging}). Οι τελικές τιμές όλων των παραμέτρων δίνονται
-στο Παράρτημα~\ref{app:parameters}, ενώ ο πειραματικός σχεδιασμός συνοψίζεται
-στον Πίνακα~\ref{tab:experiment-design}.
+στο Παράρτημα~\ref{app:parameters}.
 
-\figTODO{Το ρομπότ μετέωρο στη σκηνή του PyBullet, χωρίς βαρύτητα, κατά την
-πρώτη επαλήθευση των τροχιών βάδισης}{fig:sim-no-gravity}
 
-\tabTODO{Πειραματικός σχεδιασμός: μετρούμενα μεγέθη, αριθμός επαναλήψεων
-και συνθήκες δοκιμής}{tab:experiment-design}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/pybullet_midair.png}
+    \caption{Το ρομπότ μετέωρο στη σκηνή του PyBullet, χωρίς βαρύτητα, κατά την
+πρώτη επαλήθευση των τροχιών βάδισης}
+    \label{fig:sim-no-gravity}
+\end{figure}
+
 
 \section{Αποτελέσματα Προσομοίωσης}
 \label{sec:sim-results}
@@ -3407,7 +3518,54 @@ MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείο�
 ενότητα~\ref{sec:sim-model}, το μοντέλο είναι το τρισδιάστατο σχέδιο της πρώτης
 έκδοσης του σκελετού, γεγονός που εισάγει και από εκεί αποκλίσεις.
 
-\figTODO{Γραφήματα τροχιάς και roll/pitch από την προσομοίωση}{fig:sim-results-plots}
+Τα γραφήματα προέρχονται από τα αρχεία καταγραφής της
+ενότητας~\ref{sec:data-logging}: σε κάθε ένα φαίνονται η μετρούμενη γωνία και η
+αντίστοιχη έξοδος του ελεγκτή, σε μοίρες. Η περιοδικότητα που εμφανίζεται
+ακολουθεί τον κύκλο του βαδίσματος, καθώς η εναλλαγή των διαγώνιων ζευγών
+μεταβάλλει τη στάση του σώματος σε κάθε βήμα. Το
+Σχήμα~\ref{fig:sim-results-combo} δείχνει την απόκριση όταν η γραμμική και η
+γωνιακή εντολή δίνονται ταυτόχρονα, δηλαδή στην περίπτωση που τα δύο διανύσματα
+βήματος συντίθενται κατά την \eqref{eq:step-sum}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, trim=48 28 64 62, clip]{images/log_plot_sim_forward.png}\\[2pt]
+        \small (α) εμπρός
+    \end{minipage}\hfill
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, trim=48 28 64 62, clip]{images/log_plot_sim_backward.png}\\[2pt]
+        \small (β) πίσω
+    \end{minipage}
+
+    \vspace{8pt}
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, trim=48 28 64 62, clip]{images/log_plot_sim_right.png}\\[2pt]
+        \small (γ) δεξιά
+    \end{minipage}\hfill
+    \begin{minipage}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width=\linewidth, trim=48 28 64 62, clip]{images/log_plot_sim_left.png}\\[2pt]
+        \small (δ) αριστερά
+    \end{minipage}
+    \caption[Γωνίες roll και pitch στην προσομοίωση]{Γωνίες roll και pitch στην
+    προσομοίωση, για βάδισμα trot προς τις τέσσερις βασικές κατευθύνσεις. Σε
+    κάθε γράφημα, πάνω το roll και κάτω το pitch, με τη μετρούμενη γωνία και την
+    αντίστοιχη έξοδο του ελεγκτή PID}
+    \label{fig:sim-results-plots}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.66\textwidth, trim=48 28 64 62, clip]{images/log_plot_sim_combo.png}
+    \caption[Γωνίες roll και pitch σε συνδυασμένη κίνηση]{Γωνίες roll και pitch
+    στην προσομοίωση, για ταυτόχρονη μετατόπιση προς $\lambda = 45^\circ$ με
+    $v = 0{,}30$~m/s και στροφή με $\omega = 0{,}30$~rad/s}
+    \label{fig:sim-results-combo}
+\end{figure}
 
 \section{Αποτελέσματα Βάδισης σε Πραγματικό Ρομπότ}
 \label{sec:real-results}
@@ -3416,16 +3574,12 @@ MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείο�
 συμπεριφορά στο πραγματικό ρομπότ να πλησιάσει εκείνη της προσομοίωσης. Με όσο
 το δυνατόν λιγότερο τζόγο στις αρθρώσεις και με βιδωτές συνδέσεις, το
 αποτέλεσμα είναι αρκετά ικανοποιητικό: το ρομπότ είναι στιβαρό και ακολουθεί
-την τροχιά που του δίνεται (Σχήμα~\ref{fig:real-robot-gait-frames} και
-Πίνακας~\ref{tab:gait-performance-metrics}). Η συμπεριφορά αυτή ενδέχεται
+την τροχιά που του δίνεται (Σχήμα~\ref{fig:real-results-plots}). Η
+συμπεριφορά αυτή ενδέχεται
 ωστόσο να χειροτερεύσει, για τους λόγους που αναλύονται στους περιορισμούς
 (ενότητα~\ref{sec:limitations}).
 
-\figTODO{Ακολουθία καρέ βάδισης trot και στροφής, με ποσοτικά γραφήματα
-ταχύτητας και roll/pitch ΑΠΟ ΚΟΝΤΑ ΚΑΙ ΜΕΤΡΗΣΗ ΣΤΟ ΡΟΜΠΟΤ}{fig:real-robot-gait-frames}
-
-\tabTODO{Μετρικές απόδοσης βάδισης ανά δοκιμή: ταχύτητα, RMS σφάλμα
-roll/pitch ΜΕΤΡΗΣΗ ΣΤΟ ΡΟΜΠΟΤ}{tab:gait-performance-metrics}
+\figTODO{Γραφήματα τροχιάς και roll/pitch από το πραγματικό ρομπότ ΑΠΟ ΚΟΝΤΑ ΚΑΙ ΜΕΤΡΗΣΗ ΣΤΟ ΡΟΜΠΟΤ}{fig:real-results-plots}
 
 \section{Απόκριση Ελεγκτή Σταθεροποίησης}
 \label{sec:controller-results}
@@ -3471,8 +3625,7 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
   \textit{[προσομοίωση: σύνδεσμος]}
 \end{itemize}
 
-\figTODO{QR code / frame grabs με σύνδεσμο προς το βίντεο
-επίδειξης ΒΙΝΤΕΟ ΣΤΟ ΡΟΜΠΟΤ}{fig:video-qr}
+\figTODO{QR code προς το playlist που περιέχει όλα τα βίντεο}{fig:video-qr}
 
 % --- Conclusions ---
 \chapter{Συμπεράσματα και Μελλοντικές Επεκτάσεις}
@@ -3723,8 +3876,8 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
         0 & 0,00 & 0,0 & 8 & 0,50 & 0,6 \\
         1 & 0,00 & 0,0 & 9 & 0,50 & 0,7 \\
         2 & 0,00 & 0,0 & 10 & 1,20 & 0,7 \\
-        3 & $-0{,}20$ & 0,6 & 11 & 1,20 & 0,7 \\
-        4 & $-0{,}25$ & 0,6 & 12 & 1,10 & 0,7 \\
+        3 & $-0{,}20$ & 0,0 & 11 & 1,20 & 0,7 \\
+        4 & $-0{,}25$ & 0,6 & 12 & 1,10 & 0,0 \\
         5 & $-0{,}25$ & 0,6 & 13 & 1,00 & 0,0 \\
         6 & $-0{,}25$ & 0,6 & 14 & 1,00 & 0,0 \\
         7 & 0,50 & 0,6 & 15 & 1,00 & 0,0 \\
@@ -3768,6 +3921,7 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
 % --- Bibliography ---
 \clearpage
 \addcontentsline{toc}{chapter}{Βιβλιογραφία}
+\emergencystretch=3em
 \printbibliography[title={Βιβλιογραφία}]
 
 \end{document}
