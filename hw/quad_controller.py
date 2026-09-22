@@ -183,20 +183,20 @@ class RobotController:
         self.gait_controller.reset(kp=0.4, ki=0.025, kd=0.05)
         if not params:
             # Default parameters
-            params = dict(desired_lin_vel=0.2,
-                          desired_ang_vel=0.0,
-                          swing_height=0.040,
-                          stance_length=0.05,
-                          Tswing=0.25,
-                          dir="+x",
-                          gait_type="trot")
-            # params = dict(desired_lin_vel=0.3, 
-            #               desired_ang_vel=0.0, 
-            #               T_cycle=0.25, 
-            #               duty_factor=0.5,
-            #               swing_height=0.035,
-            #               dir="+x",  
+            # params = dict(desired_lin_vel=0.2,
+            #               desired_ang_vel=0.0,
+            #               swing_height=0.040,
+            #               stance_length=0.05,
+            #               Tswing=0.25,
+            #               dir="+x",
             #               gait_type="trot")
+            params = dict(desired_lin_vel=0.3, 
+                          desired_ang_vel=0.0, 
+                          T_cycle=0.25, 
+                          duty_factor=0.5,
+                          swing_height=0.035,
+                          dir="+x",  
+                          gait_type="trot")
         
         self._start_live_display()
         self._live_status = "Running"
@@ -372,8 +372,8 @@ if __name__ == "__main__":
 
         
         
-        robot.gait_controller.reset(kp_r=0.5, ki_r=0.025, kd_r=0.06,
-                                    kp_p=0.4, ki_p=0.05,  kd_p=0.03)
+        robot.gait_controller.reset(kp_r=0.4, ki_r=0.025, kd_r=0.05,
+                                    kp_p=0.4, ki_p=0.025, kd_p=0.05)
         robot._start_live_display()
         while not teleop.dualsense.state.circle:
             t0 = time.time()
@@ -460,7 +460,7 @@ if __name__ == "__main__":
                 state = "Running"
             elif r_bumper:
                 params = dict(desired_lin_vel=0, 
-                            desired_ang_vel=-0.2, 
+                            desired_ang_vel=-0.5, 
                             swing_height=0.035, 
                             stance_length=0.06, 
                             Tswing=0.2, 
@@ -469,15 +469,23 @@ if __name__ == "__main__":
                 state = "Running"
             elif l_bumper:
                 params = dict(desired_lin_vel=0, 
-                            desired_ang_vel=0.2, 
+                            desired_ang_vel=0.3, 
                             swing_height=0.035, 
                             stance_length=0.06, 
                             Tswing=0.2, 
                             dir="+x",  
                             gait_type="trot")
                 state = "Running"
-            # elif right_joystick_motion:
-            #     print(right_joystick_angle)
+            elif right_joystick_motion:
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=-0.5, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "Running"
+                
                 
             elif state == "Running":
                 state = "Decelerating"

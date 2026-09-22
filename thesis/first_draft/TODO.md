@@ -16,7 +16,6 @@
 
 - [ ] `fig:moving-average-plot` (§6.5.4) — roll/pitch πριν και μετά τον κινητό μέσο
 - [ ] `fig:sensor-noise-plot` (§6.5.4) — ακατέργαστο έναντι φιλτραρισμένου σήματος
-- [ ] `fig:pid-realtime-response` (§6.6) — απόκριση roll/pitch σε πραγματικό χρόνο
 - [ ] `fig:real-results-plots` (§7.3) — τροχιά και roll/pitch από το ρομπότ
 - [ ] `fig:controller-response-comparison` (§7.4) — με και χωρίς σταθεροποίηση
 - [ ] `tab:stabilization-comparison` (§7.4) — μετρικές με και χωρίς σταθεροποίηση

@@ -127,7 +127,8 @@ if __name__ == "__main__":
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     ax.get_zaxis().set_visible(False)
-    plt.show()
+    # plt.show()
+    plt.savefig("bezier.png")
     
 
 

@@ -1949,6 +1949,12 @@
       \field{title}{An efficient orientation filter for inertial and inertial/magnetic sensor arrays}
       \field{type}{techreport}
       \field{year}{2010}
+      \verb{urlraw}
+      \verb https://x-io.co.uk/downloads/madgwick_internal_report.pdf
+      \endverb
+      \verb{url}
+      \verb https://x-io.co.uk/downloads/madgwick_internal_report.pdf
+      \endverb
     \endentry
     \entry{shi_structural_2021}{article}{}{}
       \name{author}{6}{}{%

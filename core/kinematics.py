@@ -183,7 +183,7 @@ class Kinematics:
     def robot_FK(self, center, orientation, joint_angles, unit='radians'):
         """Returns mm and X(forward) Y(up) Z(left) 1(identity)"""
         # Convert angles from degrees to radians if necessary
-        if unit.startswith('deg'):
+        if unit == 'degrees':
             joint_angles = [math.radians(angle) for angle in joint_angles]
 
 
