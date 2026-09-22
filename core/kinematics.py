@@ -143,7 +143,7 @@ class Kinematics:
         thetas = [theta1, theta2, theta3]
         return thetas
     
-    def robot_IK(self, center, orientation, ef_positions, unit='radians'):
+    def robot_IK(self, center, orientation, ef_positions, unit='rad'):
         """Returns [FL angles, FR angles, RL angles, RR angles]"""
         # T_shoulder_base for each leg
         T_shoulder_base = self.bodyIK(*orientation, *center)
@@ -180,10 +180,10 @@ class Kinematics:
 
         return angles # [FL angles, FR angles, RL angles, RR angles]
     
-    def robot_FK(self, center, orientation, joint_angles, unit='radians'):
+    def robot_FK(self, center, orientation, joint_angles, unit='rad'):
         """Returns mm and X(forward) Y(up) Z(left) 1(identity)"""
         # Convert angles from degrees to radians if necessary
-        if unit == 'degrees':
+        if unit == 'deg':
             joint_angles = [math.radians(angle) for angle in joint_angles]
 
 
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     center = [0, 250, 0]  # X, Y, Z in mm
 
 
-    leg_points = kinematics.robot_FK(center, orientation, theta, unit='degrees')
+    leg_points = kinematics.robot_FK(center, orientation, theta, unit='deg')
     print(f"Front Left leg:x={leg_points[0][0]:.2f}, y={leg_points[0][1]:.2f}, z={leg_points[0][2]:.2f}")
     print(f"Front Right leg:x={leg_points[1][0]:.2f}, y={leg_points[1][1]:.2f}, z={leg_points[1][2]:.2f}")
     print(f"Rear Left leg:x={leg_points[2][0]:.2f}, y={leg_points[2][1]:.2f}, z={leg_points[2][2]:.2f}")

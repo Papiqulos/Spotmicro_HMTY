@@ -15,6 +15,13 @@ from log.log_plotter import plot_log
 PI = math.pi
 TIME_STEP = 1. / 100.
 
+THETA_RESTING = np.array([
+                            0, -45, 115,  # FL
+                            0, -45, 115,  # FR
+                            0, -45, 115,  # RL
+                            0, -45, 115,  # RR
+                            ])
+
 class PybulletSim:
     
     def __init__(self, 
@@ -28,7 +35,7 @@ class PybulletSim:
                  orientation, 
                  center_plane, 
                  initial_theta, 
-                 angle_unit='degrees'):
+                 angle_unit='deg'):
         """
         
         :param length: robot base length in mm
@@ -111,7 +118,7 @@ class PybulletSim:
         self.initial_ef_positions = self.kin_solver.robot_FK(self.center_kin, self.orientation_kin, self.initial_theta, unit=self.angle_unit)
 
         # Gait Controller
-        _init_theta_rad = np.radians(self.initial_theta) if self.angle_unit == 'degrees' else np.array(self.initial_theta, dtype=float)
+        _init_theta_rad = np.radians(self.initial_theta) if self.angle_unit == 'deg' else np.array(self.initial_theta, dtype=float)
         _state = robot_state.RobotState(
             init_angles=_init_theta_rad,
             init_ef_positions=np.array(self.initial_ef_positions, dtype=float),
@@ -120,8 +127,12 @@ class PybulletSim:
         )
         self.gait_controller = gait.GaitController(_state)
 
-        # Display Initial Pose
-        self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
+        # Display Resting Pose
+        self.move_robot_to_pose(THETA_RESTING, self.angle_unit)
+
+
+        # Move to initial pose
+        self.gait_controller.smooth_to_target(self.initial_theta, duration=1.0, move_callback=self.move_robot_to_pose, unit=self.angle_unit)
 
         self._leg_joint_map = {
             "FL": [self.joint_dic["front_left_shoulder"],  self.joint_dic["front_left_leg"],  self.joint_dic["front_left_foot"]],
@@ -208,7 +219,7 @@ class PybulletSim:
             ef_positions.append(p.getLinkState(self.robotId, i)[0])
         return ef_positions
 
-    def move_robot_to_pose(self, robotId, theta, unit='degrees'):
+    def move_robot_to_pose(self, theta, unit='deg'):
         """
         Move the robot to a given pose.
 
@@ -216,12 +227,12 @@ class PybulletSim:
         :param theta: angles for all legs [[FL], [FR], [RL], [RR]]
         :param unit: angle unit
         """
-        if unit == 'degrees':
+        if unit == 'deg':
             theta_rad = [math.radians(angle) for angle in theta]
         else:
             theta_rad = list(theta)
         theta_pb = [angle * d for angle, d in zip(theta_rad, self.theta_dirs)]
-        p.setJointMotorControlArray(robotId,
+        p.setJointMotorControlArray(self.robotId,
                                     jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=theta_pb)
@@ -237,9 +248,9 @@ class PybulletSim:
 
         :param leg:    leg name FL / FR / RL / RR
         :param angles: [shoulder, leg, foot] in radians (or degrees)
-        :param unit:   "rad" or "degrees"
+        :param unit:   "rad" or "deg"
         """
-        if unit == "degrees":
+        if unit == "deg":
             angles = [math.radians(a) for a in angles]
         leg_idx = self._leg_order.index(leg)
         dirs = self.theta_dirs[leg_idx * 3: (leg_idx + 1) * 3]
@@ -324,7 +335,8 @@ class PybulletSim:
                 pitch_angle = np.radians(p.readUserDebugParameter(self.pitch_slider))
                 yaw_angle = np.radians(p.readUserDebugParameter(self.yaw_slider))
                 angles = self.kin_solver.robot_IK(self.center_kin, [roll_angle, pitch_angle, yaw_angle], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                self.gait_controller.smooth_to_target(angles, duration=1.0, move_callback=self.move_robot_to_pose, unit="rad")
+                
                 
             # Reset scene
             if self.key_is_pressed(keyboard_event, self.eKey):
@@ -334,30 +346,61 @@ class PybulletSim:
             if self.key_is_pressed(keyboard_event, self.rKey):
                 print("RESETTING TO INITIAL POSE")
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                self.move_robot_to_pose(angles, unit="rad")
 
             # Go Forward
             if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
+                params = dict(desired_lin_vel=0.3, 
+                            desired_ang_vel=0.0, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.25, 
+                            dir="+x",  
+                            gait_type="trot")
                 self.move(params)
 
             # Go Backward
             if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                params["dir"] = "-x"
+                params = dict(desired_lin_vel=0.3, 
+                                        desired_ang_vel=0.0, 
+                                        swing_height=0.035, 
+                                        stance_length=0.06, 
+                                        Tswing=0.25, 
+                                        dir="-x",  
+                                        gait_type="trot")
                 self.move(params)
 
             # Go Left
             if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                params["dir"] = "+z"
+                params = dict(desired_lin_vel=0.3, 
+                                        desired_ang_vel=0.0, 
+                                        swing_height=0.035, 
+                                        stance_length=0.06, 
+                                        Tswing=0.25, 
+                                        dir="+z",  
+                                        gait_type="trot")
                 self.move(params)
 
             # Go Right
             if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                params["dir"] = "-z"
+                params = dict(desired_lin_vel=0.3, 
+                                        desired_ang_vel=0.0, 
+                                        swing_height=0.035, 
+                                        stance_length=0.06, 
+                                        Tswing=0.25, 
+                                        dir="-z",  
+                                        gait_type="trot")
                 self.move(params)
 
-            # Go 45 degrees front left
+            # Go 45 degrees front left while turning
             if self.key_is_pressed(keyboard_event, self.fKey):
-                params["dir"] = np.pi/4
+                params = dict(desired_lin_vel=0.3, 
+                                        desired_ang_vel=0.2, 
+                                        swing_height=0.035, 
+                                        stance_length=0.06, 
+                                        Tswing=0.25, 
+                                        dir=np.pi/4,
+                                        gait_type="trot")
                 self.move(params)
 
             # Go 45 degrees front right
@@ -367,8 +410,13 @@ class PybulletSim:
 
             # Rotate in palce
             if self.key_is_pressed(keyboard_event, self.hKey):
-                params["desired_lin_vel"] = 0.0
-                params["desired_ang_vel"] = 0.3
+                params = dict(desired_lin_vel=0.0, 
+                                        desired_ang_vel=0.3, 
+                                        swing_height=0.035, 
+                                        stance_length=0.06, 
+                                        Tswing=0.25, 
+                                        dir="+x",  
+                                        gait_type="trot")
                 self.move(params)
 
     def respawn_robot(self):
@@ -382,7 +430,7 @@ class PybulletSim:
         print("RESETTING SCENE")
         # Make sure the robot has the initial pose
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-        self.move_robot_to_pose(self.robotId, angles, unit="rad")
+        self.move_robot_to_pose(angles, unit="rad")
         
     def move(self, params=None):
 
@@ -456,7 +504,7 @@ class PybulletSim:
             if ef_vel == 0.0 and deceleration_flag:
                 print("STOPPED")
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                self.move_robot_to_pose(angles, unit="rad")
                 break
         
         plot_log(log_file)
@@ -502,4 +550,4 @@ if __name__ == "__main__":
                                orientation=orientation,
                                center_plane=center_plane,
                                initial_theta=theta_default,
-                               angle_unit="degrees")
+                               angle_unit="deg")
