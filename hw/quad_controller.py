@@ -53,17 +53,17 @@ class RobotController:
 
         if init_angles is None:
             self.init_ef_positions = init_ef_positions
-            self.init_angles = self.kin_solver.robot_IK(self.init_center, 
-                                                        self.init_orientation_deg, 
-                                                        self.init_ef_positions, 
-                                                        unit="degrees")
-            
+            self.init_angles = self.kin_solver.robot_IK(self.init_center,
+                                                        self.init_orientation_deg,
+                                                        self.init_ef_positions,
+                                                        unit="deg")
+
         else:
             self.init_angles = init_angles
-            self.init_ef_positions = self.kin_solver.robot_FK(self.init_center, 
-                                                              self.init_orientation_deg, 
-                                                              self.init_angles, 
-                                                              unit="degrees"
+            self.init_ef_positions = self.kin_solver.robot_FK(self.init_center,
+                                                              self.init_orientation_deg,
+                                                              self.init_angles,
+                                                              unit="deg"
             )
             
         if init_angles is not None and init_ef_positions is not None:

@@ -27,8 +27,8 @@ class PybulletSim:
                  center, 
                  orientation, 
                  center_plane, 
-                 initial_theta, 
-                 angle_unit='degrees'):
+                 initial_theta,
+                 angle_unit='deg'):
         """
         
         :param length: robot base length in mm
@@ -111,7 +111,7 @@ class PybulletSim:
         self.initial_ef_positions = self.kin_solver.robot_FK(self.center_kin, self.orientation_kin, self.initial_theta, unit=self.angle_unit)
 
         # Gait Controller
-        _init_theta_rad = np.radians(self.initial_theta) if self.angle_unit == 'degrees' else np.array(self.initial_theta, dtype=float)
+        _init_theta_rad = np.radians(self.initial_theta) if self.angle_unit == 'deg' else np.array(self.initial_theta, dtype=float)
         _state = robot_state.RobotState(
             init_angles=_init_theta_rad,
             init_ef_positions=np.array(self.initial_ef_positions, dtype=float),
@@ -208,7 +208,7 @@ class PybulletSim:
             ef_positions.append(p.getLinkState(self.robotId, i)[0])
         return ef_positions
 
-    def move_robot_to_pose(self, robotId, theta, unit='degrees'):
+    def move_robot_to_pose(self, robotId, theta, unit='deg'):
         """
         Move the robot to a given pose.
 
@@ -216,7 +216,7 @@ class PybulletSim:
         :param theta: angles for all legs [[FL], [FR], [RL], [RR]]
         :param unit: angle unit
         """
-        if unit == 'degrees':
+        if unit == 'deg':
             theta_rad = [math.radians(angle) for angle in theta]
         else:
             theta_rad = list(theta)
@@ -237,9 +237,9 @@ class PybulletSim:
 
         :param leg:    leg name FL / FR / RL / RR
         :param angles: [shoulder, leg, foot] in radians (or degrees)
-        :param unit:   "rad" or "degrees"
+        :param unit:   "rad" or "deg"
         """
-        if unit == "degrees":
+        if unit == "deg":
             angles = [math.radians(a) for a in angles]
         leg_idx = self._leg_order.index(leg)
         dirs = self.theta_dirs[leg_idx * 3: (leg_idx + 1) * 3]
@@ -502,4 +502,4 @@ if __name__ == "__main__":
                                orientation=orientation,
                                center_plane=center_plane,
                                initial_theta=theta_default,
-                               angle_unit="degrees")
+                               angle_unit="deg")
