@@ -32,6 +32,11 @@ _SWING_H_NORM = kinematics.robot_cfg["gait"]["swing_h_norm"]
 # Mid-stance ground-penetration (sine dip) fractions, also from config/robot_config.yaml.
 _STANCE_PEN_BASE_FRAC = kinematics.robot_cfg["gait"]["stance_penetration_base_frac"]
 _STANCE_PEN_TILT_FRAC = kinematics.robot_cfg["gait"]["stance_penetration_tilt_frac"]
+
+# Roll/pitch PID gain defaults, also from config/robot_config.yaml (pid.rp/roll/pitch).
+_PID_RP = kinematics.robot_cfg["pid"]["rp"]
+_PID_ROLL = kinematics.robot_cfg["pid"]["roll"]
+_PID_PITCH = kinematics.robot_cfg["pid"]["pitch"]
 # Phase offsets per leg [FL, FR, RL, RR] as fraction of cycle (0-1).
 _GAIT_PHASES = {
     "trot":  [0.0, 0.5, 0.5, 0.0],   # diagonals: FL+RR, FR+RL
@@ -79,10 +84,9 @@ class GaitController:
             self._prev_foot_pos = [np.zeros(3) for _ in range(4)]
 
 
-        # 0.4, 0.025, 0.05 THEY WORK IRL
-        self.pid = PIDControllerRP(kp=0.4, ki=0.025, kd=0.05)
-        self.pid_r = PIDController(kp=0.55, ki=0.1, kd=0.05)
-        self.pid_p = PIDController(kp=0.4, ki=0.025, kd=0.05)
+        self.pid = PIDControllerRP(**_PID_RP)
+        self.pid_r = PIDController(**_PID_ROLL)
+        self.pid_p = PIDController(**_PID_PITCH)
         self._pid_last_time = None
 
         _LOG_DIR.mkdir(exist_ok=True)
@@ -98,9 +102,9 @@ class GaitController:
             if f.endswith(".csv") or f.endswith(".png"):
                 os.remove(os.path.join(_LOG_DIR, f))
 
-    def reset(self, kp=0.4, ki=0.025, kd=0.05,
-              kp_r=0.4, ki_r=0.025, kd_r=0.05,
-              kp_p=0.4, ki_p=0.025, kd_p=0.05,):
+    def reset(self, kp=_PID_RP["kp"], ki=_PID_RP["ki"], kd=_PID_RP["kd"],
+              kp_r=_PID_ROLL["kp"], ki_r=_PID_ROLL["ki"], kd_r=_PID_ROLL["kd"],
+              kp_p=_PID_PITCH["kp"], ki_p=_PID_PITCH["ki"], kd_p=_PID_PITCH["kd"],):
         """Reset GaitController and set new PID gains."""
         self.pid = PIDControllerRP(kp=kp, ki=ki, kd=kd)
         self.pid_r = PIDController(kp=kp_r, ki=ki_r, kd=kd_r)

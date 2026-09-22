@@ -134,6 +134,7 @@ class IMU:
         self._imu_window.append(self.smoothed_orientation)
         filtered = np.mean(self._imu_window, axis=0)
         return filtered
+        # return np.array([roll, pitch, yaw])
 
 
 

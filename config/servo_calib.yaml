@@ -4,12 +4,12 @@
 #   adjust these to shift the angle mapping without moving the horn
 
 FL:
-  shoulder: { channel: 0, zero_deg:  95, direction:  1, kit: 1 }
+  shoulder: { channel: 0, zero_deg:  89, direction:  1, kit: 1 }
   leg:      { channel: 1, zero_deg:  89, direction: -1, kit: 1 }
   foot:     { channel: 2, zero_deg: 137, direction: -1, kit: 1 }
 
 FR:
-  shoulder: { channel: 4, zero_deg:  81, direction:  -1, kit: 1  }
+  shoulder: { channel: 4, zero_deg:  80, direction:  -1, kit: 1  }
   leg:      { channel: 5, zero_deg: 132, direction:   1, kit: 1  }
   foot:     { channel: 6, zero_deg:  62, direction:   1, kit: 1  }
 
