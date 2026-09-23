@@ -137,9 +137,8 @@ first, then disconnect and repeat the steps above.
 
 `GaitController` exposes four `execute_gait_*` entry points that share one core
 (`_compute_ramp` → `_imu_correction` → `_step_legs`) and differ only in how the
-swing/stance durations and the phase clock are derived. `execute_gait_fixed_swing_td`
-is the most robust for straight lines; the `fixed_stance` variants suit turning.
-
+swing/stance durations and the phase clock are derived. `execute_gait_fixed_stance`
+is the most robust and tuned for the real robot.
 One control step:
 
 1. **Velocity ramp** — cosine ramp over 0.5 s on both linear and angular velocity
