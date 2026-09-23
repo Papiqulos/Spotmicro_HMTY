@@ -20,6 +20,10 @@ simulation:
 
 <img src="assets/playlist.png" alt="QR code to the demo playlist" width="200">
 
+## Thesis
+
+Detailed thesis is available in [`thesis/first_draft/main.pdf`](thesis/first_draft/main.pdf).
+
 ---
 
 ## What it does
@@ -215,7 +219,7 @@ The kinematics frame is **X forward, Y up, Z left**, in millimetres.
   Sumardi, "Quadruped Robot with Stabilization Algorithm on Uneven Floor
   using 6 DOF IMU based Inverse Kinematic," *ICITACEE*, 2018 — PID
   stabilisation as a per-leg geometric foot offset
-- All of the sources used are in the thesis bibliography
+- All of the sources used are in the [`thesis/first_draft/main.pdf`](thesis/first_draft/main.pdf) bibliography
 
 Supervisor: Prof. Charalampos Bechlioulis, University of Patras.
 
