@@ -72,10 +72,10 @@ script from the repository root**.
 
 | Command                          | What it does                         |
 | -------------------------------- | ------------------------------------ |
-| `python sim/pybullet_sim.py`   | PyBullet simulation, keyboard-driven |
-| `python hw/quad_controller.py` | Hardware controller (on the Pi)      |
-| `python hw/teleop.py`          | DualSense input test                 |
-| `python sim/matplotlib_sim.py` | Static kinematics visualiser         |
+| `python -m sim.pybullet_sim`   | PyBullet simulation, keyboard-driven |
+| `python -m hw.quad_controller` | Hardware controller (on the Pi)      |
+| `python -m hw.teleop`          | DualSense input test                 |
+| `python -m sim.matplotlib_sim` | Static kinematics visualiser         |
 
 ---
 
@@ -87,7 +87,7 @@ script from the repository root**.
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements_sim.txt
-python sim/pybullet_sim.py
+python -m sim.pybullet_sim
 ```
 
 ### Hardware (Raspberry Pi) ( TODO FIX)
@@ -157,17 +157,7 @@ The kinematics frame is **X forward, Y up, Z left**, in millimetres.
 
 ---
 
-## Thesis
 
-The LaTeX source is under [`thesis/`](thesis/). Build with:
-
-```bash
-cd thesis/first_draft && latexmk main.tex
-```
-
-Requires LuaLaTeX and Biber; `.latexmkrc` selects the right engine automatically.
-
----
 
 ## Acknowledgements
 
