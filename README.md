@@ -223,6 +223,7 @@ Supervisor: Prof. Charalampos Bechlioulis, University of Patras.
 
 ## Future Work
 
+- ROS2 migration
 - LiDAR and camera integration for terrain sensing
 - A more durable print material than the current PLA
 - Redesigned shoulder joints with double-shear support
