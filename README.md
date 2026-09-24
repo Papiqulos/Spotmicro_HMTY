@@ -38,7 +38,9 @@ Detailed thesis is available in [`thesis/first_draft/main.pdf`](thesis/first_dra
 - **Simulation environment** — a PyBullet model for testing the real
   locomotion code before it runs on hardware. Currently uses the SpotMicro v1
   URDF, since no v2 model exists yet (see [Known limitations](#known-limitations))
-- **Real-time teleoperation** via a DualSense controller
+- **Real-time teleoperation** via a DualSense controller: D-pad and left stick
+  to walk, L1/R1 to turn in place, right stick to tilt the body while standing
+  (input is normalised and low-pass filtered for gradual motion)
 - **CSV logging** of filtered IMU and PID output each run, with a PNG plot
   saved automatically — handy for headless operation over SSH
 
@@ -159,9 +161,7 @@ One control step:
 9. **CSV logging** of filtered IMU and PID output
 
 IMU filtering happens in the driver (`hw/imu.py`), not in the gait controller:
-Madgwick (or EKF) fusion → exponential low-pass (α = 0.3). There is no moving
-average: its delay averaged out the stride-frequency sway the PID is meant to
-correct.
+Madgwick (or EKF) fusion → exponential low-pass (α = 0.3).
 
 <img src="assets/full_control_loop.png" alt="Full control loop, from IMU to servos" width="800">
 
