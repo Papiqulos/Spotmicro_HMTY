@@ -81,7 +81,6 @@ class RobotController:
             kin_solver=self.kin_solver,
         )
         self.gait_controller = GaitController(self.state)
-
         self.gait_controller.smooth_to_target(
             np.array(self.init_angles, dtype=float),
             duration=1.5,
@@ -180,7 +179,6 @@ class RobotController:
         time_step = 1.0 / 100
         start_time = time.time()
         self.imu._imu_window.clear()
-        self.gait_controller.reset(kp=0.4, ki=0.025, kd=0.05)
         if not params:
             # Default parameters
             # params = dict(desired_lin_vel=0.2,
@@ -370,10 +368,6 @@ if __name__ == "__main__":
         start_time = time.time()
         time_step = 1.0 / 100
 
-        
-        
-        robot.gait_controller.reset(kp_r=0.4, ki_r=0.025, kd_r=0.05,
-                                    kp_p=0.4, ki_p=0.025, kd_p=0.05)
         robot._start_live_display()
         while not teleop.dualsense.state.circle:
             t0 = time.time()
@@ -449,7 +443,14 @@ if __name__ == "__main__":
                         dir="-z",  
                         gait_type="trot")
                 state = "Running"
+            elif right_joystick_motion:
+                if current_time < 0.6:
+                    continue
+                # body manipulation
+                print("right joystick motion")
             elif left_joystick_motion:
+                if current_time < 0.6:
+                    continue
                 params = dict(desired_lin_vel=0.12, 
                         desired_ang_vel=0.0, 
                         swing_height=0.035, 
@@ -476,7 +477,7 @@ if __name__ == "__main__":
                             dir="+x",  
                             gait_type="trot")
                 state = "Running"
-            elif right_joystick_motion:
+            elif r_trigger:
                 params = dict(desired_lin_vel=0.12, 
                             desired_ang_vel=-0.5, 
                             swing_height=0.035, 
@@ -485,10 +486,19 @@ if __name__ == "__main__":
                             dir="+x",  
                             gait_type="trot")
                 state = "Running"
-                
-                
+            elif l_trigger:
+                params = dict(desired_lin_vel=0.12, 
+                            desired_ang_vel=0.5, 
+                            swing_height=0.035, 
+                            stance_length=0.06, 
+                            Tswing=0.2, 
+                            dir="+x",  
+                            gait_type="trot")
+                state = "Running"
             elif state == "Running":
                 state = "Decelerating"
+
+
             
 
             if state == "Running":
@@ -518,7 +528,10 @@ if __name__ == "__main__":
         else:
             print(f"Error: {e}")
     finally:
-        robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.0, move_callback=robot.apply_angles_robot, unit="deg")
+        # print(np.degrees(robot.state.angles))
+        tr = np.radians(THETA_RESTING)
+        robot.gait_controller.smooth_to_target(tr, duration=1.5, move_callback=robot.apply_angles_robot, unit="rad")
+        # robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.5, move_callback=robot.apply_angles_robot, unit="deg")
         if log_file:
             plot_log(log_file)
         if teleop:

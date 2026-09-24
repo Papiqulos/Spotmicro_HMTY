@@ -477,6 +477,7 @@ class GaitController:
 
         
         starting_angles = self.state.angles # this is always in radians
+        # print(starting_angles)
         if unit == "deg":
             starting_angles = np.degrees(starting_angles)
         start = time.time()
@@ -486,10 +487,17 @@ class GaitController:
             ramp_factor = 0.5 * (1.0 - np.cos(np.pi * dt / duration))
             interpolated_angles = starting_angles + ramp_factor * (target_angles-starting_angles)
             # time.sleep(0.005)
-            if unit == "deg":
-                self.state.angles = np.radians(interpolated_angles) # convert back to radians and store
+            # if unit == "deg":
+            #     self.state.angles = np.radians(interpolated_angles) # convert back to radians and store
+            #     print("in")
+            # else:
+            #     self.state.angles = interpolated_angles
+            #     print("out")
             move_callback(interpolated_angles, unit=unit)
-
+        if unit == "deg":
+            self.state.angles = np.radians(target_angles) # convert back to radians and store
+        else:
+            self.state.angles = target_angles
         
         
             
