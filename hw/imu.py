@@ -7,7 +7,6 @@ import numpy as np
 from ahrs.filters import Madgwick, EKF
 from ahrs.common.orientation import q2euler, q2rpy, acc2q
 from tools import utils
-from collections import deque
 
 # Roll angle (rotation around x-axis-FORWARD)
 # Pitch angle (rotation around z-axis-LEFT)
@@ -47,13 +46,10 @@ class IMU:
             raise ValueError(f"Unknown filter: {filter_type}")
 
 
-        # Noise filtering parameters(Low pass + 30-tap moving average)
         # Low pass filter for roll and pitch
         self.s_roll = 0
         self.s_pitch = 0
         self.alpha = 0.3
-        # 30-tap moving average for roll and pitch
-        self._imu_window = deque(maxlen=30)
         self.last_time = time.time()
         print("IMU Ready")
 
@@ -127,14 +123,11 @@ class IMU:
         smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
         self.s_roll = smoothed
         smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
-        self.s_pitch = -smoothed
+        self.s_pitch = smoothed
 
-        # Apply the 30-tap moving average filter
-        self.smoothed_orientation = np.array([ self.s_roll, self.s_pitch, yaw])
-        self._imu_window.append(self.smoothed_orientation)
-        filtered = np.mean(self._imu_window, axis=0)
-        return filtered
-        # return np.array([roll, pitch, yaw])
+        self.smoothed_orientation = np.array([ self.s_roll, -self.s_pitch, yaw])
+
+        return self.smoothed_orientation
 
 
 

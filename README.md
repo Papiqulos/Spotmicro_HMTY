@@ -159,9 +159,9 @@ One control step:
 9. **CSV logging** of filtered IMU and PID output
 
 IMU filtering happens in the driver (`hw/imu.py`), not in the gait controller:
-Madgwick (or EKF) fusion → exponential low-pass (α = 0.3) → 30-tap moving
-average. The moving average removes the ~2 Hz oscillation inherent to trotting,
-which would otherwise be fed straight into the PID.
+Madgwick (or EKF) fusion → exponential low-pass (α = 0.3). There is no moving
+average: its delay averaged out the stride-frequency sway the PID is meant to
+correct.
 
 <img src="assets/full_control_loop.png" alt="Full control loop, from IMU to servos" width="800">
 

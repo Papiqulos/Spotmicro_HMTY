@@ -87,7 +87,7 @@ class RobotController:
             move_callback=self.apply_angles_robot,
             unit="deg",
         )
-        self.show_state()
+        # self.show_state()
         time.sleep(1)
         
     def _write_servo(self, servo_index, angle):
@@ -156,8 +156,8 @@ class RobotController:
         """
         if unit == "deg":
             new_orientation = np.radians(new_orientation)
-        angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.state.ef_positions)
-        self.gait_controller.smooth_to_target(angles, move_callback=self.apply_angles_robot, unit="rad")
+        angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
+        self.gait_controller.smooth_to_target(angles, duration=0.5, move_callback=self.apply_angles_robot, unit="rad")
 
     def move(self, 
             params=None,
@@ -178,7 +178,6 @@ class RobotController:
         """
         time_step = 1.0 / 100
         start_time = time.time()
-        self.imu._imu_window.clear()
         if not params:
             # Default parameters
             # params = dict(desired_lin_vel=0.2,
@@ -323,7 +322,9 @@ if __name__ == "__main__":
 
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
     robot = RobotController(kin_solver, init_angles=theta_default, skip_rest=False)
-    # robot.change_orientation(np.array([0, 10, 0]), unit="deg")
+    # robot.change_orientation(np.array([15, 0, 0]), unit="deg")
+    # time.sleep(1)
+    # robot.change_orientation(np.array([0, 0, 0]), unit="deg")
 
     # robot.apply_angles_robot(theta_default)
 
@@ -367,6 +368,8 @@ if __name__ == "__main__":
         current_dir = "+x"
         start_time = time.time()
         time_step = 1.0 / 100
+        body_orn = np.zeros(3)
+        body_alpha = 0.10
 
         robot._start_live_display()
         while not teleop.dualsense.state.circle:
@@ -398,7 +401,8 @@ if __name__ == "__main__":
             # Triggers
             r_trigger  = teleop.dualsense.state.R2
             l_trigger  = teleop.dualsense.state.L2
-            
+
+            target_orn = np.zeros(3)
 
             if dpad_up:
                 params = dict(desired_lin_vel=0.12, 
@@ -447,7 +451,15 @@ if __name__ == "__main__":
                 if current_time < 0.6:
                     continue
                 # body manipulation
-                print("right joystick motion")
+                if state == "Running":
+                    state = "Decelerating"
+                elif state == "Idle":
+                    rx_norm = teleop.dualsense.state.RX / -128
+                    ry_norm = teleop.dualsense.state.RY / 128
+                    max_roll = 15
+                    max_pitch = 10
+                    target_orn = np.array([rx_norm * max_roll, ry_norm * max_pitch, 0])
+
             elif left_joystick_motion:
                 if current_time < 0.6:
                     continue
@@ -458,6 +470,7 @@ if __name__ == "__main__":
                         Tswing=0.2, 
                         dir=left_joystick_angle,  
                         gait_type="trot")
+                print(f"dir={left_joystick_angle}")
                 state = "Running"
             elif r_bumper:
                 params = dict(desired_lin_vel=0, 
@@ -513,6 +526,13 @@ if __name__ == "__main__":
                     state = "Idle"
             else:
                 robot._live_status = "Idle — waiting for command"
+                if np.any(np.abs(target_orn) > 0.05) or np.any(np.abs(body_orn) > 0.05):
+                    body_orn += body_alpha * (target_orn - body_orn)
+                    angles = robot.kin_solver.robot_IK(robot.init_center, np.radians(body_orn), robot.state.init_ef_positions)
+                    robot.apply_angles_robot(angles, unit="rad")
+                elif np.any(body_orn != 0):
+                    body_orn[:] = 0
+                    robot.apply_angles_robot(robot.init_angles)
                 robot.show_state("\r")
 
             elapsed = time.time() - t0
@@ -529,9 +549,9 @@ if __name__ == "__main__":
             print(f"Error: {e}")
     finally:
         # print(np.degrees(robot.state.angles))
-        tr = np.radians(THETA_RESTING)
-        robot.gait_controller.smooth_to_target(tr, duration=1.5, move_callback=robot.apply_angles_robot, unit="rad")
-        # robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.5, move_callback=robot.apply_angles_robot, unit="deg")
+        # tr = np.radians(THETA_RESTING)
+        # robot.gait_controller.smooth_to_target(tr, duration=1.5, move_callback=robot.apply_angles_robot, unit="rad")
+        robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.5, move_callback=robot.apply_angles_robot, unit="deg")
         if log_file:
             plot_log(log_file)
         if teleop:

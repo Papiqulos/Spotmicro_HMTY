@@ -9,7 +9,6 @@ from tools.pid_controller import PIDControllerRP, PIDController
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 import core.robot_state as RobotState
-from collections import deque
 from log.log_plotter import plot_log
 
 _LOG_DIR = Path(__file__).parent.parent / "log" / "roll_pitch"
@@ -153,11 +152,11 @@ class GaitController:
         return desired_lin_vel * ramp_factor, desired_ang_vel * ramp_factor
 
     def _imu_correction(self, imu_data, time_step, banked_roll=0.0):
-        """30-tap moving average + PID.  Returns corrected_orientation [roll, pitch, yaw]."""
+        """PID on filtered roll/pitch.  Returns corrected_orientation [roll, pitch, yaw]."""
         if imu_data is None:
             return np.array(self.state.init_orientation, dtype=float)
         
-        # Filtered roll and pitch(Low pass + 30-tap moving average)
+        # Roll and pitch already low-pass filtered in hw/imu.py
         filtered = np.array([imu_data[0] + banked_roll,  imu_data[1]])
 
         now = time.time()
@@ -477,7 +476,6 @@ class GaitController:
 
         
         starting_angles = self.state.angles # this is always in radians
-        # print(starting_angles)
         if unit == "deg":
             starting_angles = np.degrees(starting_angles)
         start = time.time()
@@ -487,17 +485,12 @@ class GaitController:
             ramp_factor = 0.5 * (1.0 - np.cos(np.pi * dt / duration))
             interpolated_angles = starting_angles + ramp_factor * (target_angles-starting_angles)
             # time.sleep(0.005)
-            # if unit == "deg":
-            #     self.state.angles = np.radians(interpolated_angles) # convert back to radians and store
-            #     print("in")
-            # else:
-            #     self.state.angles = interpolated_angles
-            #     print("out")
+            if unit == "deg":
+                self.state.angles = np.radians(interpolated_angles) # convert back to radians and store
+            else:
+                self.state.angles = interpolated_angles
             move_callback(interpolated_angles, unit=unit)
-        if unit == "deg":
-            self.state.angles = np.radians(target_angles) # convert back to radians and store
-        else:
-            self.state.angles = target_angles
+     
         
         
             
