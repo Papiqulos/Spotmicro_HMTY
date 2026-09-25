@@ -1,8 +1,8 @@
-import numpy as np
-from math import *
 import math
-from tools.utils import *
+from math import sin, cos, sqrt, atan2
+import numpy as np
 import yaml
+from tools.utils import to_homogenous, trans_inv
 
 with open("config/robot_config.yaml") as f:
     robot_cfg = yaml.safe_load(f)
@@ -48,11 +48,6 @@ class Kinematics:
         self.l4 = l4  # Lower Leg Length in mm
         self.com_offset = com_offset  # X offset from geometric centre to COM (mm)
 
-        self.theta_dirs = [-1, 1, 1,
-                        1, 1, 1,
-                        -1, 1, 1, 
-                        1, 1, 1]
-        
         # Inversion matrix for right legs
         self.Ix = np.array([[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
 
@@ -212,21 +207,6 @@ class Kinematics:
 
 
         return ef_positions
-    
-    def jacobian(self):
-        raise NotImplementedError
-    
-    def diffKin(self):
-        raise NotImplementedError
-    
-    def diffIK(self):
-        raise NotImplementedError
-    
-    def torques(self):
-        raise NotImplementedError
-    
-    def mech_power(self):
-        raise NotImplementedError
 
 
 

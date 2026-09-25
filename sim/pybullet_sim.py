@@ -7,13 +7,33 @@ import core.gait_controller as gait
 import core.kinematics as kinematics
 import core.robot_state as robot_state
 from tools.utils import from_pybullet_orn, from_pybullet_pos
-from log.log_plotter import plot_log
+from log.pid_plotter import plot_log
 
 
 
 # CONSTANTS
 PI = math.pi
 TIME_STEP = 1. / 100.
+
+THETA_RESTING = np.array([
+                            0, -45, 115,  # FL
+                            0, -45, 115,  # FR
+                            0, -45, 115,  # RL
+                            0, -45, 115,  # RR
+                            ])
+
+UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW = 65297, 65298, 65295, 65296
+
+
+def trot_params(lin_vel, ang_vel, dir):
+    """Gait parameters for execute_gait_fixed_stance (lengths in m, times in s)."""
+    return dict(desired_lin_vel=lin_vel,
+                desired_ang_vel=ang_vel,
+                swing_height=0.035,
+                stance_length=0.06,
+                Tswing=0.25,
+                dir=dir,
+                gait_type="trot")
 
 class PybulletSim:
     
@@ -27,7 +47,7 @@ class PybulletSim:
                  center, 
                  orientation, 
                  center_plane, 
-                 initial_theta,
+                 initial_theta, 
                  angle_unit='deg'):
         """
         
@@ -120,8 +140,12 @@ class PybulletSim:
         )
         self.gait_controller = gait.GaitController(_state)
 
-        # Display Initial Pose
-        self.move_robot_to_pose(self.robotId, initial_theta, self.angle_unit)
+        # Display Resting Pose
+        self.move_robot_to_pose(THETA_RESTING, self.angle_unit)
+
+
+        # Move to initial pose
+        self.gait_controller.smooth_to_target(self.initial_theta, duration=1.0, move_callback=self.move_robot_to_pose, unit=self.angle_unit)
 
         self._leg_joint_map = {
             "FL": [self.joint_dic["front_left_shoulder"],  self.joint_dic["front_left_leg"],  self.joint_dic["front_left_foot"]],
@@ -208,7 +232,7 @@ class PybulletSim:
             ef_positions.append(p.getLinkState(self.robotId, i)[0])
         return ef_positions
 
-    def move_robot_to_pose(self, robotId, theta, unit='deg'):
+    def move_robot_to_pose(self, theta, unit='deg'):
         """
         Move the robot to a given pose.
 
@@ -221,7 +245,7 @@ class PybulletSim:
         else:
             theta_rad = list(theta)
         theta_pb = [angle * d for angle, d in zip(theta_rad, self.theta_dirs)]
-        p.setJointMotorControlArray(robotId,
+        p.setJointMotorControlArray(self.robotId,
                                     jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
                                     targetPositions=theta_pb)
@@ -247,129 +271,56 @@ class PybulletSim:
         p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg], p.POSITION_CONTROL, angles)
 
     def start_simulation(self):
-        
-        
-        # Start Simulation Loop
         while True:
-
-            # Step Simulation and add small delay for smooth transition to initial pose
             p.stepSimulation()
             time.sleep(1./240.)
-            
-            
-            # Keyboard and Mouse Events
+
             keyboard_event = p.getKeyboardEvents()
 
-            self.upArrowKey = 65297
-            self.downArrowKey = 65298
-            self.leftArrowKey = 65295
-            self.rightArrowKey = 65296
-            self.cKey = ord('c')
-            self.rKey = ord('r')
-            self.eKey = ord('e')
-            self.wKey = ord('w')
-            self.sKey = ord('s')
-            self.aKey = ord('a')
-            self.dKey = ord('d')
-            self.qKey = ord('q')
-            self.iKey = ord('i')
-            self.tKey = ord('t')
-            self.fKey = ord('f')
-            self.gKey = ord('g')
-            self.hKey = ord('h')
+            def pressed(*keys):
+                return any(self.key_is_pressed(keyboard_event, k) for k in keys)
 
-            # Default parameters
-
-            # OLD
-            # params = dict(desired_lin_vel=0.3, 
-            #               desired_ang_vel=0.0, 
-            #               T_cycle=0.4, 
-            #               duty_factor=0.5,
-            #               swing_height=0.035,
-            #               dir="+x",  
-            #               gait_type="trot")
-
-            # NEW
-            params = dict(desired_lin_vel=0.3, 
-                        desired_ang_vel=0.0, 
-                        swing_height=0.035, 
-                        stance_length=0.06, 
-                        Tswing=0.25, 
-                        dir="+x",  
-                        gait_type="trot")
-
-            # Print imu data
-            if self.key_is_pressed(keyboard_event, self.iKey):
-                imu_data_raw = self.get_imu_data()
-                imu_data_kin = from_pybullet_orn(imu_data_raw)
-                
-                roll = imu_data_kin[0]
-                pitch = imu_data_kin[1]
-                yaw = imu_data_kin[2]
-
-                # roll_deg  = np.degrees(roll)
-                # pitch_deg = np.degrees(pitch)
-                # yaw_deg   = np.degrees(yaw)
+            # Print IMU data
+            if pressed(ord('i')):
+                roll, pitch, yaw = from_pybullet_orn(self.get_imu_data())
                 print("---------------")
-                # print(f"roll: {roll_deg}\npitch: {pitch_deg}\nyaw: {yaw_deg}")
                 print(f"roll: {roll}\npitch: {pitch}\nyaw: {yaw}")
 
-            # Test certain trajectories 
-            if self.key_is_pressed(keyboard_event, self.tKey):
-                pass
-
-            # Move to a certain pose
-            if self.key_is_pressed(keyboard_event, self.cKey):
+            # Move to the pose set by the roll/pitch/yaw sliders
+            if pressed(ord('c')):
                 roll_angle = np.radians(p.readUserDebugParameter(self.roll_slider))
                 pitch_angle = np.radians(p.readUserDebugParameter(self.pitch_slider))
                 yaw_angle = np.radians(p.readUserDebugParameter(self.yaw_slider))
                 angles = self.kin_solver.robot_IK(self.center_kin, [roll_angle, pitch_angle, yaw_angle], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
-                
+                self.gait_controller.smooth_to_target(angles, duration=1.0, move_callback=self.move_robot_to_pose, unit="rad")
+
             # Reset scene
-            if self.key_is_pressed(keyboard_event, self.eKey):
+            if pressed(ord('e')):
                 self.respawn_robot()
-            
+
             # Reset to initial pose
-            if self.key_is_pressed(keyboard_event, self.rKey):
+            if pressed(ord('r')):
                 print("RESETTING TO INITIAL POSE")
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                self.move_robot_to_pose(angles, unit="rad")
 
-            # Go Forward
-            if self.key_is_pressed(keyboard_event, self.wKey) or self.key_is_pressed(keyboard_event, self.upArrowKey):
-                self.move(params)
-
-            # Go Backward
-            if self.key_is_pressed(keyboard_event, self.sKey) or self.key_is_pressed(keyboard_event, self.downArrowKey):
-                params["dir"] = "-x"
-                self.move(params)
-
-            # Go Left
-            if self.key_is_pressed(keyboard_event, self.aKey) or self.key_is_pressed(keyboard_event, self.leftArrowKey):
-                params["dir"] = "+z"
-                self.move(params)
-
-            # Go Right
-            if self.key_is_pressed(keyboard_event, self.dKey) or self.key_is_pressed(keyboard_event, self.rightArrowKey):
-                params["dir"] = "-z"
-                self.move(params)
-
-            # Go 45 degrees front left
-            if self.key_is_pressed(keyboard_event, self.fKey):
-                params["dir"] = np.pi/4
-                self.move(params)
-
-            # Go 45 degrees front right
-            if self.key_is_pressed(keyboard_event, self.gKey):
-                params["dir"] = -np.pi/4
-                self.move(params)
-
-            # Rotate in palce
-            if self.key_is_pressed(keyboard_event, self.hKey):
-                params["desired_lin_vel"] = 0.0
-                params["desired_ang_vel"] = 0.3
-                self.move(params)
+            if pressed(ord('w'), UP_ARROW):
+                self.move(trot_params(0.3, 0.0, "+x"))
+            if pressed(ord('s'), DOWN_ARROW):
+                self.move(trot_params(0.3, 0.0, "-x"))
+            if pressed(ord('a'), LEFT_ARROW):
+                self.move(trot_params(0.3, 0.0, "+z"))
+            if pressed(ord('d'), RIGHT_ARROW):
+                self.move(trot_params(0.3, 0.0, "-z"))
+            # 45 degrees front left while turning
+            if pressed(ord('f')):
+                self.move(trot_params(0.3, 0.2, np.pi/4))
+            # 45 degrees front right
+            if pressed(ord('g')):
+                self.move(trot_params(0.3, 0.0, -np.pi/4))
+            # Rotate in place
+            if pressed(ord('h')):
+                self.move(trot_params(0.0, 0.3, "+x"))
 
     def respawn_robot(self):
         # I am inevitable
@@ -382,31 +333,13 @@ class PybulletSim:
         print("RESETTING SCENE")
         # Make sure the robot has the initial pose
         angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-        self.move_robot_to_pose(self.robotId, angles, unit="rad")
+        self.move_robot_to_pose(angles, unit="rad")
         
     def move(self, params=None):
-
-
-        # Default parameters
+        """Walk with the given gait parameters until 'q' is pressed, then decelerate to a stop."""
         if params is None:
-            # OLD
-            # params = dict(desired_lin_vel=0.3, 
-            #               desired_ang_vel=0.0, 
-            #               T_cycle=0.25, 
-            #               duty_factor=0.5,
-            #               swing_height=0.035,
-            #               dir="+x",  
-            #               gait_type="trot")
+            params = trot_params(0.3, 0.0, "+x")
 
-            # NEW
-            params = dict(desired_lin_vel=0.3, 
-                        desired_ang_vel=0.0, 
-                        swing_height=0.035, 
-                        stance_length=0.06, 
-                        Tswing=0.25, 
-                        dir="+x",  
-                        gait_type="trot")
-        
         if params["dir"] == "+x":
             print("GOING FORWARDS")
         elif params["dir"] == "-x":
@@ -416,49 +349,32 @@ class PybulletSim:
         elif params["dir"] == "-z":
             print("GOING LEFT")
         else:
-            direction = np.degrees(params["dir"])
-            print(f"GOING TOWARDS {direction:.2f}°")
-        deceleration_flag = False
+            print(f"GOING TOWARDS {np.degrees(params['dir']):.2f}°")
 
+        deceleration_flag = False
         current_time = 0
-        # self.gait_controller.reset(kp=0.37, ki=0.0, kd=0.025)
 
         while True:
             current_time += TIME_STEP
             p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
             keyboard_event = p.getKeyboardEvents()
 
-            if self.key_is_pressed(keyboard_event, self.qKey):
+            if self.key_is_pressed(keyboard_event, ord('q')):
                 deceleration_flag = True
                 print("DECELERATING")
-            # ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance_old(
-            #                 current_time, TIME_STEP, imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag, move_callback=self.move_callback, 
-            #                 desired_lin_vel=params["desired_lin_vel"], 
-            #                 desired_ang_vel=params["desired_ang_vel"], 
-            #                 T_cycle=params["T_cycle"], 
-            #                 duty_factor=params["duty_factor"],
-            #                 swing_height=params["swing_height"],
-            #                 dir=params["dir"],
-            #                 gait_type=params["gait_type"])
             ef_vel, log_file = self.gait_controller.execute_gait_fixed_stance(
-            current_time, TIME_STEP, imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag, move_callback=self.move_callback,
-            desired_lin_vel=params["desired_lin_vel"],
-            desired_ang_vel=params["desired_ang_vel"],
-            swing_height=params["swing_height"],
-            stance_length=params["stance_length"],
-            Tswing=params["Tswing"],
-            dir=params["dir"],
-            gait_type=params["gait_type"])
+                current_time, TIME_STEP, imu_data=self.get_imu_data(), deceleration_flag=deceleration_flag, move_callback=self.move_callback,
+                **params)
             p.stepSimulation()
             time.sleep(TIME_STEP)
-            
+
             # Once speed is 0 return to default pose
             if ef_vel == 0.0 and deceleration_flag:
                 print("STOPPED")
                 angles = self.kin_solver.robot_IK(self.center_kin, [0, 0, 0], self.initial_ef_positions)
-                self.move_robot_to_pose(self.robotId, angles, unit="rad")
+                self.move_robot_to_pose(angles, unit="rad")
                 break
-        
+
         plot_log(log_file)
 
     def key_is_pressed(self, keyboard_event, key):

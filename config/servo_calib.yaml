@@ -1,15 +1,15 @@
 # zero_deg: angle (0-180) that corresponds to neutral position
 # direction: 1 = normal, -1 = reversed
-# min_pulse/max_pulse: PWM pulse width range in microseconds (default 750/2250)
-#   adjust these to shift the angle mapping without moving the horn
+# kit: 1 = front PCA9685 (0x40), 2 = rear PCA9685 (0x41)
+# PWM pulse range is the adafruit_servokit default, 750-2250 us
 
 FL:
-  shoulder: { channel: 0, zero_deg:  89, direction:  1, kit: 1 }
+  shoulder: { channel: 0, zero_deg:  90, direction:  1, kit: 1 }
   leg:      { channel: 1, zero_deg:  89, direction: -1, kit: 1 }
   foot:     { channel: 2, zero_deg: 137, direction: -1, kit: 1 }
 
 FR:
-  shoulder: { channel: 4, zero_deg:  80, direction:  -1, kit: 1  }
+  shoulder: { channel: 4, zero_deg:  83, direction:  -1, kit: 1  }
   leg:      { channel: 5, zero_deg: 132, direction:   1, kit: 1  }
   foot:     { channel: 6, zero_deg:  62, direction:   1, kit: 1  }
 
@@ -19,6 +19,6 @@ RL:
   foot:     { channel:  12, zero_deg: 120, direction:  -1, kit: 2  }
 
 RR:
-  shoulder: { channel: 0, zero_deg: 90, direction:  1, kit: 2  }
+  shoulder: { channel: 0, zero_deg: 88, direction:  1, kit: 2  }
   leg:      { channel: 1, zero_deg: 94, direction:  1, kit: 2  }
   foot:     { channel: 2, zero_deg: 50, direction:  1, kit: 2 }

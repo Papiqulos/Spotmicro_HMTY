@@ -19,6 +19,7 @@ class DualSenseController:
         elif angle > 0 and angle < np.pi:
             angle = angle - np.pi
         return angle if not in_deg else np.degrees(angle)
+
     
     def _get_joystick_angle(self, in_deg=False):
         l_angle = np.arctan2(self.dualsense.state.LX, self.dualsense.state.LY)

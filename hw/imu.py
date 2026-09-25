@@ -1,13 +1,11 @@
-from hw import ITG_3200 as imu_gyro
-from hw import ADXL435 as imu_accelerometer
-from hw import QMC5883L as imu_magnetometer
 import time
-import math
+from pathlib import Path
 import numpy as np
 from ahrs.filters import Madgwick, EKF
-from ahrs.common.orientation import q2euler, q2rpy, acc2q
-from tools import utils
-from collections import deque
+from ahrs.common.orientation import q2rpy, acc2q
+from hw import ITG_3200 as imu_gyro
+from hw import ADXL435 as imu_accelerometer
+from tools.utils import open_run_log
 
 # Roll angle (rotation around x-axis-FORWARD)
 # Pitch angle (rotation around z-axis-LEFT)
@@ -18,12 +16,15 @@ from collections import deque
 
 # X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 
+
+_LOG_DIR = Path(__file__).parent.parent / "log" / "imu"
+
 class IMU:
-    def __init__(self, filter_type="Madgwick"):
+    def __init__(self, filter_type="Madgwick", log=False):
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
         init_acc = self.accelerometer.read()["acceleration"]
-        # self.magnetometer = imu_magnetometer.QMC5883L() # not used because of too much noise
+        # Magnetometer (hw/QMC5883L.py) not used because of too much noise
 
 
         # Calculate initial orientation through the accelerometer
@@ -47,17 +48,27 @@ class IMU:
             raise ValueError(f"Unknown filter: {filter_type}")
 
 
-        # Noise filtering parameters(Low pass + 30-tap moving average)
         # Low pass filter for roll and pitch
         self.s_roll = 0
         self.s_pitch = 0
         self.alpha = 0.3
-        # 30-tap moving average for roll and pitch
-        self._imu_window = deque(maxlen=30)
         self.last_time = time.time()
         print("IMU Ready")
 
+        self.log = log
+        self.log_path = None
+        if log:
+            self._log_file, self._csv = open_run_log(
+                _LOG_DIR, "imu", ["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"])
+            self.log_path = self._log_file.name
+            self._t0 = time.time()
 
+    def save_plot(self):
+        if not self.log:
+            return
+        from log.imu_plotter import imu_log
+        self._log_file.flush()
+        imu_log(self.log_path)
 
     def update(self, raw_gyro, raw_acc, raw_mag=None, in_deg=False):
         """Update the orientation using raw IMU data.
@@ -127,27 +138,25 @@ class IMU:
         smoothed = self.alpha * self.s_roll + (1 - self.alpha) * roll
         self.s_roll = smoothed
         smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
-        self.s_pitch = -smoothed
+        self.s_pitch = smoothed
 
-        # Apply the 30-tap moving average filter
-        self.smoothed_orientation = np.array([ self.s_roll, self.s_pitch, yaw])
-        self._imu_window.append(self.smoothed_orientation)
-        filtered = np.mean(self._imu_window, axis=0)
-        return filtered
-        # return np.array([roll, pitch, yaw])
+        self.smoothed_orientation = np.array([ self.s_roll, -self.s_pitch, yaw])
 
+        if self.log:
+            self._csv.writerow([f"{current_time - self._t0:.4f}",
+                                f"{roll:.6f}", f"{-pitch:.6f}", f"{yaw:.6f}",
+                                f"{self.smoothed_orientation[0]:.6f}",
+                                f"{self.smoothed_orientation[1]:.6f}",
+                                f"{self.smoothed_orientation[2]:.6f}"])
 
-
-
-
-
+        return self.smoothed_orientation
 
 
 if __name__ == "__main__":
-    imu = IMU(filter_type="EKF")
+    imu = IMU(filter_type="EKF", log=True)
 
-    while True:
-        try:
+    try:
+        while True:
             raw_gyro = imu.gyro.read()
             raw_acc = imu.accelerometer.read()["acceleration"]
             # raw_mag = imu.magnetometer.read()
@@ -157,10 +166,7 @@ if __name__ == "__main__":
             print(f"Roll: {np.degrees(roll):.4f}° Pitch: {np.degrees(pitch):.4f}° Yaw: {np.degrees(yaw):.4f}°", end='\r')
             # print(f"Roll: {roll:.6f} Pitch: {pitch:.6f} Yaw: {yaw:.6f}", end='\r')
             time.sleep(0.01)
-        except KeyboardInterrupt:
-            break
-        
-
-
-
-
+    except KeyboardInterrupt:
+        pass
+    finally:
+        imu.save_plot()

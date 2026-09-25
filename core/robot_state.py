@@ -73,11 +73,3 @@ class RobotState:
         self.linear_vel    = float(linear_vel)
         self.angular_vel   = float(angular_vel)
         self.direction     = None
-
-    def update(self, angles, linear_vel, angular_vel, orientation, ef_positions=None):
-        self.angles      = angles            # setter: FK updates _ef_positions
-        self.linear_vel  = float(linear_vel)
-        self.angular_vel = float(angular_vel)
-        self._orientation = np.array(orientation, dtype=float)  # direct: avoids redundant second FK
-        if ef_positions is not None:
-            self._ef_positions = np.array(ef_positions, dtype=float)  # direct override, no IK

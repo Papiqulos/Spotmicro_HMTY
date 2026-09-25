@@ -9,7 +9,8 @@ def plot_log(file_name):
     fig, axes = plt.subplots(2, 1, figsize=(10, 8))
     # file_name = "log/pid_20260518_193234.csv"
     df = pd.read_csv(file_name)
-    df2 = pd.read_csv(file_name)
+    df["t"] = df["t"] - df["t"].iloc[0]
+    df2 = df.copy()
     # Convert the data from radians to degrees
     df["imu_roll"] = df["imu_roll"] * 180 / np.pi
     df["pid_roll"] = df["pid_roll"] * 180 / np.pi
@@ -18,6 +19,8 @@ def plot_log(file_name):
 
     df.plot(x="t", y=["imu_roll", "pid_roll"], ylim=[-7, 7], ylabel="Angle (deg)", ax=axes[0], grid=True)
     df2.plot(x="t", y=["imu_pitch", "pid_pitch"], ylim=[-7, 7], ylabel="Angle (deg)", ax=axes[1], grid=True)
+    for ax in axes:
+        ax.set_xlabel("t (s)")
 
     image_name = file_name.replace(".csv", ".png")
     plt.savefig(image_name)

@@ -97,9 +97,8 @@ gait:
 
 # Roll/pitch stabilization PID gains 
 pid:
-  rp:    {kp: 0.4, ki: 0.025, kd: 0.05}
-  roll:  {kp: 0.5, ki: 0.025, kd: 0.05}
-  pitch: {kp: 0.5, ki: 0.00, kd: 0.05}
+  roll:  {kp: 0.5, ki: 0.0, kd: 0.05}
+  pitch: {kp: 1, ki: 0.02, kd: 0.01}
 
 imu:
   length: 22
