@@ -8,7 +8,7 @@ from tools.utils import to_homogenous, rescale_number, trans_inv
 from core.gait_controller import GaitController
 import yaml
 from hw.imu import IMU
-from log.log_plotter import plot_log
+from log.pid_plotter import plot_log
 from hw.teleop import DualSenseController
 from core.robot_state import RobotState
 
@@ -27,12 +27,13 @@ THETA_RESTING = np.array([
 
 class RobotController:
 
-    def __init__(self, kin_solver, init_angles=None, init_ef_positions=None, init_center=[0, 0, 0] , skip_rest=False):
+    def __init__(self, kin_solver, init_angles=None, init_ef_positions=None, init_center=[0, 0, 0] , skip_rest=False, log_imu=True):
         """
         :param kin_solver: kinematics solver
         :param init_angles: initial joint angles in degrees
         :param init_ef_positions: initial foot positions in kinematics frame (mm, Y-up)
         :param init_center: body center in kinematics frame (mm)
+        :param log_imu: log EKF/Madgwick vs low-pass IMU angles to log/imu/ during trot steps
 
         Given init_angles OR init_ef_positions NOT BOTH, the robot will be initialized with the given angles.
         If both are given, the ef_positions will be ignored.
@@ -48,7 +49,7 @@ class RobotController:
         self.kit_front_obj = ServoKit(channels=16)
         self.kit_rear_obj  = ServoKit(channels=16, address=0x41)
 
-        self.imu = IMU(filter_type="EKF")
+        self.imu = IMU(filter_type="EKF", log=log_imu)
         self.init_orientation_rad = self.init_orientation_deg = np.array([0, 0, 0])
 
         if init_angles is None:
@@ -218,6 +219,7 @@ class RobotController:
                 break
         
         # plot_log(log_file)
+        self.imu.save_plot()
 
     def show_state(self, end='\n'):
         """Print verbose robot state to the terminal."""
@@ -554,6 +556,7 @@ if __name__ == "__main__":
         robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.5, move_callback=robot.apply_angles_robot, unit="deg")
         if log_file:
             plot_log(log_file)
+        robot.imu.save_plot()
         if teleop:
             teleop.dualsense.close()
 

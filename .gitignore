@@ -14,7 +14,8 @@ tests/
 /sim/urdf/stlv2/
 
 # log
-/log/roll_pitch/
+/log/pid/
+/log/imu/
 
 # package
 /spotmicro.egg-info/

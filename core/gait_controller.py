@@ -9,9 +9,9 @@ from tools.pid_controller import PIDControllerRP, PIDController
 import core.kinematics as kinematics
 import core.bezier_curve_gen as bezier
 import core.robot_state as RobotState
-from log.log_plotter import plot_log
+from log.pid_plotter import plot_log
 
-_LOG_DIR = Path(__file__).parent.parent / "log" / "roll_pitch"
+_LOG_DIR = Path(__file__).parent.parent / "log" / "pid"
 
 L1 = kinematics.L1
 L2 = kinematics.L2

@@ -7,7 +7,7 @@ import core.gait_controller as gait
 import core.kinematics as kinematics
 import core.robot_state as robot_state
 from tools.utils import from_pybullet_orn, from_pybullet_pos
-from log.log_plotter import plot_log
+from log.pid_plotter import plot_log
 
 
 

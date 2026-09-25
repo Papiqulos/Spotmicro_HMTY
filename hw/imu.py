@@ -7,6 +7,10 @@ import numpy as np
 from ahrs.filters import Madgwick, EKF
 from ahrs.common.orientation import q2euler, q2rpy, acc2q
 from tools import utils
+import csv
+import os
+import atexit
+from pathlib import Path
 
 # Roll angle (rotation around x-axis-FORWARD)
 # Pitch angle (rotation around z-axis-LEFT)
@@ -17,8 +21,11 @@ from tools import utils
 
 # X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
 
+
+_LOG_DIR = Path(__file__).parent.parent / "log" / "imu"
+
 class IMU:
-    def __init__(self, filter_type="Madgwick"):
+    def __init__(self, filter_type="Madgwick", log=False):
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
         init_acc = self.accelerometer.read()["acceleration"]
@@ -53,7 +60,30 @@ class IMU:
         self.last_time = time.time()
         print("IMU Ready")
 
+        self.log = log
+        self.log_path = None
+        if log:
+            _LOG_DIR.mkdir(exist_ok=True)
+            self._clear_log()
+            _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
+            self._log_file = open(_LOG_DIR / f"imu_{_ts}.csv", "w", newline="")
+            self.log_path = self._log_file.name
+            self._csv = csv.writer(self._log_file)
+            self._csv.writerow(["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"])
+            self._t0 = time.time()
+            atexit.register(self._log_file.close)
 
+    def save_plot(self):
+        if not self.log:
+            return
+        from log.imu_plotter import imu_log
+        self._log_file.flush()
+        imu_log(self.log_path)
+
+    def _clear_log(self):
+        for f in os.listdir(_LOG_DIR):
+            if f.endswith(".csv") or f.endswith(".png"):
+                os.remove(os.path.join(_LOG_DIR, f))
 
     def update(self, raw_gyro, raw_acc, raw_mag=None, in_deg=False):
         """Update the orientation using raw IMU data.
@@ -127,6 +157,13 @@ class IMU:
 
         self.smoothed_orientation = np.array([ self.s_roll, -self.s_pitch, yaw])
 
+        if self.log:
+            self._csv.writerow([f"{current_time - self._t0:.4f}",
+                                f"{roll:.6f}", f"{-pitch:.6f}", f"{yaw:.6f}",
+                                f"{self.smoothed_orientation[0]:.6f}",
+                                f"{self.smoothed_orientation[1]:.6f}",
+                                f"{self.smoothed_orientation[2]:.6f}"])
+
         return self.smoothed_orientation
 
 
@@ -137,10 +174,10 @@ class IMU:
 
 
 if __name__ == "__main__":
-    imu = IMU(filter_type="EKF")
+    imu = IMU(filter_type="EKF", log=True)
 
-    while True:
-        try:
+    try:
+        while True:
             raw_gyro = imu.gyro.read()
             raw_acc = imu.accelerometer.read()["acceleration"]
             # raw_mag = imu.magnetometer.read()
@@ -150,10 +187,7 @@ if __name__ == "__main__":
             print(f"Roll: {np.degrees(roll):.4f}° Pitch: {np.degrees(pitch):.4f}° Yaw: {np.degrees(yaw):.4f}°", end='\r')
             # print(f"Roll: {roll:.6f} Pitch: {pitch:.6f} Yaw: {yaw:.6f}", end='\r')
             time.sleep(0.01)
-        except KeyboardInterrupt:
-            break
-        
-
-
-
-
+    except KeyboardInterrupt:
+        pass
+    finally:
+        imu.save_plot()
