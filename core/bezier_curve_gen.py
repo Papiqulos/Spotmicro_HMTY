@@ -1,8 +1,5 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import math
-import yaml
-
+import numpy as np
 
 
 class BezierCurveGen:
@@ -14,18 +11,6 @@ class BezierCurveGen:
     def __init__(self, control_points):
         self.control_points = np.array(control_points)
 
-    @staticmethod
-    def linear_interpolate(p0, p1, t):
-        return (1 - t) * p0 + t * p1
-    
-    @staticmethod
-    def quadratic_interpolate(p0, p1, p2, t):
-        return (1 - t)**2 * p0 + 2 * (1 - t) * t * p1 + t**2 * p2
-    
-    @staticmethod
-    def cubic_interpolate(p0, p1, p2, p3, t):
-        return (1 - t)**3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
-    
     @staticmethod
     def n_point_curve(points, t):
         n = len(points)
@@ -44,92 +29,25 @@ class BezierCurveGen:
 
 
 if __name__ == "__main__":
-    
-    # Define control points for a cubic Bezier curve
-    start = np.array([0, 0, 0])
-    end = np.array([1, 0, 0])
-    middle1 = start + end / 2 + np.array([0, 0, 1])  # Elevated middle point
-    middle2 = end + start / 2 + np.array([0, 1, 1])  # Elevated middle point
-
-    dl = 450.0 * (0.27)
-    L_span = 450.0
-    h1 = 250.0 - 70
-    h2 = 250.0
-
-    # ef_positions2 = np.array([
-    #     [67.29 - L_span, 46.12, 107],
-    #     [67.29 - L_span - dl, 46.12, 107],
-    #     [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
-    #     [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
-    #     [67.29 - L_span - dl - 50.0, 46.12 + h1, 107],
-    #     [67.29, 46.12 + h1, 107],
-    #     [67.29, 46.12 + h1, 107],
-    #     [67.29, 46.12 + h2, 107],
-    #     [67.29 + L_span + dl + 50.0, 46.12 + h2, 107],
-    #     [67.29 + L_span + dl + 50.0, 46.12 + h2, 107],
-    #     [67.29 + L_span + dl, 46.12, 107],
-    #     [67.29 + L_span, 46.12, 107],
-    #     ])
-    
-    # ef_positions2 = np.array([
-    #     [67.29, 46.12, -107],
-    #     [72.29, 56.12, -107],
-    #     [77.29, 46.12, -107]])
-
-    # control_points = [
-    # [-200.0, 500.0, 100.0],
-    # [-280.5, 500.0, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [-300.0, 361.1, 100.0],
-    # [0.0, 361.1, 100.0],
-    # [0.0, 361.1, 100.0],
-    # [0.0, 321.4, 100.0],
-    # [303.2, 321.4, 100.0],
-    # [303.2, 321.4, 100.0],
-    # [282.6, 500.0, 100.0],
-    # [200.0, 500.0, 100.0],
-    
-    # ]
+    import matplotlib.pyplot as plt
+    import yaml
 
     with open("config/robot_config.yaml") as f:
-        _robot_cfg = yaml.safe_load(f)
+        gait_cfg = yaml.safe_load(f)["gait"]
 
-    _SWING_X_NORM = _robot_cfg["gait"]["swing_x_norm"]
-    _SWING_H_NORM = _robot_cfg["gait"]["swing_h_norm"]
+    x_norm = gait_cfg["swing_x_norm"]
+    h_norm = gait_cfg["swing_h_norm"]
+    control_points = np.array([[x, h, 0.0] for x, h in zip(x_norm, h_norm)])
 
-    control_points = np.array([[_SWING_X_NORM[i], _SWING_H_NORM[i], 0.0] for i in range(len(_SWING_X_NORM))])
+    curve_points = BezierCurveGen(control_points).generate_curve(num_points=1000)
 
-    # Create Bezier curve generator
-    bezier_gen = BezierCurveGen(control_points)
-
-    # Generate curve points
-    curve_points = bezier_gen.generate_curve(num_points=1000)
-
-    # Plotting
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
-    # Plot control points
-    cp = np.array(control_points)
-    ax.plot(cp[:, 0], cp[:, 2], cp[:, 1], 'ro--', label='Control Points')
-
-    # Plot Bezier curve
+    ax.plot(control_points[:, 0], control_points[:, 2], control_points[:, 1], 'ro--', label='Control Points')
     ax.plot(curve_points[:, 0], curve_points[:, 2], curve_points[:, 1], 'b-', label='Bezier Curve')
-
-    
-
-    # Set labels and title
-
     ax.set_title('Bezier Curve')
     ax.legend()
-    # Hide numbers but show axis labels
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     ax.get_zaxis().set_visible(False)
-    # plt.show()
     plt.savefig("bezier.png")
-    
-
-
-    

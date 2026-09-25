@@ -1,16 +1,11 @@
-from hw import ITG_3200 as imu_gyro
-from hw import ADXL435 as imu_accelerometer
-from hw import QMC5883L as imu_magnetometer
 import time
-import math
+from pathlib import Path
 import numpy as np
 from ahrs.filters import Madgwick, EKF
-from ahrs.common.orientation import q2euler, q2rpy, acc2q
-from tools import utils
-import csv
-import os
-import atexit
-from pathlib import Path
+from ahrs.common.orientation import q2rpy, acc2q
+from hw import ITG_3200 as imu_gyro
+from hw import ADXL435 as imu_accelerometer
+from tools.utils import open_run_log
 
 # Roll angle (rotation around x-axis-FORWARD)
 # Pitch angle (rotation around z-axis-LEFT)
@@ -29,7 +24,7 @@ class IMU:
         self.gyro = imu_gyro.ITG_3200()
         self.accelerometer = imu_accelerometer.ADXL435()
         init_acc = self.accelerometer.read()["acceleration"]
-        # self.magnetometer = imu_magnetometer.QMC5883L() # not used because of too much noise
+        # Magnetometer (hw/QMC5883L.py) not used because of too much noise
 
 
         # Calculate initial orientation through the accelerometer
@@ -63,15 +58,10 @@ class IMU:
         self.log = log
         self.log_path = None
         if log:
-            _LOG_DIR.mkdir(exist_ok=True)
-            self._clear_log()
-            _ts = time.strftime("%Y_%m_%d_%H_%M_%S")
-            self._log_file = open(_LOG_DIR / f"imu_{_ts}.csv", "w", newline="")
+            self._log_file, self._csv = open_run_log(
+                _LOG_DIR, "imu", ["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"])
             self.log_path = self._log_file.name
-            self._csv = csv.writer(self._log_file)
-            self._csv.writerow(["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"])
             self._t0 = time.time()
-            atexit.register(self._log_file.close)
 
     def save_plot(self):
         if not self.log:
@@ -79,11 +69,6 @@ class IMU:
         from log.imu_plotter import imu_log
         self._log_file.flush()
         imu_log(self.log_path)
-
-    def _clear_log(self):
-        for f in os.listdir(_LOG_DIR):
-            if f.endswith(".csv") or f.endswith(".png"):
-                os.remove(os.path.join(_LOG_DIR, f))
 
     def update(self, raw_gyro, raw_acc, raw_mag=None, in_deg=False):
         """Update the orientation using raw IMU data.
@@ -165,12 +150,6 @@ class IMU:
                                 f"{self.smoothed_orientation[2]:.6f}"])
 
         return self.smoothed_orientation
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

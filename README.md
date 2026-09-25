@@ -41,8 +41,9 @@ Detailed thesis is available in [`thesis/first_draft/main.pdf`](thesis/first_dra
 - **Real-time teleoperation** via a DualSense controller: D-pad and left stick
   to walk, L1/R1 to turn in place, right stick to tilt the body while standing
   (input is normalised and low-pass filtered for gradual motion)
-- **CSV logging** of filtered IMU and PID output each run, with a PNG plot
-  saved automatically — handy for headless operation over SSH
+- **CSV logging** each run, with a PNG plot saved automatically, handy for
+  headless operation over SSH: filtered IMU and PID output (`log/pid/`), and
+  fused vs low-pass filtered roll/pitch/yaw (`log/imu/`)
 
 ---
 
@@ -95,6 +96,8 @@ script from the repository root**.
 | -------------------------------- | ------------------------------------ |
 | `python -m sim.pybullet_sim`   | PyBullet simulation, keyboard-driven |
 | `python -m hw.quad_controller` | Hardware controller (on the Pi)      |
+| `python -m hw.gotorest`        | Move the robot to its resting pose   |
+| `python -m hw.imu`             | IMU only: log and plot fused vs low-pass angles |
 | `python -m hw.teleop`          | DualSense input test                 |
 | `python -m sim.matplotlib_sim` | Static kinematics visualiser         |
 
@@ -142,7 +145,7 @@ first, then disconnect and repeat the steps above.
 ## How the gait controller works
 
 `GaitController` exposes four `execute_gait_*` entry points that share one core
-(`_compute_ramp` → `_imu_correction` → `_step_legs`) and differ only in how the
+(`_compute_ramp` → `_control_step`: `_imu_correction` → `_step_legs`) and differ only in how the
 swing/stance durations and the phase clock are derived. `execute_gait_fixed_stance`
 is the most robust and tuned for the real robot.
 One control step:
@@ -161,7 +164,7 @@ One control step:
 9. **CSV logging** of filtered IMU and PID output
 
 IMU filtering happens in the driver (`hw/imu.py`), not in the gait controller:
-Madgwick (or EKF) fusion → exponential low-pass (α = 0.3).
+EKF (or Madgwick) fusion → exponential low-pass (α = 0.3).
 
 <img src="assets/full_control_loop.png" alt="Full control loop, from IMU to servos" width="800">
 

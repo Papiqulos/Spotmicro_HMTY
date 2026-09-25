@@ -1,9 +1,27 @@
-import numpy as np
+import atexit
+import csv
 import math
-
+import time
+import numpy as np
 
 
 pi = np.pi
+
+
+def open_run_log(log_dir, prefix, header):
+    """Delete old CSV/PNG logs in log_dir, open a timestamped CSV and write its header.
+
+    Returns (file, csv_writer). The file is closed at interpreter exit.
+    """
+    log_dir.mkdir(exist_ok=True)
+    for f in log_dir.iterdir():
+        if f.suffix in (".csv", ".png"):
+            f.unlink()
+    log_file = open(log_dir / f"{prefix}_{time.strftime('%Y_%m_%d_%H_%M_%S')}.csv", "w", newline="")
+    writer = csv.writer(log_file)
+    writer.writerow(header)
+    atexit.register(log_file.close)
+    return log_file, writer
 
 def Rx(theta):
     return np.array([[1, 0, 0, 0],
