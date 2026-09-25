@@ -159,7 +159,7 @@
 \vspace{1em}
 This thesis covers the design, implementation and motion control of a low cost
 quadruped robot, built on the open source SpotMicro platform. The goal is
-stable, omnidirectional walking on a machine driven by position controlled
+stable, omnidirectional movement on a machine driven by position controlled
 servos with no joint feedback, whose only sensor is an inertial measurement
 unit.
 
@@ -168,23 +168,23 @@ for each leg, together with the body pose transform that lets the body
 translate and rotate over fixed foot positions. The model is verified first in
 a lightweight visualisation tool and then in the PyBullet dynamic simulation.
 
-On top of the model, a trot gait generator is developed. The swing phase
+For the movemen a trot gait developed, which consists of the swing phase that
 follows a Bezier curve whose repeated end control points give zero foot
-velocity and acceleration at liftoff and touchdown, while the stance phase
-follows a sinusoidal profile with a controlled ground penetration depth. The
-generator is extended to omnidirectional motion by composing a linear step
+velocity and acceleration at liftoff and touchdown, and the stance phase
+that follows a sinusoidal profile with a controlled ground penetration depth. The
+gait is extended to omnidirectional motion by composing a linear step
 vector towards an arbitrary heading with the per leg step vector produced by a
 yaw rate, so that walking and turning can be commanded at the same time. A
 cosine velocity ramp is applied to both the linear and the angular command, and
 a banked roll term compensates the lean during turns.
 
-Orientation is stabilised in closed loop. Two independent PID controllers act
+Orientation is stabilised in a closed loop. Two independent PID controllers act
 on the roll and pitch angles, and their output is converted geometrically into
 a vertical offset of each foot, so the correction is applied through the
-trajectories rather than through the body pose. The controller input comes from
+trajectories rather than through the body pose. The PID controller input comes from
 the inertial unit: the gyroscope and accelerometer readings are fused with an
 extended Kalman filter, and the resulting angles pass through a low pass filter
-before reaching the controller.
+before reaching the PID controller.
 
 The same control code runs in simulation and on the real robot, the only
 differences being the module that applies the joint angles and the source of
@@ -195,7 +195,7 @@ DualSense controller. Sensor and servo calibration, per run data logging and a
 live status display complete the implementation.
 
 The robot walks in any direction of the horizontal plane, turns in place and
-while moving, and keeps its frame level through the stabilisation loop, with a
+while moving, and keeps its frame relatively level through the stabilisation loop, with a
 single inertial unit as the only feedback. The main limitations, namely the
 absence of joint feedback, of contact detection and of any perception of the
 environment, together with the extensions they suggest, are discussed in the
@@ -1801,8 +1801,8 @@ $(\mathbf{q}_f - \mathbf{q}_0)/T$.
 Σημειώνεται ότι η γωνιακή επιτάχυνση, $\ddot{\mathbf{q}}(t) =
 (\pi^2/2T^2)\cos(\pi t/T)(\mathbf{q}_f - \mathbf{q}_0)$, δεν μηδενίζεται στα
 άκρα. Για τις ανάγκες της παρούσας εργασίας αυτό δεν αποτελεί περιορισμό, καθώς
-οι μεταβάσεις εκτελούνται με το ρομπότ ακίνητο και με τυπική διάρκεια
-$T = 0{,}5$~s. Η συνέχεια και της επιτάχυνσης αποτελεί πρόσθετη απαίτηση που
+οι μεταβάσεις εκτελούνται με το ρομπότ ακίνητο και με διάρκεια $T = 1{,}5$~s
+κατά την εκκίνηση και την επιστροφή στη στάση ανάπαυσης. Η συνέχεια και της επιτάχυνσης αποτελεί πρόσθετη απαίτηση που
 μπορεί να επιβληθεί \cite{siciliano_robotics_2009}, θα απαιτούσε όμως πολυώνυμο
 ανώτερης τάξης.
 
@@ -1832,7 +1832,8 @@ $T = 0{,}5$~s. Η συνέχεια και της επιτάχυνσης αποτ
     \centering
     \includegraphics[width=0.8\textwidth]{images/joint_space_ramp.png}
     \caption[Συνημιτονοειδές προφίλ μετάβασης στον χώρο των αρθρώσεων]{Μετάβαση
-    άρθρωσης κατά $30^\circ$ σε $T = 0{,}5$~s. (α) Γωνία $q(t)$ με το
+    άρθρωσης κατά $30^\circ$ σε $T = 0{,}5$~s, ενδεικτικά (στην εκκίνηση
+    χρησιμοποιείται $T = 1{,}5$~s). (α) Γωνία $q(t)$ με το
     συνημιτονοειδές προφίλ της \eqref{eq:cosine-ramp} έναντι γραμμικής ράμπας.
     (β) Η αντίστοιχη γωνιακή ταχύτητα της \eqref{eq:joint-vel}: το
     συνημιτονοειδές προφίλ ξεκινά και τερματίζει με μηδενική ταχύτητα, με
@@ -2504,7 +2505,9 @@ I_j[k] = \operatorname{sat}\!\left(I_j[k-1] + e_j[k]\,\Delta t_k\right),
 όπου η $\operatorname{sat}$ περιορίζει τον ολοκληρωτικό όρο στο
 $[-I_{max},\ I_{max}]$ ως μέτρο anti-windup \cite{caparroz_antiwindup_2026}. Οι
 τιμές των κερδών, οι οποίες προσδιορίστηκαν πειραματικά και διαφέρουν ανά
-άξονα, δίνονται στον Πίνακα~\ref{tab:pid-gains}.
+άξονα, δίνονται στον Πίνακα~\ref{tab:pid-gains}. Στον άξονα roll ο
+ολοκληρωτικός όρος απενεργοποιήθηκε ($K_i = 0$), οπότε ο ελεγκτής λειτουργεί ως
+αναλογικός διαφορικός (PD).
 
 \begin{table}[htbp]
     \centering
@@ -2514,7 +2517,7 @@ $[-I_{max},\ I_{max}]$ ως μέτρο anti-windup \cite{caparroz_antiwindup_202
         Παράμετρος & Σύμβολο & roll & pitch \\
         \midrule
         Αναλογικό κέρδος & $K_p$ & $0{,}50$ & $1{,}00$ \\
-        Ολοκληρωτικό κέρδος & $K_i$ & $0{,}085$ & $0{,}02$ \\
+        Ολοκληρωτικό κέρδος & $K_i$ & $0$ & $0{,}02$ \\
         Διαφορικό κέρδος & $K_d$ & $0{,}05$ & $0{,}01$ \\
         Όριο ολοκληρωτικού όρου & $I_{max}$ & $0{,}7$ & $0{,}7$ \\
         \bottomrule
@@ -3003,7 +3006,7 @@ XL4015, ενός για κάθε οδηγό PCA9685. Το Raspberry Pi 5 τρο�
         \toprule
         Φάκελος & Αρχείο & Περιεχόμενο \\
         \midrule
-        \texttt{config/} & \texttt{robot\_config.yaml} & Διαστάσεις σκελετού και μηκών συνδέσμων, όρια αρθρώσεων \\
+        \texttt{config/} & \texttt{robot\_config.yaml} & Διαστάσεις σκελετού και μηκών συνδέσμων, όρια αρθρώσεων, σημεία ελέγχου Bezier, συντελεστές διείσδυσης και κέρδη PID \\
         & \texttt{servo\_calib.yaml} & Κανάλι, γωνία μηδενισμού και φορά κάθε σερβοκινητήρα \\
         \midrule
         \texttt{core/} & \texttt{kinematics.py} & Ευθεία και αντίστροφη κινηματική ποδιού και σώματος \\
@@ -3018,6 +3021,7 @@ XL4015, ενός για κάθε οδηγό PCA9685. Το Raspberry Pi 5 τρο�
         & \texttt{ITG\_3200.py} & Οδηγός γυροσκοπίου ITG-3200 \\
         & \texttt{QMC5883L.py} & Οδηγός μαγνητομέτρου, δεν χρησιμοποιείται \\
         & \texttt{teleop.py} & Ανάγνωση του χειριστηρίου DualSense \\
+        & \texttt{gotorest.py} & Μετάβαση στη στάση ανάπαυσης \\
         \midrule
         \texttt{sim/} & \texttt{pybullet\_sim.py} & Προσομοίωση στο PyBullet με έλεγχο από πληκτρολόγιο \\
         & \texttt{matplotlib\_sim.py} & Οπτικοποίηση του κινηματικού μοντέλου \\
@@ -3026,9 +3030,11 @@ XL4015, ενός για κάθε οδηγό PCA9685. Το Raspberry Pi 5 τρο�
         \texttt{tools/} & \texttt{utils.py} & Στροφές, ομογενείς μετασχηματισμοί και μετατροπές πλαισίων \\
         & \texttt{pid\_controller.py} & Ελεγκτής PID με περιορισμό ολοκληρωτικού όρου \\
         \midrule
-        \texttt{log/} & \texttt{log\_plotter.py} & Γραφήματα από τα αρχεία καταγραφής \\
-        & \texttt{log\_plotter.m} & Αντίστοιχη υλοποίηση σε MATLAB \\
-        & \texttt{roll\_pitch/} & Αρχεία καταγραφής του ελεγκτή σταθεροποίησης \\
+        \texttt{log/} & \texttt{pid\_plotter.py} & Γραφήματα από τα αρχεία καταγραφής \\
+        & \texttt{pid\_plotter.m} & Αντίστοιχη υλοποίηση σε MATLAB \\
+        & \texttt{imu\_plotter.py} & Γραφήματα γωνιών IMU πριν και μετά το βαθυπερατό φίλτρο \\
+        & \texttt{pid/} & Αρχεία καταγραφής του ελεγκτή σταθεροποίησης \\
+        & \texttt{imu/} & Αρχεία καταγραφής της αδρανειακής μονάδας \\
         \bottomrule
     \end{tabular}
     \caption[Οργάνωση του λογισμικού]{Οργάνωση του λογισμικού σε φακέλους και ο
@@ -3082,21 +3088,21 @@ $90^\circ$, ώστε το διαθέσιμο εύρος κίνησης να εί
         \toprule
         Πόδι & Άρθρωση & Οδηγός & Κανάλι & $\theta_0$ [$^\circ$] & $d$ \\
         \midrule
-        FL & Ώμος & 1 & 12 & 76 & $-1$ \\
-        FL & Πόδι & 1 & 13 & 83 & $-1$ \\
-        FL & Πατούσα & 1 & 14 & 137 & $-1$ \\
+        FL & Ώμος & 1 & 0 & 90 & $+1$ \\
+        FL & Πόδι & 1 & 1 & 89 & $-1$ \\
+        FL & Πατούσα & 1 & 2 & 137 & $-1$ \\
         \midrule
-        FR & Ώμος & 1 & 9 & 81 & $+1$ \\
-        FR & Πόδι & 1 & 10 & 132 & $+1$ \\
-        FR & Πατούσα & 1 & 11 & 62 & $+1$ \\
+        FR & Ώμος & 1 & 4 & 83 & $-1$ \\
+        FR & Πόδι & 1 & 5 & 132 & $+1$ \\
+        FR & Πατούσα & 1 & 6 & 62 & $+1$ \\
         \midrule
-        RL & Ώμος & 2 & 14 & 120 & $-1$ \\
-        RL & Πόδι & 2 & 15 & 76 & $-1$ \\
-        RL & Πατούσα & 2 & 13 & 126 & $-1$ \\
+        RL & Ώμος & 2 & 15 & 75 & $-1$ \\
+        RL & Πόδι & 2 & 13 & 76 & $-1$ \\
+        RL & Πατούσα & 2 & 12 & 120 & $-1$ \\
         \midrule
-        RR & Ώμος & 2 & 6 & 87 & $+1$ \\
-        RR & Πόδι & 2 & 8 & 94 & $+1$ \\
-        RR & Πατούσα & 2 & 12 & 50 & $+1$ \\
+        RR & Ώμος & 2 & 0 & 88 & $+1$ \\
+        RR & Πόδι & 2 & 1 & 94 & $+1$ \\
+        RR & Πατούσα & 2 & 2 & 50 & $+1$ \\
         \bottomrule
     \end{tabular}
     \caption[Βαθμονόμηση σερβοκινητήρων]{Βαθμονόμηση των δώδεκα
@@ -3311,6 +3317,12 @@ s_k = \alpha\, s_{k-1} + (1 - \alpha)\, x_k, \qquad \alpha = 0{,}3,
 έξοδο του εκτιμητή προσανατολισμού χρησιμοποιεί και το
 \cite{prayogo_quadruped_2018}.
 
+Με $\alpha = 0{,}3$ και βήμα ελέγχου περίπου 15~ms, η σταθερά χρόνου του
+φίλτρου είναι περίπου 12~ms και η συχνότητα αποκοπής περίπου 13~Hz. Το φίλτρο
+αφήνει ανέπαφη τη διακύμανση του βαδίσματος (κάτω από 5~Hz) και περιορίζει
+κυρίως τον θόρυβο υψηλής συχνότητας, ο οποίος ενισχύεται από τον διαφορικό όρο
+του ελεγκτή.
+
 Η επίδραση του φιλτραρίσματος φαίνεται στο
 Σχήμα~\ref{fig:sensor-noise-plot}, όπου καταγράφηκαν οι γωνίες roll και pitch
 κατά τη διάρκεια βαδίσματος trot, με το φιλτράρισμα απενεργοποιημένο και
@@ -3329,6 +3341,34 @@ s_k = \alpha\, s_{k-1} + (1 - \alpha)\, x_k, \qquad \alpha = 0{,}3,
     του ελεγκτή. (β) Με το βαθυπερατό φίλτρο της \eqref{eq:lowpass}}
     \label{fig:sensor-noise-plot}
 \end{figure}
+
+Επειδή το Σχήμα~\ref{fig:sensor-noise-plot} συγκρίνει δύο διαφορετικές
+εκτελέσεις, η επίδραση του φίλτρου μετρήθηκε και από το αρχείο καταγραφής της
+αδρανειακής μονάδας (ενότητα~\ref{sec:data-logging}), στο οποίο το σήμα πριν και
+μετά το φίλτρο καταγράφεται στην ίδια εκτέλεση. Σε εκτέλεση με το ρομπότ
+αιωρούμενο, η ισχύς που αφαιρεί το φίλτρο σε κάθε ζώνη συχνοτήτων δίνεται στον
+Πίνακα~\ref{tab:lpf-bands}, ενώ η ενεργός τιμή (RMS) της διαφοράς των δύο
+σημάτων είναι μόλις $0{,}02$ έως $0{,}03^\circ$. Με το ρομπότ αιωρούμενο δεν
+υπάρχουν κρούσεις των πελμάτων στο έδαφος, οπότε οι τιμές αυτές υποεκτιμούν την
+επίδραση του φίλτρου κατά το βάδισμα πάνω στο έδαφος.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabular}{@{}l c@{}}
+        \toprule
+        Ζώνη συχνοτήτων & Ισχύς που αφαιρείται \\
+        \midrule
+        0 έως 5~Hz (κίνηση του βαδίσματος) & $< 1\%$ \\
+        5 έως 15~Hz & 25 έως 33\% \\
+        15 έως 34~Hz & 61 έως 64\% \\
+        \bottomrule
+    \end{tabular}
+    \caption[Επίδραση του βαθυπερατού φίλτρου ανά ζώνη συχνοτήτων]{Ποσοστό της
+    ισχύος του σήματος που αφαιρεί το βαθυπερατό φίλτρο σε κάθε ζώνη
+    συχνοτήτων, από εκτέλεση με το ρομπότ αιωρούμενο}
+    \label{tab:lpf-bands}
+\end{table}
 
 \begin{table}[htbp]
     \centering
@@ -3374,11 +3414,27 @@ s_k = \alpha\, s_{k-1} + (1 - \alpha)\, x_k, \qquad \alpha = 0{,}3,
 τους σερβοκινητήρες. Η απόκριση του βρόχου σε πραγματικό χρόνο, με μετρήσεις
 από το ρομπότ, παρουσιάζεται στην Ενότητα~\ref{sec:controller-results}.
 
+Ο βρόχος έχει ονομαστική περίοδο 10~ms (100~Hz). Στην πράξη ένα βήμα ελέγχου
+διαρκεί περίπου 15~ms, οπότε η μετρημένη συχνότητα είναι περίπου 67~Hz. Το
+μεγαλύτερο μέρος του χρόνου καταναλώνεται στον δίαυλο
+I\textsuperscript{2}C, ο οποίος λειτουργεί στην προεπιλεγμένη ταχύτητα των
+100~kHz: οι δώδεκα εντολές θέσης προς τους οδηγούς PCA9685 απαιτούν περίπου
+9,5~ms και η ανάγνωση του επιταχυνσιομέτρου περίπου 2,8~ms. Επειδή ο ελεγκτής
+PID χρησιμοποιεί το πραγματικό χρονικό βήμα $\Delta t_k$ της
+\eqref{eq:pid-output} και η φάση του βαδίσματος προκύπτει από το ρολόι του
+συστήματος, η χαμηλότερη συχνότητα δεν μεταβάλλει ούτε τη δράση των κερδών ούτε
+τον χρονισμό του βαδίσματος.
+
+Ως μέτρο ασφαλείας, αν η απόλυτη γωνία pitch ξεπεράσει τις $45^\circ$, το βήμα
+ελέγχου δεν εκτελείται και ο βρόχος επιστρέφει σε ηρεμία. Ο έλεγχος αφορά μόνο
+το pitch, οπότε πτώση στο πλάι δεν ανιχνεύεται.
+
 \section{Τηλεχειρισμός}
 \label{sec:teleop}
 Ο τηλεχειρισμός του ρομπότ γίνεται με χειριστήριο DualSense του PlayStation 5,
 το οποίο συνδέεται στο Raspberry Pi και διαβάζεται μέσω της βιβλιοθήκης
-\texttt{pydualsense}. Ο βρόχος του τηλεχειρισμού εκτελείται στα 100~Hz: σε κάθε
+\texttt{pydualsense}. Ο βρόχος του τηλεχειρισμού έχει ονομαστική συχνότητα
+100~Hz (μετρημένη περίπου 67~Hz, ενότητα~\ref{sec:realtime-control}): σε κάθε
 επανάληψη διαβάζεται η κατάσταση του χειριστηρίου, επιλέγονται οι παράμετροι
 βάδισης και εκτελείται ένα βήμα του ελεγκτή της
 ενότητας~\ref{sec:realtime-control}. Οι εντολές που έχουν αντιστοιχιστεί
@@ -3447,7 +3503,9 @@ fraction) της \eqref{eq:omni-foot} και δίνεται αυτούσια σ�
 
 Σε όλες τις εντολές μετατόπισης χρησιμοποιείται η ίδια επιθυμητή γραμμική
 ταχύτητα, 0,12~m/s, ενώ στη στροφή επί τόπου η γραμμική ταχύτητα μηδενίζεται και
-δίνεται γωνιακή ταχύτητα $\pm 0{,}2$~rad/s
+δίνεται γωνιακή ταχύτητα $-0{,}5$~rad/s με το R1 (δεξιά) και $+0{,}3$~rad/s με το
+L1 (αριστερά). Στη στροφή κατά το βάδισμα, με τις σκανδάλες R2 και L2, η γραμμική ταχύτητα
+παραμένει 0,12~m/s και η γωνιακή είναι $-0{,}5$ και $+0{,}5$~rad/s αντίστοιχα
 (ενότητα~\ref{sec:turning-gait}). Ο βρόχος διατηρεί τρεις καταστάσεις: ηρεμία,
 κίνηση και επιβράδυνση. Μόλις αφεθεί το πλήκτρο, η κατάσταση περνά σε
 επιβράδυνση και η ράμπα της ενότητας~\ref{subsec:velocity-ramp} μηδενίζει ομαλά
@@ -3458,7 +3516,8 @@ fraction) της \eqref{eq:omni-foot} και δίνεται αυτούσια σ�
 \section{Καταγραφή Δεδομένων}
 \label{sec:data-logging}
 Κατά τη διάρκεια κάθε κίνησης καταγράφονται δεδομένα σε αρχείο CSV, ένα δείγμα
-ανά βήμα ελέγχου, δηλαδή με τη συχνότητα των 100~Hz του βρόχου. Κάθε γραμμή
+ανά βήμα ελέγχου, δηλαδή με τη μετρημένη συχνότητα του βρόχου, περίπου 67~Hz
+(ενότητα~\ref{sec:realtime-control}). Κάθε γραμμή
 περιέχει τη χρονική στιγμή, τις φιλτραρισμένες γωνίες roll και pitch του
 αδρανειακού αισθητήρα και τις δύο διορθώσεις που δίνει ο ελεγκτής PID,
 \begin{center}
@@ -3469,16 +3528,26 @@ fraction) της \eqref{eq:omni-foot} και δίνεται αυτούσια σ�
 διόρθωση, μαζί με τον όρο αντιστάθμισης της κλίσης στις στροφές.
 
 Με τη λήξη κάθε εκτέλεσης, δηλαδή με το πάτημα του κουμπιού του κύκλου, το
-αρχείο CSV δίνεται στη μονάδα \texttt{log\_plotter.py}, η οποία μετατρέπει τις
+αρχείο CSV δίνεται στη μονάδα \texttt{pid\_plotter.py}, η οποία μετατρέπει τις
 γωνίες σε μοίρες και παράγει ένα γράφημα με δύο άξονες, έναν για το roll και
 έναν για το pitch, όπου σε κάθε άξονα εμφανίζονται μαζί η μέτρηση του αισθητήρα
-και η αντίστοιχη έξοδος του ελεγκτή. Το γράφημα αποθηκεύεται ως εικόνα δίπλα
-στο αρχείο δεδομένων, με το ίδιο όνομα, όπως στο
+και η αντίστοιχη έξοδος του ελεγκτή. Ο άξονας του χρόνου ξεκινά από τα 0~s,
+αφαιρώντας την πρώτη χρονική στιγμή του αρχείου. Το γράφημα αποθηκεύεται ως
+εικόνα δίπλα στο αρχείο δεδομένων, με το ίδιο όνομα, όπως στο
 Σχήμα~\ref{fig:log-plotter-sample}. Διατίθεται και ισοδύναμη υλοποίηση σε
-MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείου.
+MATLAB (\texttt{pid\_plotter.m}) για την ίδια μορφή αρχείου.
+
+Παράλληλα καταγράφεται σε δεύτερο αρχείο (\texttt{log/imu/}) η έξοδος του
+φίλτρου σύντηξης πριν και μετά το βαθυπερατό φίλτρο, με στήλες
+\begin{center}
+\texttt{t, imu\_roll, imu\_pitch, imu\_yaw, lpf\_roll, lpf\_pitch, lpf\_yaw}
+\end{center}
+όπου ο χρόνος μετράται σε δευτερόλεπτα από την εκκίνηση και οι γωνίες σε
+ακτίνια. Η μονάδα \texttt{imu\_plotter.py} παράγει γράφημα τριών αξόνων (roll,
+pitch, yaw).
 
 Πριν από κάθε νέα εκτέλεση τα προηγούμενα αρχεία δεδομένων και εικόνων
-διαγράφονται, ώστε στον φάκελο να παραμένει πάντα μόνο η τελευταία δοκιμή. Με
+διαγράφονται, ώστε στους φακέλους καταγραφής να παραμένει πάντα μόνο η τελευταία δοκιμή. Με
 τον τρόπο αυτό, μετά από κάθε δοκιμή είναι άμεσα διαθέσιμη η απόκριση του
 συστήματος, κάτι που χρησιμοποιήθηκε για τη ρύθμιση των κερδών του ελεγκτή στο
 πραγματικό ρομπότ.
@@ -3487,7 +3556,7 @@ MATLAB (\texttt{log\_plotter.m}) για την ίδια μορφή αρχείο�
     \centering
     \includegraphics[width=0.72\textwidth, trim=48 28 64 62, clip]{images/log_plot_sim_combo.png}
     \caption[Δείγμα γραφήματος καταγεγραμμένων δεδομένων]{Δείγμα του
-    γραφήματος που παράγει η \texttt{log\_plotter.py} στο τέλος κάθε
+    γραφήματος που παράγει η \texttt{pid\_plotter.py} στο τέλος κάθε
     εκτέλεσης, από ένα τυχαίο πέρασμα. Πάνω το roll και κάτω το pitch, με τη
     μέτρηση του αισθητήρα και την έξοδο του ελεγκτή σε κοινό άξονα}
     \label{fig:log-plotter-sample}
@@ -3795,6 +3864,9 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
   επιβάλλονται κατά την εκτέλεση, ενώ η αντίστροφη κινηματική επιστρέφει
   μηδενικές γωνίες όταν ο στόχος βρίσκεται εκτός του χώρου εργασίας, χωρίς
   προειδοποίηση.
+  \item Η διακοπή ασφαλείας ενεργοποιείται μόνο όταν η απόλυτη γωνία pitch
+  ξεπεράσει τις $45^\circ$ (ενότητα~\ref{sec:realtime-control}), οπότε πτώση στο
+  πλάι δεν ανιχνεύεται.
   \item Η αυτονομία της μπαταρίας είναι πολύ μικρή, οπότε όλες οι δοκιμές
   έγιναν με εργαστηριακό τροφοδοτικό. Ταυτόχρονα, η κατανάλωση ρεύματος των
   σερβοκινητήρων απαίτησε περιορισμό της ισχύος για να μην ενεργοποιείται η
@@ -3854,6 +3926,14 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
   CAD (ενότητα~\ref{sec:urdf}) και εξαγωγή της κινηματικής απευθείας από αυτό.
   \item Μεταφορά της υλοποίησης σε ROS~2 και Gazebo, ώστε να διατεθεί ως ενιαίο
   πακέτο για τετράποδα ρομπότ (ενότητα~\ref{sec:sim-env}).
+  \item Επίτευξη της ονομαστικής συχνότητας των 100~Hz του βρόχου ελέγχου
+  (ενότητα~\ref{sec:realtime-control}), με τρεις παρεμβάσεις στον δίαυλο
+  I\textsuperscript{2}C: αύξηση της ταχύτητάς του στα 400~kHz, ανάγνωση του
+  επιταχυνσιομέτρου με μία και όχι με τρεις συναλλαγές, και εγγραφή των θέσεων
+  των σερβοκινητήρων σε τμήματα (block writes) των οδηγών PCA9685, δηλαδή τρεις
+  συναλλαγές αντί για δώδεκα.
+  \item Ανίχνευση πτώσης με βάση τη συνολική κλίση του σώματος και όχι μόνο τη
+  γωνία pitch, ώστε να ανιχνεύεται και πτώση στο πλάι.
   \item Εκπαίδευση πολιτικής βάδισης με ενισχυτική μάθηση
   (ενότητα~\ref{subsec:rl-litreview}), με χρήση του Isaac Sim για παράλληλη
   προσομοίωση.
@@ -3960,9 +4040,10 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
         \toprule
         Παράμετρος & Σύμβολο & Τιμή \\
         \midrule
-        Συχνότητα βρόχου ελέγχου & & 100 Hz \\
+        Συχνότητα βρόχου ελέγχου & & 100 Hz (ονομαστική), $\approx 67$ Hz (μετρημένη) \\
         Επιθυμητή γραμμική ταχύτητα & $v$ & 0,12 m/s \\
-        Γωνιακή ταχύτητα στροφής & $\omega$ & $\pm 0{,}20$ rad/s \\
+        Γωνιακή ταχύτητα στροφής επί τόπου & $\omega$ & $-0{,}5$ (R1), $+0{,}3$ (L1) rad/s \\
+        Γωνιακή ταχύτητα στροφής κατά το βάδισμα & $\omega$ & $-0{,}5$ (R2), $+0{,}5$ (L2) rad/s \\
         Διάρκεια αιώρησης & $T_{sw}$ & 0,20 s \\
         Ονομαστικό μήκος στήριξης & & 0,06 m \\
         Διάρκεια στήριξης & $T_{st}$ & 0,26 s \\
@@ -4013,7 +4094,7 @@ PyBullet, όπου εκτελείται ο ίδιος κώδικας ελέγχ�
         Παράμετρος & Σύμβολο & Τιμή \\
         \midrule
         \multicolumn{3}{@{}l}{\textit{Ελεγκτής PID}} \\
-        Κέρδη roll & $K_p,\ K_i,\ K_d$ & 0,50; 0,085; 0,05 \\
+        Κέρδη roll & $K_p,\ K_i,\ K_d$ & 0,50; 0; 0,05 \\
         Κέρδη pitch & $K_p,\ K_i,\ K_d$ & 1,00; 0,020; 0,01 \\
         Όριο ολοκληρωτικού όρου & $I_{max}$ & 0,7 \\
         \midrule

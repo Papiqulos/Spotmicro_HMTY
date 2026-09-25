@@ -14,7 +14,8 @@ tests/
 /sim/urdf/stlv2/
 
 # log
-/log/roll_pitch/
+/log/pid/
+/log/imu/
 
 # package
 /spotmicro.egg-info/
@@ -87,6 +88,7 @@ graphs_for_thesis/
 
 thesis/first_draft/tables/~$gait_patterns_tables.xlsx
 guide.txt
+changes.md
 
 /thesis/*
 !/thesis/first_draft/
