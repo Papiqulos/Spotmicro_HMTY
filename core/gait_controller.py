@@ -414,6 +414,7 @@ class GaitController:
 
         R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
         banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
+        print(f"Banked roll: {banked_roll}")
         corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
         sl_mm = eff_lin * T_cycle * duty_factor * 1000.0  # proportional to ramped velocity
         self._step_legs(global_phase, duty_factor, T_cycle,
