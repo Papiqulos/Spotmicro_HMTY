@@ -1,6 +1,8 @@
 import atexit
 import csv
+import json
 import math
+import subprocess
 import time
 import numpy as np
 
@@ -9,19 +11,43 @@ pi = np.pi
 
 
 def open_run_log(log_dir, prefix, header):
-    """Delete old CSV/PNG logs in log_dir, open a timestamped CSV and write its header.
+    """Open a timestamped CSV in log_dir and write its header. Old logs are kept.
 
     Returns (file, csv_writer). The file is closed at interpreter exit.
     """
     log_dir.mkdir(exist_ok=True)
-    for f in log_dir.iterdir():
-        if f.suffix in (".csv", ".png"):
-            f.unlink()
-    log_file = open(log_dir / f"{prefix}_{time.strftime('%Y_%m_%d_%H_%M_%S')}.csv", "w", newline="")
+    stamp = time.strftime('%Y_%m_%d_%H_%M_%S')
+    path = log_dir / f"{prefix}_{stamp}.csv"
+    n = 1
+    while path.exists():
+        path = log_dir / f"{prefix}_{stamp}_{n}.csv"
+        n += 1
+    log_file = open(path, "w", newline="", encoding="utf-8")
     writer = csv.writer(log_file)
     writer.writerow(header)
     atexit.register(log_file.close)
     return log_file, writer
+
+
+def git_commit():
+    """Short HEAD hash, suffixed with '-dirty' when the working tree has changes. None outside git."""
+    try:
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True, check=True).stdout.strip()
+        return commit + ("-dirty" if dirty else "")
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def write_run_meta(csv_path, meta):
+    """Write meta (plus the git commit) as JSON next to csv_path, same name with .json."""
+    meta = dict(meta, git_commit=git_commit())
+    path = str(csv_path).replace(".csv", ".json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2, default=float)
+    return path
 
 def Rx(theta):
     return np.array([[1, 0, 0, 0],

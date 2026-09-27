@@ -9,6 +9,7 @@ class PIDController:
         self.previous_error = 0
         self.integral_sum = 0
         self.first_run = True
+        self.p = self.i = self.d = 0.0
 
     def update(self, error, dt):
         if self.first_run:
@@ -25,6 +26,7 @@ class PIDController:
         derivative = self.kd * (error - self.previous_error) / dt if dt > 0 else 0.0
 
         self.previous_error = error
+        self.p, self.i, self.d = proportional, integral, derivative
 
         return proportional + derivative + integral
 
