@@ -154,6 +154,8 @@ class RobotController:
         Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
         target_pos_shoulder = Ix @ trans_inv(transforms[leg]) @ to_homogenous(position)
         angles = self.kin_solver.legIK(target_pos_shoulder)
+        if angles is None:
+            return
         angles = np.array([math.degrees(a) for a in angles])
         self.apply_angles_leg(leg, angles, "deg")
         self.state.linear_vel  = 0.0

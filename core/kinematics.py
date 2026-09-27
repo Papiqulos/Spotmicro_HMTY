@@ -55,7 +55,13 @@ class Kinematics:
         self.shoulder_lim = lim.get("shoulder", [-pi, pi])
         self.elbow_lim    = lim.get("elbow",    [-pi, pi])
         self.knee_lim     = lim.get("knee",     [-0.10, pi])
-        
+
+        self.ik_clamped = 0
+        self.limits = np.array([self.shoulder_lim, self.elbow_lim, self.knee_lim])  
+
+    def clip_to_limits(self, thetas):
+        return list(np.clip(thetas, self.limits[:, 0], self.limits[:, 1]))
+
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legFK(self, angles):
         '''
@@ -141,21 +147,29 @@ class Kinematics:
 
         # Front Left Leg
         fl_angles = self.legIK(trans_inv(T_shoulder_base[0]) @ to_homogenous(fl))
+        if fl_angles is None:
+            raise ValueError("FL target unreachable")
         for angle in fl_angles:
             angles.append(angle)
 
         # Front Right Leg
         fr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[1]) @ to_homogenous(fr))
+        if fr_angles is None:
+            raise ValueError("FR target unreachable")
         for angle in fr_angles:
             angles.append(angle)
 
         # Rear Left Leg
         rl_angles = self.legIK(trans_inv(T_shoulder_base[2]) @ to_homogenous(rl))
+        if rl_angles is None:
+            raise ValueError("RL target unreachable")
         for angle in rl_angles:
             angles.append(angle)
 
         # Rear Right Leg
         rr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[3]) @ to_homogenous(rr))
+        if rr_angles is None:
+            raise ValueError("RR target unreachable")
         for angle in rr_angles:
             angles.append(angle)
 
