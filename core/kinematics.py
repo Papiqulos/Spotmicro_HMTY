@@ -55,7 +55,13 @@ class Kinematics:
         self.shoulder_lim = lim.get("shoulder", [-pi, pi])
         self.elbow_lim    = lim.get("elbow",    [-pi, pi])
         self.knee_lim     = lim.get("knee",     [-0.10, pi])
-        
+
+        self.ik_clamped = 0
+        self.limits = np.array([self.shoulder_lim, self.elbow_lim, self.knee_lim])  
+
+    def clip_to_limits(self, thetas):
+        return list(np.clip(thetas, self.limits[:, 0], self.limits[:, 1]))
+
     # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legFK(self, angles):
         '''
@@ -108,35 +114,24 @@ class Kinematics:
             Tm @ np.array([[cHp,0,sHp,-self.length/2],[0,1,0,0],[-sHp,0,cHp,-self.width/2],[0,0,0,1]])
             ])
 
-    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
+    # Modified from https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legIK(self, point):
-        """ Inverse Kinematics for a single leg 
-        
-        :param point: Target foot position (x, y, z) relative to shoulder
-        
-        :returns: Tuple of joint angles (theta1, theta2, theta3)"""
-        (x, y, z) = (point[0], point[1], point[2])
-        
-        # Check if target is reachable (simple validity check)
-        if x**2 + y**2 - self.l1**2 < 0:
-            return (0, 0, 0) # Error safety
-
-        F = sqrt(x**2 + y**2 - self.l1**2) # Length of shoulder-point to target-point on x/y only
-        G = F - self.l2  # Length we need to reach to the point on x/y
-        H = sqrt(G**2 + z**2) # 3-Dimensional length we need to reach
-        
-        theta1 = -atan2(y, x) - atan2(F, - self.l1)
-
+        x, y, z = point[0], point[1], point[2]
+        F2 = x**2 + y**2 - self.l1**2
+        if F2 <= 0:
+            return None                      # inside the shoulder cylinder
+        F = sqrt(F2)
+        G = F - self.l2
+        H = sqrt(G**2 + z**2)
+        theta1 = -atan2(y, x) - atan2(F, -self.l1)
         D = (H**2 - self.l3**2 - self.l4**2) / (2 * self.l3 * self.l4)
-
-        # arctan2 form: numerically stable at D = ±1 (fully extended / folded leg).
-        # Positive sqrt keeps the same sign convention as acos (elbow-down = positive theta3).
-        theta3 = atan2(sqrt(max(0.0, 1.0 - D**2)), D)
-
+        if abs(D) > 1.0:
+            self.ik_clamped += 1             # counted, reported by the caller
+            D = max(-1.0, min(1.0, D))
+        theta3 = atan2(sqrt(1.0 - D**2), D)
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
+        return self.clip_to_limits([theta1, theta2, theta3])
 
-        thetas = [theta1, theta2, theta3]
-        return thetas
     
     def robot_IK(self, center, orientation, ef_positions, unit='rad'):
         """Returns [FL angles, FR angles, RL angles, RR angles]"""
@@ -152,21 +147,29 @@ class Kinematics:
 
         # Front Left Leg
         fl_angles = self.legIK(trans_inv(T_shoulder_base[0]) @ to_homogenous(fl))
+        if fl_angles is None:
+            raise ValueError("FL target unreachable")
         for angle in fl_angles:
             angles.append(angle)
 
         # Front Right Leg
         fr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[1]) @ to_homogenous(fr))
+        if fr_angles is None:
+            raise ValueError("FR target unreachable")
         for angle in fr_angles:
             angles.append(angle)
 
         # Rear Left Leg
         rl_angles = self.legIK(trans_inv(T_shoulder_base[2]) @ to_homogenous(rl))
+        if rl_angles is None:
+            raise ValueError("RL target unreachable")
         for angle in rl_angles:
             angles.append(angle)
 
         # Rear Right Leg
         rr_angles = self.legIK(self.Ix @ trans_inv(T_shoulder_base[3]) @ to_homogenous(rr))
+        if rr_angles is None:
+            raise ValueError("RR target unreachable")
         for angle in rr_angles:
             angles.append(angle)
 

@@ -205,6 +205,9 @@ class GaitController:
             Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
             target_pos_shoulder = Ix @ trans_inv(self.transforms[i]) @ target_pos
             angles = self.kin_solver.legIK(target_pos_shoulder)
+            if angles is None:
+                angles = list(self.state.angles[3*i : 3*i + 3])
+
             all_angles.extend(angles)
 
             if move_callback is not None:
