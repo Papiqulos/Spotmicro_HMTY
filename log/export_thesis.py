@@ -177,9 +177,10 @@ def latex_tables(stats, cfg):
             continue
         lat = [s["tape"]["lateral_cm"] for s in S if "lateral_cm" in s["tape"]]
         hdg = [s["tape"]["heading_deg"] for s in S if "heading_deg" in s["tape"]]
+        lat_col = pm(lat, 1) + "~cm" if lat else ""
+        hdg_col = pm(hdg, 0, True) + "$^\\circ$" if hdg else ""
         rows.append(f"        {TESTS[pre][0]} & {pm(meas)}~m & ${num(theo)}$~m & "
-                    f"${num(np.mean(meas) / theo * 100, 0)}\\%$ & "
-                    f"{pm(lat, 1) + '~cm' if lat else ''} & {pm(hdg, 0, True) + '$^\\circ$' if hdg else ''} \\\\")
+                    f"${num(np.mean(meas) / theo * 100, 0)}\\%$ & {lat_col} & {hdg_col} \\\\")
     if rows:
         lines += [r"\begin{table}[htbp]", r"    \centering", r"    \small",
                   r"    \begin{tabular}{@{}l c c c c c@{}}", r"        \toprule",
