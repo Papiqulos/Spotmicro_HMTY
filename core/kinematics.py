@@ -108,35 +108,24 @@ class Kinematics:
             Tm @ np.array([[cHp,0,sHp,-self.length/2],[0,1,0,0],[-sHp,0,cHp,-self.width/2],[0,0,0,1]])
             ])
 
-    # From https://spotmicroai.readthedocs.io/en/latest/kinematic/
+    # Modified from https://spotmicroai.readthedocs.io/en/latest/kinematic/
     def legIK(self, point):
-        """ Inverse Kinematics for a single leg 
-        
-        :param point: Target foot position (x, y, z) relative to shoulder
-        
-        :returns: Tuple of joint angles (theta1, theta2, theta3)"""
-        (x, y, z) = (point[0], point[1], point[2])
-        
-        # Check if target is reachable (simple validity check)
-        if x**2 + y**2 - self.l1**2 < 0:
-            return (0, 0, 0) # Error safety
-
-        F = sqrt(x**2 + y**2 - self.l1**2) # Length of shoulder-point to target-point on x/y only
-        G = F - self.l2  # Length we need to reach to the point on x/y
-        H = sqrt(G**2 + z**2) # 3-Dimensional length we need to reach
-        
-        theta1 = -atan2(y, x) - atan2(F, - self.l1)
-
+        x, y, z = point[0], point[1], point[2]
+        F2 = x**2 + y**2 - self.l1**2
+        if F2 <= 0:
+            return None                      # inside the shoulder cylinder
+        F = sqrt(F2)
+        G = F - self.l2
+        H = sqrt(G**2 + z**2)
+        theta1 = -atan2(y, x) - atan2(F, -self.l1)
         D = (H**2 - self.l3**2 - self.l4**2) / (2 * self.l3 * self.l4)
-
-        # arctan2 form: numerically stable at D = ±1 (fully extended / folded leg).
-        # Positive sqrt keeps the same sign convention as acos (elbow-down = positive theta3).
-        theta3 = atan2(sqrt(max(0.0, 1.0 - D**2)), D)
-
+        if abs(D) > 1.0:
+            self.ik_clamped += 1             # counted, reported by the caller
+            D = max(-1.0, min(1.0, D))
+        theta3 = atan2(sqrt(1.0 - D**2), D)
         theta2 = atan2(z, G) - atan2(self.l4 * sin(theta3), self.l3 + self.l4 * cos(theta3))
+        return self.clip_to_limits([theta1, theta2, theta3])
 
-        thetas = [theta1, theta2, theta3]
-        return thetas
     
     def robot_IK(self, center, orientation, ef_positions, unit='rad'):
         """Returns [FL angles, FR angles, RL angles, RR angles]"""

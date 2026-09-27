@@ -328,6 +328,10 @@ if __name__ == "__main__":
                 elif state == "Idle":
                     rx_norm = buttons.RX / -128
                     ry_norm = buttons.RY / 128
+                    n = np.hypot(rx_norm, ry_norm)
+                    if n > 1.0:
+                        rx_norm, ry_norm = rx_norm / n, ry_norm / n
+
                     max_roll = 15
                     max_pitch = 10
                     target_orn = np.array([rx_norm * max_roll, ry_norm * max_pitch, 0])
