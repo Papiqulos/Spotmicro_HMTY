@@ -138,7 +138,7 @@ class GaitController:
             return np.array(self.state.init_orientation, dtype=float)
         
         # Roll and pitch already low-pass filtered in hw/imu.py
-        filtered = np.array([imu_data[0] + banked_roll,  imu_data[1]])
+        filtered = np.array([imu_data[0] - banked_roll,  imu_data[1]])
 
         now = time.time()
         pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
@@ -157,12 +157,15 @@ class GaitController:
     def _step_legs(self, global_phase, duty_factor, T_cycle, sl_mm, sh_mm,
                    lateral_fraction, eff_ang, corrected_orientation, gait_type, move_callback):
         """Compute and apply per-leg trajectories for one control step."""
+
+        Wf = WIDTH/2 + L1          
         dy = [
-            + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1]),
-            - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1]),
-            + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
-            - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
+            - Wf*np.tan(corrected_orientation[0]) + (LENGTH/2)*np.tan(corrected_orientation[1]),   # FL
+            + Wf*np.tan(corrected_orientation[0]) + (LENGTH/2)*np.tan(corrected_orientation[1]),   # FR
+            - Wf*np.tan(corrected_orientation[0]) - (LENGTH/2)*np.tan(corrected_orientation[1]),   # RL
+            + Wf*np.tan(corrected_orientation[0]) - (LENGTH/2)*np.tan(corrected_orientation[1]),   # RR
         ]
+
 
         delta_base = sh_mm * _STANCE_PEN_BASE_FRAC
         leg_offset = _GAIT_PHASES[gait_type]
