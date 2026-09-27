@@ -93,3 +93,6 @@ guide.txt
 !/thesis/first_draft/
 /thesis/first_draft/*
 !/thesis/first_draft/main.pdf
+TODO.md
+.gitignore
+TUNING_PLAN.md
