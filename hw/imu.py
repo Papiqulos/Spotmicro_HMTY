@@ -12,9 +12,9 @@ from tools.utils import open_run_log
 # Yaw angle (rotation around y-axis-UP)
 
 
-# X-imu-> Left, Y-imu-> Backwards, Z-imu-> Uπ
+# X-imu-> Left, Y-imu-> Backwards, Z-imu-> Up
 
-# X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> Z-imu
+# X-robot-> -Y-imu, Y-robot-> Z-imu, Z-robot-> X-imu
 
 
 _LOG_DIR = Path(__file__).parent.parent / "log" / "imu"
@@ -144,7 +144,7 @@ class IMU:
 
         if self.log:
             self._csv.writerow([f"{current_time - self._t0:.4f}",
-                                f"{roll:.6f}", f"{-pitch:.6f}", f"{yaw:.6f}",
+                                f"{roll:.6f}", f"{-pitch:.6f}", f"{-yaw:.6f}",
                                 f"{self.smoothed_orientation[0]:.6f}",
                                 f"{self.smoothed_orientation[1]:.6f}",
                                 f"{self.smoothed_orientation[2]:.6f}"])
