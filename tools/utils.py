@@ -22,7 +22,7 @@ def open_run_log(log_dir, prefix, header):
     while path.exists():
         path = log_dir / f"{prefix}_{stamp}_{n}.csv"
         n += 1
-    log_file = open(path, "w", newline="")
+    log_file = open(path, "w", newline="", encoding="utf-8")
     writer = csv.writer(log_file)
     writer.writerow(header)
     atexit.register(log_file.close)
@@ -45,7 +45,7 @@ def write_run_meta(csv_path, meta):
     """Write meta (plus the git commit) as JSON next to csv_path, same name with .json."""
     meta = dict(meta, git_commit=git_commit())
     path = str(csv_path).replace(".csv", ".json")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2, default=float)
     return path
 

@@ -81,8 +81,8 @@ if __name__ == "__main__":
         tape = ask_tape(args.test)
         if tape:
             meta_path = pid_log.replace(".csv", ".json")
-            with open(meta_path) as f:
+            with open(meta_path, encoding="utf-8") as f:
                 meta = json.load(f)
             meta["tape"] = tape
-            with open(meta_path, "w") as f:
+            with open(meta_path, "w", encoding="utf-8") as f:
                 json.dump(meta, f, indent=2)

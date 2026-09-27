@@ -11,6 +11,7 @@ simulation from the base orientation logged by the controller.
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -56,7 +57,7 @@ def latest_runs(source):
     """tag -> (csv path, meta) for the latest run of every tag."""
     runs = {}
     for js in sorted(_PID_DIR.glob("pid_*.json")):
-        m = json.loads(js.read_text())
+        m = json.loads(js.read_text(encoding="utf-8"))
         if m.get("source") == source and m.get("tag"):
             runs[m["tag"]] = (js.with_suffix(".csv"), m)
     return runs
@@ -232,7 +233,7 @@ def export(source):
         plot_pitch_on_off(runs[f"F_{chosen['F']}"], runs[f"F-OFF_{chosen['F-OFF']}"], source,
                           fig_dir / cfg["pitch_fig"])
 
-    (tab_dir / cfg["tables"]).write_text(latex_tables(stats, cfg))
+    (tab_dir / cfg["tables"]).write_text(latex_tables(stats, cfg), encoding="utf-8")
 
     R = [f"# {cfg['title']}", "",
          f"Παράγεται από `python -m log.export_thesis{' --sim' if source == 'sim' else ''}`. Γωνίες σε "
@@ -291,11 +292,13 @@ def export(source):
         R += ["", "Στο Σχ. `fig:controller-response-comparison` το (β) γίνεται `images/log_plot_real_forward.png`."]
     R += [f"Οι πίνακες LaTeX είναι στο `tables/{cfg['tables']}` (`tab:{cfg['label']}-roll`, "
           f"`tab:{cfg['label']}-pitch`, `tab:{cfg['label']}-distance`)."]
-    (_OUT / cfg["summary"]).write_text("\n".join(R) + "\n")
+    (_OUT / cfg["summary"]).write_text("\n".join(R) + "\n", encoding="utf-8")
     print("\n".join(R))
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")   # Greek text on a cp1252 console
     ap = argparse.ArgumentParser()
     ap.add_argument("--sim", action="store_true", help="export the simulation runs")
     export("sim" if ap.parse_args().sim else "robot")

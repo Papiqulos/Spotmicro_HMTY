@@ -22,7 +22,7 @@ _BANDS = [(0.0, 5.0), (5.0, 15.0), (15.0, np.inf)]
 
 def load_meta(csv_path):
     path = Path(str(csv_path).replace(".csv", ".json"))
-    return json.loads(path.read_text()) if path.exists() else {}
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def steady_mask(df, meta):
@@ -154,7 +154,7 @@ def summary(results):
 
 
 def append_notes(r, path=_NOTES):
-    text = path.read_text() if path.exists() else ""
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
     if r["run"] in text:
         return
     if not text:
@@ -167,7 +167,7 @@ def append_notes(r, path=_NOTES):
     text += (f"| {r['run']} | {r['tag'] or ''} | {p.get('desired_lin_vel')}, {p.get('desired_ang_vel')}, "
              f"{p.get('dir')} | {g('roll')} | {g('pitch')} | {r['roll']['rms']:.2f} | {r['pitch']['rms']:.2f} "
              f"| {r['roll']['max']:.2f} | {r['pitch']['max']:.2f} | {r['T_c']:.1f} | {m.get('fallen', '')} |  |\n")
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":
