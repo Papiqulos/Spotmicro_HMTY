@@ -1,0 +1,36 @@
+{
+  "tag": "F_1",
+  "source": "sim",
+  "pid_roll": {
+    "kp": 0.3,
+    "ki": 1.0,
+    "kd": 0.0
+  },
+  "pid_pitch": {
+    "kp": 0.3,
+    "ki": 1.0,
+    "kd": 0.0
+  },
+  "params": {
+    "desired_lin_vel": 0.12,
+    "desired_ang_vel": 0.0,
+    "swing_height": 0.035,
+    "stance_length": 0.06,
+    "Tswing": 0.2,
+    "dir": "+x",
+    "gait_type": "trot"
+  },
+  "steps": 1050,
+  "fallen": false,
+  "duration": 11.00999999999981,
+  "ik_clamped": 0,
+  "tape": {
+    "heading_deg": 0.799171405680544,
+    "turn_deg": 0.799171405680544,
+    "distance_m": 0.31228684526409284,
+    "lateral_cm": 2.0406771701011
+  },
+  "pid_log": "D:\\ABackups\\Personal\\University\\Diploma_thesis\\code\\spotmicro_hmty_sim\\log\\pid\\pid_2026_09_28_01_55_44.csv",
+  "imu_log": null,
+  "git_commit": "1af9cfd"
+}
