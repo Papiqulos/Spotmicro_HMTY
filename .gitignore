@@ -92,6 +92,17 @@ changes.md
 
 /thesis/*
 !/thesis/first_draft/
+# thesis sources are tracked, LaTeX build products are not
 /thesis/first_draft/*
 !/thesis/first_draft/main.pdf
+!/thesis/first_draft/main.tex
+!/thesis/first_draft/main.bbl
+!/thesis/first_draft/thesis.bib
+!/thesis/first_draft/cover.pdf
+!/thesis/first_draft/.latexmkrc
+!/thesis/first_draft/images/
+!/thesis/first_draft/tables/
+
+# working notes and tuning results kept locally
 TUNING_PLAN.md
+/thesis_export/
