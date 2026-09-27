@@ -24,6 +24,7 @@ THETA_RESTING = np.array([
 
 UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW = 65297, 65298, 65295, 65296
 
+SERVO_TORQUE = 1.5   # N·m, ροπή ακινητοποίησης FT5116M
 
 def trot_params(lin_vel, ang_vel, dir):
     """Gait parameters for execute_gait_fixed_stance (lengths in m, times in s)."""
@@ -168,8 +169,30 @@ class PybulletSim:
         :param orn: in pybullet frame
         """
         try:
+            
+
+
+
+
+
+
+
             robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=False)
             print(f"Successfully loaded {urdf_path}!")
+
+            # Fix the mass of the legs
+            REAL_MASS = 1.702
+            links = range(-1, p.getNumJoints(robotId))
+            cover = [j for j in links if j >= 0 and
+                    p.getJointInfo(robotId, j)[12].decode().endswith("_cover")]
+            for j in cover:
+                p.changeDynamics(robotId, j, mass=0.001, localInertiaDiagonal=[1e-6] * 3)
+            total = sum(p.getDynamicsInfo(robotId, j)[0] for j in links)
+            k = REAL_MASS / total
+            for j in links:
+                if j not in cover:
+                    p.changeDynamics(robotId, j, mass=p.getDynamicsInfo(robotId, j)[0] * k)
+
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
             for i in range(num_joints):
@@ -195,6 +218,7 @@ class PybulletSim:
         p.connect(p.GUI)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
+        p.setTimeStep(TIME_STEP)
         p.resetDebugVisualizerCamera(cameraDistance=cameraDistance, cameraYaw=cameraYaw, cameraPitch=cameraPitch, cameraTargetPosition=cameraTargetPosition)
         self.roll_slider = p.addUserDebugParameter("----roll", -60, 60, 0)
         self.pitch_slider = p.addUserDebugParameter("----pitch", -60, 60, 0)
@@ -248,7 +272,8 @@ class PybulletSim:
         p.setJointMotorControlArray(self.robotId,
                                     jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
-                                    targetPositions=theta_pb)
+                                    targetPositions=theta_pb
+                                    ,forces=[SERVO_TORQUE] * 12)
         p.stepSimulation()
         time.sleep(1./240.)
         self.gait_controller.state.angles       = np.array(theta_rad)
@@ -268,12 +293,15 @@ class PybulletSim:
         leg_idx = self._leg_order.index(leg)
         dirs = self.theta_dirs[leg_idx * 3: (leg_idx + 1) * 3]
         angles = [a * d for a, d in zip(angles, dirs)]
-        p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg], p.POSITION_CONTROL, angles)
+        p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg],
+                                    p.POSITION_CONTROL, angles,
+                                    forces=[SERVO_TORQUE] * 3)
+
 
     def start_simulation(self):
         while True:
             p.stepSimulation()
-            time.sleep(1./240.)
+            time.sleep(TIME_STEP)
 
             keyboard_event = p.getKeyboardEvents()
 
