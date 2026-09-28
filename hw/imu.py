@@ -4,7 +4,7 @@ import numpy as np
 from ahrs.filters import Madgwick, EKF
 from ahrs.common.orientation import q2rpy, acc2q
 from hw import ITG_3200 as imu_gyro
-from hw import ADXL435 as imu_accelerometer
+from hw import ADXL345 as imu_accelerometer
 from tools.utils import open_run_log
 
 # Roll angle (rotation around x-axis-FORWARD)
@@ -24,7 +24,7 @@ _LOG_HEADER = ["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch",
 class IMU:
     def __init__(self, filter_type="Madgwick", log=False):
         self.gyro = imu_gyro.ITG_3200()
-        self.accelerometer = imu_accelerometer.ADXL435()
+        self.accelerometer = imu_accelerometer.ADXL345()
         init_acc = self.accelerometer.read()["acceleration"]
         # Magnetometer (hw/QMC5883L.py) not used because of too much noise
 
