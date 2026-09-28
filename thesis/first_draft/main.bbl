@@ -1225,7 +1225,7 @@
       \field{labeltitlesource}{title}
       \field{abstract}{This paper presents a trotting pattern generation approach and online control strategy for a little quadruped robot. The trotting gait is scheduled based on the composite cycloid method in order to improve the stability of quadruped robot. The efficiency and performance of the proposed methods are verified by simulations and experiments by means of the little quadruped robot constructed by our laboratory. The experiment results show that the average speed of the little quadruped robot on even terrain is 0.1m/s and the proposed methods are suitable and simple in terms of controlling.}
       \field{booktitle}{Electronics and {Signal} {Processing}}
-      \field{isbn}{978-3-642-21696-1 978-3-642-21697-8}
+      \field{isbn}{978-3-642-21696-1}
       \field{note}{Series Title: Lecture Notes in Electrical Engineering}
       \field{title}{Trotting {Gait} {Planning} and {Implementation} for a {Little} {Quadruped} {Robot}}
       \field{urlday}{15}
@@ -2411,16 +2411,14 @@
       \field{title}{Tilt sensing using a three-axis accelerometer}
       \field{urlday}{17}
       \field{urlmonth}{8}
-      \field{urlyear}{2016}
+      \field{urlyear}{2026}
       \field{year}{2013}
       \field{urldateera}{ce}
-      \field{pages}{2012\bibrangedash 2013}
-      \range{pages}{2}
       \verb{urlraw}
-      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+      \verb https://www.nxp.com/docs/en/application-note/AN3461.pdf
       \endverb
       \verb{url}
-      \verb http://cache-uat.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+      \verb https://www.nxp.com/docs/en/application-note/AN3461.pdf
       \endverb
     \endentry
     \entry{macenski_ros2_2022}{article}{}{}

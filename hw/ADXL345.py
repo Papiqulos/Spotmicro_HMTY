@@ -5,7 +5,7 @@ import adafruit_adxl34x
 import numpy as np
 
 
-class ADXL435:
+class ADXL345:
     def __init__(self):
         i2c = board.I2C()  # uses board.SCL and board.SDA
         # For ADXL345
@@ -104,7 +104,7 @@ class ADXL435:
 
 
 if __name__ == "__main__":
-    acc = ADXL435()
+    acc = ADXL345()
     # acc.run_interactive_calibration(samples=2000)
     readings = acc.read()
     print(readings)
