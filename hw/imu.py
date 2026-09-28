@@ -12,12 +12,14 @@ from tools.utils import open_run_log
 # Yaw angle (rotation around y-axis-UP)
 
 
-# X-imu-> Left, Y-imu-> Backwards, Z-imu-> Down
+# X-imu-> Left, Y-imu-> Backwards, Z-imu-> Up
 
-# X-robot-> -Y-imu, Y-robot-> X-imu, Z-robot-> -Z-imu
+# X-robot-> -Y-imu, Y-robot-> Z-imu, Z-robot-> X-imu
 
 
 _LOG_DIR = Path(__file__).parent.parent / "log" / "imu"
+_LOG_HEADER = ["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw",
+               "gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"]
 
 class IMU:
     def __init__(self, filter_type="Madgwick", log=False):
@@ -56,15 +58,20 @@ class IMU:
         print("IMU Ready")
 
         self.log = log
-        self.log_path = None
-        if log:
-            self._log_file, self._csv = open_run_log(
-                _LOG_DIR, "imu", ["t", "imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"])
-            self.log_path = self._log_file.name
-            self._t0 = time.time()
+        self._log_file = self._csv = None
+
+    @property
+    def log_path(self):
+        return self._log_file.name if self._log_file is not None else None
+
+    def new_log(self):
+        """Close the current IMU log. The next update opens a new one."""
+        if self._log_file is not None:
+            self._log_file.close()
+        self._log_file = self._csv = None
 
     def save_plot(self):
-        if not self.log:
+        if self._log_file is None:
             return
         from log.imu_plotter import imu_log
         self._log_file.flush()
@@ -140,14 +147,18 @@ class IMU:
         smoothed = self.alpha * self.s_pitch + (1 - self.alpha) * pitch
         self.s_pitch = smoothed
 
-        self.smoothed_orientation = np.array([ self.s_roll, -self.s_pitch, yaw])
+        self.smoothed_orientation = np.array([ self.s_roll, -self.s_pitch, -yaw])
 
         if self.log:
-            self._csv.writerow([f"{current_time - self._t0:.4f}",
-                                f"{roll:.6f}", f"{-pitch:.6f}", f"{yaw:.6f}",
+            if self._log_file is None:
+                self._log_file, self._csv = open_run_log(_LOG_DIR, "imu", _LOG_HEADER)
+            self._csv.writerow([f"{current_time:.4f}",
+                                f"{roll:.6f}", f"{-pitch:.6f}", f"{-yaw:.6f}",
                                 f"{self.smoothed_orientation[0]:.6f}",
                                 f"{self.smoothed_orientation[1]:.6f}",
-                                f"{self.smoothed_orientation[2]:.6f}"])
+                                f"{self.smoothed_orientation[2]:.6f}",
+                                *(f"{v:.6f}" for v in raw_gyro),
+                                *(f"{v:.6f}" for v in raw_acc)])
 
         return self.smoothed_orientation
 

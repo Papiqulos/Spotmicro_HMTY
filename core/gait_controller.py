@@ -7,6 +7,10 @@ import core.kinematics as kinematics
 from core.bezier_curve_gen import BezierCurveGen
 
 _LOG_DIR = Path(__file__).parent.parent / "log" / "pid"
+_LOG_HEADER = ["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch",
+               "roll_meas", "banked_roll", "eff_lin", "eff_ang", "phase",
+               "p_roll", "i_roll", "d_roll", "p_pitch", "i_pitch", "d_pitch",
+               "dt", "ik_clamped"]
 
 L1 = kinematics.L1
 L2 = kinematics.L2
@@ -80,9 +84,25 @@ class GaitController:
         self.pid_r = PIDController(**_PID_ROLL)
         self.pid_p = PIDController(**_PID_PITCH)
         self._pid_last_time = None
+        self._pid_dt = None
 
-        self._log_file, self._csv = open_run_log(
-            _LOG_DIR, "pid", ["t", "imu_roll", "imu_pitch", "pid_roll", "pid_pitch"])
+        self._log_file = self._csv = None
+
+    @property
+    def log_path(self):
+        return self._log_file.name if self._log_file is not None else None
+
+    def reset_pid(self):
+        """Clear PID integral and derivative history, keeping the gains."""
+        self.pid_r.reset()
+        self.pid_p.reset()
+        self._pid_last_time = None
+
+    def new_log(self):
+        """Close the current PID log. The next control step opens a new one."""
+        if self._log_file is not None:
+            self._log_file.close()
+        self._log_file = self._csv = None
 
     def _reset_prev_foot_pos(self):
         if self.state.init_ef_positions is not None:
@@ -96,6 +116,7 @@ class GaitController:
         self.pid_r = PIDController(kp=kp_r, ki=ki_r, kd=kd_r)
         self.pid_p = PIDController(kp=kp_p, ki=ki_p, kd=kd_p)
         self._pid_last_time = None
+        self._pid_dt = None
         self.gait_init = None
         self.deceleration_init = 0
         self._td_time = None
@@ -132,37 +153,52 @@ class GaitController:
 
         return desired_lin_vel * ramp_factor, desired_ang_vel * ramp_factor
 
-    def _imu_correction(self, imu_data, time_step, banked_roll=0.0):
+    def _imu_correction(self, imu_data, time_step, current_time, banked_roll=0.0):
         """PID on filtered roll/pitch.  Returns corrected_orientation [roll, pitch, yaw]."""
         if imu_data is None:
             return np.array(self.state.init_orientation, dtype=float)
         
         # Roll and pitch already low-pass filtered in hw/imu.py
-        filtered = np.array([imu_data[0] + banked_roll,  imu_data[1]])
+        filtered = np.array([imu_data[0] - banked_roll,  imu_data[1]])
 
-        now = time.time()
-        pid_dt = (now - self._pid_last_time) if self._pid_last_time is not None else time_step
-        self._pid_last_time = now
+        # dt from the controller clock: wall clock on the robot, simulated time in PyBullet
+        pid_dt = (current_time - self._pid_last_time) if self._pid_last_time is not None else time_step
+        if pid_dt <= 0:
+            pid_dt = time_step
+        self._pid_last_time = current_time
+        self._pid_dt = pid_dt
 
         correction = np.array([self.pid_r.update(filtered[0], pid_dt),
                                self.pid_p.update(filtered[1], pid_dt)])
 
-        self._csv.writerow([f"{now:.4f}",
-                            f"{filtered[0]:.6f}", f"{filtered[1]:.6f}",
-                            f"{correction[0]:.6f}", f"{correction[1]:.6f}"])
-        self._log_file.flush()
-
         return np.array([correction[0], correction[1], self.state.init_orientation[2]])
+
+    def _log_step(self, imu_data, banked_roll, corrected_orn, eff_lin, eff_ang, phase):
+        if self._log_file is None:
+            self._log_file, self._csv = open_run_log(_LOG_DIR, "pid", _LOG_HEADER)
+        r, p = self.pid_r, self.pid_p
+        self._csv.writerow([f"{time.time():.4f}",
+                            f"{imu_data[0] - banked_roll:.6f}", f"{imu_data[1]:.6f}",
+                            f"{corrected_orn[0]:.6f}", f"{corrected_orn[1]:.6f}",
+                            f"{imu_data[0]:.6f}", f"{banked_roll:.6f}",
+                            f"{eff_lin:.6f}", f"{eff_ang:.6f}", f"{phase:.6f}",
+                            f"{r.p:.6f}", f"{r.i:.6f}", f"{r.d:.6f}",
+                            f"{p.p:.6f}", f"{p.i:.6f}", f"{p.d:.6f}",
+                            f"{self._pid_dt:.6f}", self.kin_solver.ik_clamped])
+        self._log_file.flush()
 
     def _step_legs(self, global_phase, duty_factor, T_cycle, sl_mm, sh_mm,
                    lateral_fraction, eff_ang, corrected_orientation, gait_type, move_callback):
         """Compute and apply per-leg trajectories for one control step."""
+
+        Wf = WIDTH/2 + L1          
         dy = [
-            + (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1]),
-            - (WIDTH/2)*np.tan(corrected_orientation[0]) + (LENGTH/4)*np.tan(corrected_orientation[1]),
-            + (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
-            - (WIDTH/2)*np.tan(corrected_orientation[0]) - (LENGTH/4)*np.tan(corrected_orientation[1]),
+            - Wf*np.tan(corrected_orientation[0]) + (LENGTH/2)*np.tan(corrected_orientation[1]),   # FL
+            + Wf*np.tan(corrected_orientation[0]) + (LENGTH/2)*np.tan(corrected_orientation[1]),   # FR
+            - Wf*np.tan(corrected_orientation[0]) - (LENGTH/2)*np.tan(corrected_orientation[1]),   # RL
+            + Wf*np.tan(corrected_orientation[0]) - (LENGTH/2)*np.tan(corrected_orientation[1]),   # RR
         ]
+
 
         delta_base = sh_mm * _STANCE_PEN_BASE_FRAC
         leg_offset = _GAIT_PHASES[gait_type]
@@ -202,6 +238,9 @@ class GaitController:
             Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
             target_pos_shoulder = Ix @ trans_inv(self.transforms[i]) @ target_pos
             angles = self.kin_solver.legIK(target_pos_shoulder)
+            if angles is None:
+                angles = list(self.state.angles[3*i : 3*i + 3])
+
             all_angles.extend(angles)
 
             if move_callback is not None:
@@ -254,19 +293,21 @@ class GaitController:
                          y,
                          initial_pos[2] + d * np.sin(lateral_fraction)])
 
-    def _control_step(self, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
+    def _control_step(self, current_time, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
                       sl_mm, sh_mm, lateral_fraction, dir, gait_type, move_callback):
         """Shared tail of every execute_gait_*: banked roll, PID, leg trajectories, state update."""
         R_yaw = abs(eff_lin) / abs(eff_ang) if abs(eff_ang) > 1e-6 else np.inf
         banked_roll = np.sign(eff_ang) * np.arctan2(eff_lin**2, 9.81 * R_yaw)
-        corrected_orn = self._imu_correction(imu_data, time_step, banked_roll)
+        corrected_orn = self._imu_correction(imu_data, time_step, current_time, banked_roll)
+        if imu_data is not None:
+            self._log_step(imu_data, banked_roll, corrected_orn, eff_lin, eff_ang, global_phase)
         self._step_legs(global_phase, duty_factor, T_cycle, sl_mm, sh_mm,
                         lateral_fraction, eff_ang, corrected_orn, gait_type, move_callback)
         self.state.linear_vel = eff_lin
         self.state.angular_vel = eff_ang
         self.state.direction = dir
         self.state.orientation = list(imu_data) if imu_data is not None else list(self.state.init_orientation)
-        return eff_lin, self._log_file.name
+        return eff_lin, self.log_path
 
     # ------------------------------------------------------------------
     # Gait execution methods
@@ -321,7 +362,7 @@ class GaitController:
         else:
             self._sw_ref = 0.0
 
-        return self._control_step(imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
+        return self._control_step(current_time, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
                                   stance_length * 1000.0, swing_height * 1000.0,
                                   lateral_fraction, dir, gait_type, move_callback)
 
@@ -355,7 +396,7 @@ class GaitController:
         duty_factor = Tstance / T_cycle
         global_phase = (current_time % T_cycle) / T_cycle
 
-        return self._control_step(imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
+        return self._control_step(current_time, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
                                   stance_length * 1000.0, swing_height * 1000.0,
                                   lateral_fraction, dir, gait_type, move_callback)
 
@@ -390,7 +431,7 @@ class GaitController:
         global_phase = (current_time % T_cycle) / T_cycle
 
         sl_mm = eff_lin * T_cycle * duty_factor * 1000.0  # proportional to ramped velocity
-        return self._control_step(imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
+        return self._control_step(current_time, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
                                   sl_mm, swing_height * 1000.0,
                                   lateral_fraction, dir, gait_type, move_callback)
 
@@ -416,7 +457,7 @@ class GaitController:
         stance_length = eff_lin * T_cycle * duty_factor
         global_phase = (current_time % T_cycle) / T_cycle
 
-        return self._control_step(imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
+        return self._control_step(current_time, imu_data, time_step, eff_lin, eff_ang, global_phase, duty_factor, T_cycle,
                                   stance_length * 1000.0, swing_height * 1000.0,
                                   lateral_fraction, dir, gait_type, move_callback)
 

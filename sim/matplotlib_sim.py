@@ -114,12 +114,16 @@ class RobotVisualizer:
         """
         # Left Leg
         left_angles = self.kin.legIK(np.linalg.inv(Tl) @ Ll) # Passing foot position relative to left shoulder
+        if left_angles is None:
+            return
         print(f"{tag} Left Leg Angles (rad): theta1={degrees(left_angles[0]):.2f}, theta2={degrees(left_angles[1]):.2f}, theta3={degrees(left_angles[2]):.2f}", )
         left_points = [Tl @ x for x in self.kin.legFK(left_angles)]
         self.drawLegPoints(left_points)
         
         # Right Leg
         right_angles = self.kin.legIK(self.kin.Ix @ np.linalg.inv(Tr) @ Lr) # Passing foot position relative to right shoulder
+        if right_angles is None:
+            return
         print(f"{tag} Right Leg Angles (rad): theta1={degrees(right_angles[0]):.2f}, theta2={degrees(right_angles[1]):.2f}, theta3={degrees(right_angles[2]):.2f}", )
         right_points = [Tr @ self.kin.Ix @ x for x in self.kin.legFK(right_angles)]
         self.drawLegPoints(right_points)

@@ -1,10 +1,11 @@
 from adafruit_servokit import ServoKit
 import time
+from collections import Counter
 import core.kinematics as kinematics
 from core.kinematics import LENGTH, WIDTH, L1, L2, L3, L4
 import numpy as np
 import math
-from tools.utils import to_homogenous, rescale_number, trans_inv
+from tools.utils import to_homogenous, rescale_number, trans_inv, write_run_meta
 from core.gait_controller import GaitController
 import yaml
 from hw.imu import IMU
@@ -154,6 +155,8 @@ class RobotController:
         Ix = self.kin_solver.Ix if leg in ("FR", "RR") else np.identity(4)
         target_pos_shoulder = Ix @ trans_inv(transforms[leg]) @ to_homogenous(position)
         angles = self.kin_solver.legIK(target_pos_shoulder)
+        if angles is None:
+            return
         angles = np.array([math.degrees(a) for a in angles])
         self.apply_angles_leg(leg, angles, "deg")
         self.state.linear_vel  = 0.0
@@ -170,14 +173,46 @@ class RobotController:
         angles = self.kin_solver.robot_IK(self.init_center, new_orientation, self.init_ef_positions)
         self.gait_controller.smooth_to_target(angles, duration=0.5, move_callback=self.apply_angles_robot, unit="rad")
 
-    def move(self, params=None, steps=150):
+    def start_run(self):
+        """Open new PID/IMU logs and clear the PID state. Returns the record finish_run needs."""
+        self.gait_controller.new_log()
+        self.gait_controller.reset_pid()
+        self.imu.new_log()
+        return {"start": time.time(), "ik_clamped": self.gait_controller.kin_solver.ik_clamped}
+
+    def finish_run(self, run, params, steps, fallen, tag=None, **extra):
+        """Write the run JSON next to its PID log. Returns (pid_log, imu_log); pid_log is None if nothing was logged."""
+        gc = self.gait_controller
+        pid_log = gc.log_path
+        if pid_log:
+            write_run_meta(pid_log, {
+                "tag": tag,
+                "source": "robot",
+                "pid_roll":  {"kp": gc.pid_r.kp, "ki": gc.pid_r.ki, "kd": gc.pid_r.kd},
+                "pid_pitch": {"kp": gc.pid_p.kp, "ki": gc.pid_p.ki, "kd": gc.pid_p.kd},
+                "params": params,
+                "steps": steps,
+                "fallen": fallen,
+                "duration": time.time() - run["start"],
+                "ik_clamped": gc.kin_solver.ik_clamped - run["ik_clamped"],
+                "pid_log": pid_log,
+                "imu_log": self.imu.log_path,
+                **extra,
+            })
+        return pid_log, self.imu.log_path
+
+    def move(self, params=None, steps=150, tag=None):
         """Run a fixed number of control steps, then decelerate to a stop. Used for gait tuning.
+
+        Each call writes its own PID/IMU CSVs, their plots and a JSON with gains, command and outcome.
 
         :param params: gait parameters (see trot_params); DEFAULT_PARAMS when None
         :param steps:  number of control steps before deceleration starts
+        :param tag:    run label stored in the JSON (e.g. "F_1")
         """
         params = params or DEFAULT_PARAMS
         time_step = 1.0 / 100
+        run = self.start_run()
         start_time = time.time()
 
         self._start_live_display()
@@ -197,10 +232,14 @@ class RobotController:
             elif ef_vel == 0.0:
                 break
 
+        pid_log, _ = self.finish_run(run, params, steps, fallen, tag=tag)
         print(f"\033[7B", end='', flush=True)
         self._live_status = ""
         if not fallen:
             self.apply_angles_robot(self.init_angles)
+
+        if pid_log:
+            plot_log(pid_log)
         self.imu.save_plot()
 
     def show_state(self, end='\n'):
@@ -284,8 +323,17 @@ if __name__ == "__main__":
     kin_solver = kinematics.Kinematics(LENGTH, WIDTH, L1, L2, L3, L4)
     robot = RobotController(kin_solver, init_angles=theta_default, skip_rest=False)
 
-    log_file = None
+    run = None
+    run_cmds = Counter()
+    run_logs = []
     teleop = None
+
+    def end_run(fallen):
+        cmds = [dict(c) for c, _ in run_cmds.most_common()]
+        run_logs.append(robot.finish_run(run, cmds[0] if cmds else None, sum(run_cmds.values()), fallen,
+                                         tag="teleop", commands=cmds[:10]))
+        run_cmds.clear()
+
     try:
         teleop = DualSenseController()
 
@@ -328,6 +376,10 @@ if __name__ == "__main__":
                 elif state == "Idle":
                     rx_norm = buttons.RX / -128
                     ry_norm = buttons.RY / 128
+                    n = np.hypot(rx_norm, ry_norm)
+                    if n > 1.0:
+                        rx_norm, ry_norm = rx_norm / n, ry_norm / n
+
                     max_roll = 15
                     max_pitch = 10
                     target_orn = np.array([rx_norm * max_roll, ry_norm * max_pitch, 0])
@@ -352,14 +404,20 @@ if __name__ == "__main__":
                 state = "Decelerating"
 
             if state in ("Running", "Decelerating"):
+                if run is None:
+                    run = robot.start_run()
                 robot._live_status = state
-                ef_vel, log_file, _ = robot.trot_step(current_time, time_step, params=params,
-                                                      deceleration_flag=(state == "Decelerating"), verbose=True)
+                run_cmds[tuple(params.items())] += 1
+                ef_vel, _, _ = robot.trot_step(current_time, time_step, params=params,
+                                               deceleration_flag=(state == "Decelerating"), verbose=True)
                 if ef_vel is None:
                     state = "Idle"
                 elif state == "Decelerating" and ef_vel == 0.0:
                     robot.apply_angles_robot(robot.init_angles)
                     state = "Idle"
+                if state == "Idle":
+                    end_run(fallen=ef_vel is None)
+                    run = None
             else:
                 robot._live_status = "Idle — waiting for command"
                 if np.any(np.abs(target_orn) > 0.05) or np.any(np.abs(body_orn) > 0.05):
@@ -382,9 +440,15 @@ if __name__ == "__main__":
         else:
             print(f"Error: {e}")
     finally:
+        if run is not None:
+            end_run(fallen=False)
         robot.gait_controller.smooth_to_target(THETA_RESTING, duration=1.5, move_callback=robot.apply_angles_robot, unit="deg")
-        if log_file:
-            plot_log(log_file)
-        robot.imu.save_plot()
+        robot.imu.new_log()
+        from log.imu_plotter import imu_log
+        for pid_log, imu_path in run_logs:
+            if pid_log:
+                plot_log(pid_log)
+            if imu_path:
+                imu_log(imu_path)
         if teleop:
             teleop.dualsense.close()

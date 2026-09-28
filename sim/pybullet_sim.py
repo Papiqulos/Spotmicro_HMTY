@@ -6,7 +6,7 @@ import numpy as np
 import core.gait_controller as gait
 import core.kinematics as kinematics
 import core.robot_state as robot_state
-from tools.utils import from_pybullet_orn, from_pybullet_pos
+from tools.utils import from_pybullet_orn, from_pybullet_pos, write_run_meta
 from log.pid_plotter import plot_log
 
 
@@ -24,6 +24,7 @@ THETA_RESTING = np.array([
 
 UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW = 65297, 65298, 65295, 65296
 
+SERVO_TORQUE = 1.5   # N·m, ροπή ακινητοποίησης FT5116M
 
 def trot_params(lin_vel, ang_vel, dir):
     """Gait parameters for execute_gait_fixed_stance (lengths in m, times in s)."""
@@ -48,7 +49,9 @@ class PybulletSim:
                  orientation, 
                  center_plane, 
                  initial_theta, 
-                 angle_unit='deg'):
+                 angle_unit='deg',
+                 gui=True,
+                 interactive=True):
         """
         
         :param length: robot base length in mm
@@ -63,6 +66,8 @@ class PybulletSim:
         :param initial_theta: initial angles for the robot to spawn
         :param initial_ef_positions: initial end effector positions for the robot to spawn (in kinematics frame)
         :param angle_unit: unit of initial_theta
+        :param gui: PyBullet GUI (False: headless DIRECT mode)
+        :param interactive: start the keyboard loop at the end of the constructor
         """
         # --- CONFIGURATION ---
         self.urdf_path = "sim/urdf/spotmicroai_gen_ros.urdf"  
@@ -115,7 +120,7 @@ class PybulletSim:
 
         # Pybullet Setup
         # Prepare environment
-        self.prep_environment(plane_orientation=[0, 0, 0], center_plane=center_plane)
+        self.prep_environment(plane_orientation=[0, 0, 0], center_plane=center_plane, gui=gui)
 
         # Load the quadruped
         self.robotId, self.num_joints = self.load_quadruped(self.urdf_path, center, p.getQuaternionFromEuler(orientation))
@@ -157,7 +162,8 @@ class PybulletSim:
 
         # Start simulation
         self.initial_state = p.saveState()
-        self.start_simulation()
+        if interactive:
+            self.start_simulation()
         
     def load_quadruped(self, urdf_path, center, orn):
         """
@@ -168,8 +174,30 @@ class PybulletSim:
         :param orn: in pybullet frame
         """
         try:
+            
+
+
+
+
+
+
+
             robotId = p.loadURDF(urdf_path, center, orn, useFixedBase=False)
             print(f"Successfully loaded {urdf_path}!")
+
+            # Fix the mass of the legs
+            REAL_MASS = 1.702
+            links = range(-1, p.getNumJoints(robotId))
+            cover = [j for j in links if j >= 0 and
+                    p.getJointInfo(robotId, j)[12].decode().endswith("_cover")]
+            for j in cover:
+                p.changeDynamics(robotId, j, mass=0.001, localInertiaDiagonal=[1e-6] * 3)
+            total = sum(p.getDynamicsInfo(robotId, j)[0] for j in links)
+            k = REAL_MASS / total
+            for j in links:
+                if j not in cover:
+                    p.changeDynamics(robotId, j, mass=p.getDynamicsInfo(robotId, j)[0] * k)
+
             num_joints = p.getNumJoints(robotId)
             print(f"Robot has {num_joints} joints.")
             for i in range(num_joints):
@@ -181,7 +209,7 @@ class PybulletSim:
             print(f"Error loading URDF: {e}")
             return
         
-    def prep_environment(self, plane_orientation, center_plane, cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0]):
+    def prep_environment(self, plane_orientation, center_plane, cameraDistance=1, cameraYaw=-181, cameraPitch=-165, cameraTargetPosition=[0, 0, 0], gui=True):
         """
         Docstring for prep_environment
         
@@ -192,9 +220,10 @@ class PybulletSim:
         :param cameraPitch: 
         :param cameraTargetPosition: 
         """
-        p.connect(p.GUI)
+        p.connect(p.GUI if gui else p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, 0, -9.81)
+        p.setTimeStep(TIME_STEP)
         p.resetDebugVisualizerCamera(cameraDistance=cameraDistance, cameraYaw=cameraYaw, cameraPitch=cameraPitch, cameraTargetPosition=cameraTargetPosition)
         self.roll_slider = p.addUserDebugParameter("----roll", -60, 60, 0)
         self.pitch_slider = p.addUserDebugParameter("----pitch", -60, 60, 0)
@@ -248,7 +277,8 @@ class PybulletSim:
         p.setJointMotorControlArray(self.robotId,
                                     jointIndices=list(self.joint_dic.values()),
                                     controlMode=p.POSITION_CONTROL,
-                                    targetPositions=theta_pb)
+                                    targetPositions=theta_pb
+                                    ,forces=[SERVO_TORQUE] * 12)
         p.stepSimulation()
         time.sleep(1./240.)
         self.gait_controller.state.angles       = np.array(theta_rad)
@@ -268,12 +298,15 @@ class PybulletSim:
         leg_idx = self._leg_order.index(leg)
         dirs = self.theta_dirs[leg_idx * 3: (leg_idx + 1) * 3]
         angles = [a * d for a, d in zip(angles, dirs)]
-        p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg], p.POSITION_CONTROL, angles)
+        p.setJointMotorControlArray(self.robotId, self._leg_joint_map[leg],
+                                    p.POSITION_CONTROL, angles,
+                                    forces=[SERVO_TORQUE] * 3)
+
 
     def start_simulation(self):
         while True:
             p.stepSimulation()
-            time.sleep(1./240.)
+            time.sleep(TIME_STEP)
 
             keyboard_event = p.getKeyboardEvents()
 
@@ -353,6 +386,10 @@ class PybulletSim:
 
         deceleration_flag = False
         current_time = 0
+        gc = self.gait_controller
+        gc.new_log()
+        gc.reset_pid()
+        ik_clamped_start = gc.kin_solver.ik_clamped
 
         while True:
             current_time += TIME_STEP
@@ -376,6 +413,95 @@ class PybulletSim:
                 break
 
         plot_log(log_file)
+        write_run_meta(log_file, {
+            "tag": None,
+            "source": "sim",
+            "pid_roll":  {"kp": gc.pid_r.kp, "ki": gc.pid_r.ki, "kd": gc.pid_r.kd},
+            "pid_pitch": {"kp": gc.pid_p.kp, "ki": gc.pid_p.ki, "kd": gc.pid_p.kd},
+            "params": params,
+            "duration": current_time,
+            "ik_clamped": gc.kin_solver.ik_clamped - ik_clamped_start,
+            "pid_log": log_file,
+            "imu_log": None,
+        })
+
+    def _body_pose(self):
+        """Base position (x, y) and heading of the body in the world, from the four shoulder joints."""
+        sh = [self.joint_dic[f"{side}_shoulder"] for side in ("front_left", "front_right", "rear_left", "rear_right")]
+        fl, fr, rl, rr = (np.array(p.getLinkState(self.robotId, j)[4][:2]) for j in sh)
+        front = (fl + fr) / 2 - (rl + rr) / 2
+        left = (fl + rl) / 2 - (fr + rr) / 2
+        base = np.array(p.getBasePositionAndOrientation(self.robotId)[0][:2])
+        return base, front / np.linalg.norm(front), left / np.linalg.norm(left), np.arctan2(front[1], front[0])
+
+    def run_test(self, params, steps, tag, test=None, gains=None, realtime=True):
+        """Scripted run: `steps` control steps, then decelerate to a stop (same as RobotController.move).
+
+        Writes CSV/PNG/JSON to log/pid/. Distance along the commanded direction, lateral deviation,
+        heading change (counter-clockwise positive) and total turn are measured from the body pose
+        and stored in the JSON under "tape".
+
+        :param gains: dict kp_r, ki_r, kd_r, kp_p, ki_p, kd_p; robot_config.yaml values when None
+        :param realtime: sleep one time step per step (for watching in the GUI)
+        """
+        gc = self.gait_controller
+        gc.reset(**(gains or {}))
+        gc.new_log()
+        ik_clamped_start = gc.kin_solver.ik_clamped
+        base0, front0, left0, yaw_prev = self._body_pose()
+        turn = 0.0
+        current_time = 0.0
+        fallen = False
+        log_file = None
+        k = 0
+        while True:
+            current_time += TIME_STEP
+            deceleration_flag = k >= steps
+            imu = self.get_imu_data()
+            if abs(np.degrees(imu[1])) > 45:
+                fallen = True
+                break
+            ef_vel, log_file = gc.execute_gait_fixed_stance(
+                current_time, TIME_STEP, imu_data=imu, deceleration_flag=deceleration_flag,
+                move_callback=self.move_callback, **params)
+            p.stepSimulation()
+            if realtime:
+                p.resetDebugVisualizerCamera(cameraDistance=1, cameraYaw=-181, cameraPitch=-165,
+                                             cameraTargetPosition=p.getBasePositionAndOrientation(self.robotId)[0])
+                time.sleep(TIME_STEP)
+            _, _, _, yaw = self._body_pose()
+            turn += (yaw - yaw_prev + np.pi) % (2 * np.pi) - np.pi
+            yaw_prev = yaw
+            k += 1
+            if deceleration_flag and ef_vel == 0.0:
+                break
+
+        if log_file is None:
+            return None
+        base1, _, _, _ = self._body_pose()
+        d = base1 - base0
+        u = {"F": front0, "B": -front0, "R": -left0, "L": left0}.get(test)
+        tape = {"heading_deg": float(np.degrees(turn)), "turn_deg": float(abs(np.degrees(turn)))}
+        if u is not None:
+            tape["distance_m"] = float(d @ u)
+            tape["lateral_cm"] = float(abs(d[0] * u[1] - d[1] * u[0]) * 100)
+
+        plot_log(log_file)
+        write_run_meta(log_file, {
+            "tag": tag,
+            "source": "sim",
+            "pid_roll":  {"kp": gc.pid_r.kp, "ki": gc.pid_r.ki, "kd": gc.pid_r.kd},
+            "pid_pitch": {"kp": gc.pid_p.kp, "ki": gc.pid_p.ki, "kd": gc.pid_p.kd},
+            "params": params,
+            "steps": steps,
+            "fallen": fallen,
+            "duration": current_time,
+            "ik_clamped": gc.kin_solver.ik_clamped - ik_clamped_start,
+            "tape": tape,
+            "pid_log": log_file,
+            "imu_log": None,
+        })
+        return log_file
 
     def key_is_pressed(self, keyboard_event, key):
         return key in keyboard_event and keyboard_event[key]&p.KEY_WAS_TRIGGERED

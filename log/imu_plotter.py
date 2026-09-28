@@ -7,6 +7,7 @@ def imu_log(file_name, in_deg=False):
     df = pd.read_csv(file_name)
     if df.empty:
         return
+    df["t"] = df["t"] - df["t"].iloc[0]
 
     if not in_deg:
         cols = ["imu_roll", "imu_pitch", "imu_yaw", "lpf_roll", "lpf_pitch", "lpf_yaw"]

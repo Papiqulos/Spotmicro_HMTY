@@ -17,6 +17,10 @@ tests/
 /log/pid/
 /log/imu/
 
+# tuning helpers (local, tuning_notes.md is appended by log.metrics)
+/tuning_help.md
+/tuning_notes.md
+
 # package
 /spotmicro.egg-info/
 
@@ -93,3 +97,6 @@ guide.txt
 !/thesis/first_draft/
 /thesis/first_draft/*
 !/thesis/first_draft/main.pdf
+TODO.md
+.gitignore
+TUNING_PLAN.md

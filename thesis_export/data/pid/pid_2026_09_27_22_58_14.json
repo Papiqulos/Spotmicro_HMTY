@@ -1,0 +1,30 @@
+{
+  "tag": "F_107",
+  "source": "robot",
+  "pid_roll": {
+    "kp": 0.5,
+    "ki": 0.012,
+    "kd": 0.035
+  },
+  "pid_pitch": {
+    "kp": 0.5,
+    "ki": 0.01,
+    "kd": 0.005
+  },
+  "params": {
+    "desired_lin_vel": 0.12,
+    "desired_ang_vel": 0.0,
+    "swing_height": 0.035,
+    "stance_length": 0.06,
+    "Tswing": 0.2,
+    "dir": "+x",
+    "gait_type": "trot"
+  },
+  "steps": 760,
+  "fallen": false,
+  "duration": 11.136104345321655,
+  "ik_clamped": 0,
+  "pid_log": "/home/papiqulos/spotmicro_hmty_rpi5/log/pid/pid_2026_09_27_22_58_14.csv",
+  "imu_log": "/home/papiqulos/spotmicro_hmty_rpi5/log/imu/imu_2026_09_27_22_58_14.csv",
+  "git_commit": "3040b9b-dirty"
+}
